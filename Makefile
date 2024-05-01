@@ -1,7 +1,8 @@
+# Project: ircserv
 NAME=ircserv
 
 # Compiler options
-CC 			= c++
+CXX 		= c++
 CXXFLAGS	= -g -Wall -Wextra -Werror -Wconversion -std=c++98
 RM			= rm -rf
 PRINT_INFO	= -info
@@ -14,10 +15,23 @@ BLUE   		= "\033[0;34m"
 RESET  		= "\033[0m"
 
 # Folders
-OBJ_FOLDER	= ./obj/
+OBJ_FOLDER	   = ./obj/
+SRC_FOLDER     = ./src/
+INCLUDE_FOLDER = ./includes/
+CXXINCLUDES    = -I$(INCLUDE_FOLDER)
 
 # Files
-SRCS 		= main.cpp
+SRCS 		= $(addprefix $(SRC_FOLDER), \
+				main.cpp \
+				Server.cpp \
+				Channel.cpp \
+				Client.cpp)
+
+# Includes
+INC 		= $(addprefix $(INCLUDE_FOLDER), \
+				Server.hpp \
+				Channel.hpp \
+				Client.hpp)
 
 # Object files
 OBJS 		= $(SRCS:%.cpp=$(OBJ_FOLDER)%.o)
@@ -28,13 +42,13 @@ OBJS 		= $(SRCS:%.cpp=$(OBJ_FOLDER)%.o)
 all: MSG_START $(NAME) MSG_DONE
 
 $(NAME): $(OBJS)
-	@$(CC) $(OBJS) $(CXXFLAGS) -o $(NAME)
+	@$(CXX) $(OBJS) $(CXXFLAGS) $(CXXINCLUDES) -o $(NAME)
 	@echo $(GREEN)"\n Linking complete!"$(RESET)
 
 $(OBJ_FOLDER)%.o: %.cpp
 	@mkdir -p $(@D)
 	@echo -n $(GREEN)"."$(RESET)
-	@$(CC) $(CXXFLAGS) -c $< -o $@
+	@$(CXX) $(CXXFLAGS) $(CXXINCLUDES) -c $< -o $@
 
 clean:
 	@$(RM) $(OBJ_FOLDER)
@@ -48,13 +62,11 @@ re: fclean all
 
 run: re
 	@echo $(BLUE) $(NAME) "starting..." $(RESET)
-	@echo $(BLUE) $(NAME) "TO DO..." $(RESET)
-#	@./$(NAME) $(TEST_FILE)
+	@./$(NAME) 8080 42
 
 val: re
 	@echo $(BLUE) $(NAME) "starting with valgrind..." $(RESET)
-	@echo $(BLUE) $(NAME) "TO DO..." $(RESET)
-#	@valgrind --leak-check=full ./$(NAME) $(TEST_FILE) $(PRINT_INFO)
+	@valgrind --leak-check=full ./$(NAME) 8080 42
 
 MSG_START:
 	@echo $(ORANGE) $(NAME) "compiling" $(RESET)
