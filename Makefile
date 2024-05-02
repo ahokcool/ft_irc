@@ -3,7 +3,7 @@ NAME=ircserv
 
 # Compiler options
 CXX 		= c++
-CXXFLAGS	= -g -Wall -Wextra -Werror -Wconversion -std=c++98
+CXXFLAGS	= -g -Wall -Wextra -Werror -std=c++98 #-Wconversion 
 RM			= rm -rf
 PRINT_INFO	= -info
 
@@ -68,7 +68,7 @@ runNoPort: re
 
 run: re
 	@echo $(BLUE) $(NAME) "starting..." $(RESET)
-	@./$(NAME) 8080 42
+	@./$(NAME) 4242 42
 
 val: re
 	@echo $(BLUE) $(NAME) "starting with valgrind..." $(RESET)

@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/02 03:14:46 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/02 03:44:16 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,41 @@ void Server::initNetwork() throw(std::exception)
 {
 	info("[START] Init network", CLR_YLW);
 
+    struct sockaddr_in address;
+    
+    // Create a master socket
+    if ((_socket = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+        perror("socket failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Set master socket to allow multiple connections,
+    // this is just a good habit, it will work without this
+    int opt = 1;
+    if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0) {
+        perror("setsockopt");
+        exit(EXIT_FAILURE);
+    }
+
+    // Type of socket created
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons(_port);
+	// TODO: SET THE PASSWORD
+
+    // Bind the socket to localhost port _port
+    if (bind(_socket, (struct sockaddr *)&address, sizeof(address)) < 0)
+	{
+        perror("bind failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Try to specify maximum of 3 pending connections for the master socket
+    if (listen(_socket, 3) < 0)
+	{
+        perror("listen");
+        exit(EXIT_FAILURE);
+    }
 	
 	info("[>DONE] Init network", CLR_GRN);
 }
@@ -37,11 +72,148 @@ void Server::initNetwork() throw(std::exception)
 void Server::goOnline()
 {
 	info("[START] Go online", CLR_GRN);
-	while (_keepRunning)
-	{
-		poll(NULL, 0, 1000);
-		pause();
-	}
+	// while (_keepRunning)
+	// {
+	// 	poll(NULL, 0, 1000);
+	// 	pause();
+	// }
+
+
+    // Accept the incoming connection
+    // int addrlen = sizeof(address);
+    // puts("Waiting for connections ...");
+
+// char buffer[1025];  //data buffer of 1K
+
+	// int new_socket, max_clients = 30 sd;
+	
+	// int activity, valread;
+    // int max_sd;
+
+	//a message
+    // const char *message = "ECHO Daemon v1.0 \r\n";
+
+
+    // while (true) {
+    //     // Clear the socket set
+    //     FD_ZERO(&FUUUUUUUUCK);
+
+    //     // Add master socket to set
+    //     FD_SET(_socket, &FUUUUUUUUCK);
+    //     max_sd = _socket;
+
+    //     // Add child sockets to set
+    //     for (i = 0; i < max_clients; i++) {
+    //         // Socket descriptor
+    //         sd = client_socket[i];
+
+    //         // If valid socket descriptor then add to read list
+    //         if (sd > 0) {
+    //             FD_SET(sd, &FUUUUUUUUCK);
+    //         }
+
+    //         // Highest file descriptor number, need it for the select function
+    //         if (sd > max_sd) {
+    //             max_sd = sd;
+    //         }
+    //     }
+
+    //     // Wait for an activity on one of the sockets, timeout is NULL,
+    //     // so wait indefinitely
+    //     activity = select(max_sd + 1, &FUUUUUUUUCK, NULL, NULL, NULL);
+
+    //     if ((activity < 0) && (errno != EINTR)) {
+    //         printf("select error");
+    //     }
+
+    //     // If something happened on the master socket,
+    //     // then its an incoming connection
+    //     if (FD_ISSET(_socket, &FUUUUUUUUCK)) {
+    //         if ((new_socket = accept(_socket, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0) {
+    //             perror("accept");
+    //             exit(EXIT_FAILURE);
+    //         }
+
+    //         // Inform user of socket number - used in send and receive commands
+    //         printf("New connection, socket fd is %d, ip is : %s, port : %d\n", new_socket, inet_ntoa(address.sin_addr), ntohs(address.sin_port));
+
+    //         // Send new connection greeting message
+	// 		if (send(new_socket, message, strlen(message), 0) != static_cast<ssize_t>(strlen(message))) 
+    // 			perror("send failed");
+
+
+    //         puts("Welcome message sent successfully");
+
+    //         // Add new socket to array of sockets
+    //         for (i = 0; i < max_clients; i++) {
+    //             // If position is empty
+    //             if (client_socket[i] == 0) {
+    //                 client_socket[i] = new_socket;
+    //                 printf("Adding to list of sockets as %d\n", i);
+    //                 break;
+    //             }
+    //         }
+    //     }
+
+    //     // Else its some IO operation on some other socket
+    //     for (i = 0; i < max_clients; i++) {
+    //         sd = client_socket[i];
+
+    //         if (FD_ISSET(sd, &FUUUUUUUUCK)) {
+    //             // Check if it was for closing, and also read the
+    //             // incoming message
+    //             if ((valread = read(sd, buffer, 1024)) == 0) {
+    //                 // Somebody disconnected, get his details and print
+    //                 getpeername(sd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
+    //                 printf("Host disconnected, ip %s, port %d \n", inet_ntoa(address.sin_addr), ntohs(address.sin_port));
+
+    //                 // Close the socket and mark as 0 in list for reuse
+    //                 close(sd);
+    //                 client_socket[i] = 0;
+    //             }
+
+    //             // Echo back the message that came in
+    //             else {
+	// 				printf("Message from client: %s\n", buffer);
+    //                 buffer[valread] = '\0';
+    //                 send(sd, buffer, strlen(buffer), 0);
+    //             }
+    //         }
+    //     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+	
 	info("[>DONE] Go online", CLR_YLW);
 }
 
@@ -56,19 +228,15 @@ void Server::shutDown()
 
 // Private Member Functions
 // -----------------------------------------------------------------------------
-void Server::parseArgs(const std::string &port, const std::string &password)
-	throw(std::exception)
+void Server::parseArgs(const std::string &port, const std::string &password) throw (std::exception)
 {
-	int		portInt;
-	
-	try
+	u_int16_t	portInt;
+	std::istringstream iss(port);
+
+	if (!(iss >> portInt))
 	{
-		portInt = std::atoi(port.c_str());
-	}
-	catch (std::exception &e)
-	{
-		info("Port is not a number!", CLR_RED);
-		throw std::exception();
+    	info("Port is not a number!", CLR_RED);
+    	throw std::exception();
 	}
 
 	// 194 is the default port for IRC
@@ -80,7 +248,7 @@ void Server::parseArgs(const std::string &port, const std::string &password)
 		info("Port is not the IRC port (194) or in the range 1024-65535!", CLR_RED);
 		throw std::exception();
 	}
-	_port = port;
+	_port = portInt;
 	// TODO: Check if password is valid
 	_password = password;
 }
