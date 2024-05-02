@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/02 20:34:58 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/02 23:14:09 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,11 +80,11 @@ class Server
 
         void                    broadcastMessage(const std::string &message) const;
         
-        void                    invite(const Message &message);
-        void                    mode(const Message &message);
-        void                    kick(const Message &message);
+        void                    invite(const Message &message, Channel *channel);
+        void                    mode(const Message &message, Channel *channel);
+        void                    kick(const Message &message, Channel *channel);
         void                    join(const Message &message, Channel *channel);
-        void                    topic(const Message &message);
+        void                    topic(const Message &message, Channel *channel);
         void                    part(const Message &message, Channel *channel);
         void                    privmsg(const Message &message);
 
@@ -96,7 +96,28 @@ class Server
         std::list<Client>       		_clients;
         std::list<Channel>      		_channels;
 
-		
+    
+    // template <typename T, typename O>
+    // bool findInList(const std::string &name, const T &l)
+    // {
+    //     for (typename T::iterator it = l.begin(); it != l.end(); ++it)
+    //     {
+    //         if (it->getName() == name)
+    //             return true;
+    //     }
+    //     return false;
+    // }
+
+    // template <typename T>
+    // bool findInList(const std::string &name, const T &l)
+    // {
+    //     for (typename T::iterator it = l.begin(); it != l.end(); ++it)
+    //     {
+    //         if (it->getName() == name)
+    //             return true;
+    //     }
+    //     return false;
+    // }
 };
 	
 #endif

@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/02 21:53:32 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/02 23:14:37 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -308,17 +308,17 @@ void Server::processMessage(Client *client, const std::string &ircMessage)
 		{
 			case 'I':
 				// INVITE <client> #<channel>
-				invite(message);
+				invite(message, channel);
 				break;
 
 			case 'M':
 				// MODE #<channelName> flag
-				mode(message);
+				mode(message, channel);
 				break;
 
 			case 'K':
 				// KICK #<channelName> <client>
-				kick(message);
+				kick(message, channel);
 				break;
 
 			case 'J':
@@ -329,7 +329,7 @@ void Server::processMessage(Client *client, const std::string &ircMessage)
 				
 			case 'T':
 				// TOPIC #<channelName> :<topic>
-				topic(message);
+				topic(message, channel);
 				break;
 
 			case 'P':
@@ -342,7 +342,7 @@ void Server::processMessage(Client *client, const std::string &ircMessage)
 				else // PART
 				{
 					// PART #<channelName>
-					part(client, message, channel);
+					part(message, channel);
 				}
 			}
 				break;
@@ -359,19 +359,46 @@ void Server::processMessage(Client *client, const std::string &ircMessage)
 	}
 }
 
-void Server::invite(const Message &message)
+void Server::invite(const Message &message, Channel *channel)
 {
 	// INVITE <client> #<channel>
+	// if (!findInList(message.getArg1(), _clients))
+	// {
+	// 	// info(":No such nick", CLR_RED);
+	// 	// TODO: no suck nick
+	// 	return;
+	// }
+	// if (!findInList(message.getChannelName(), _channels))
+	// {
+	// 	// TODO: no such channel
+	// 	return ;
+	// }
+	message.getReceiver()->getInvited(channel);
+	// TODO: send a message that a client was invited to a channel
 }
 
-void Server::mode(const Message &message)
+void Server::mode(const Message &message,  Channel *channel)
 {
+	(void)message;
+	(void)channel;
 	// MODE #<channelName> flag
 }
 
-void Server::kick(const Message &message)
+void Server::kick(const Message &message, Channel *channel)
 {
 	// KICK #<channelName> <client>
+	// if (!findInList(message.getArg1(), _clients))
+	// {
+	// 	// info(":No such nick", CLR_RED);
+	// 	// TODO: no suck nick
+	// 	return;
+	// }
+	// if (!findInList(message.getChannelName(), _channels))
+	// {
+	// 	// TODO: no such channel
+	// 	return ;
+	// }
+	message.getSender()->getKicked(channel);
 }
 
 void Server::join(const Message &message, Channel *channel)
@@ -381,9 +408,12 @@ void Server::join(const Message &message, Channel *channel)
 	//TODO: send messages to the channel that the client has joined
 }
 
-void Server::topic(const Message &message)
+void Server::topic(const Message &message,  Channel *channel)
 {
+	(void)message;
+	(void)channel;
 	// TOPIC #<channelName> :<topic>
+	
 }
 
 Client *Server::findUserByNickname(const std::string &nickname)

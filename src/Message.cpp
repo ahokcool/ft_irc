@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/02 16:44:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/02 20:26:54 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/02 23:15:44 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,9 +17,8 @@ Message::Message()
     // Nothing to do
 }
 
-Message::Message(Client *sender, const std::string &ircMessage) : 
+Message::Message(Client *sender, const std::string &ircMessage) throw(MessageException) : 
 	_sender(sender), _receiver(NULL)
-	throw(MessageException)
 {
 	std::istringstream iss(ircMessage);
     std::string token;

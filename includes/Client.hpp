@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:33 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/01 22:57:18 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/02 22:37:56 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,8 @@ class Client
 
         void                    joinChannel(Channel *channel);
         void                    leaveChannel(Channel *channel);
+        void                    getInvited(Channel *channel);
+        void                    getKicked(Channel *channel);
         
         void                    setUsername(const std::string &username);
         void                    setHostname(const std::string &hostname);
@@ -46,6 +48,7 @@ class Client
         std::string             _username;
         std::string             _hostname;
         std::list<Channel *>    _channels;
+        std::list<Channel *>    _invitations;
 };
 
 #endif
