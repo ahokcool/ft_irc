@@ -22,16 +22,18 @@ CXXINCLUDES    = -I$(INCLUDE_FOLDER)
 
 # Files
 SRCS 		= $(addprefix $(SRC_FOLDER), \
-				main.cpp \
-				Server.cpp \
+				main.cpp 	\
+				Server.cpp 	\
 				Channel.cpp \
-				Client.cpp)
+				Client.cpp	\
+				utils.cpp)
 
 # Includes
 INC 		= $(addprefix $(INCLUDE_FOLDER), \
-				Server.hpp \
-				Channel.hpp \
-				Client.hpp)
+				Server.hpp	\
+				Channel.hpp	\
+				Client.hpp	\
+				utils.hpp)
 
 # Object files
 OBJS 		= $(SRCS:%.cpp=$(OBJ_FOLDER)%.o)
