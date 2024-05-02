@@ -69,7 +69,7 @@ runNoPort: re
 
 run: re
 	@echo $(BLUE) $(NAME) "starting..." $(RESET)
-	@./$(NAME) 4242 42
+	@./$(NAME) 1234 42
 
 val: re
 	@echo $(BLUE) $(NAME) "starting with valgrind..." $(RESET)
