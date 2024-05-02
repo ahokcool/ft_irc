@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/02 22:44:26 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/02 23:15:00 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,6 +55,21 @@ void Client::joinChannel(Channel *channel)
 void Client::leaveChannel(Channel *channel)
 {
     _channels.remove(channel);
+}
+
+void Client::getInvited(Channel *channel)
+{
+    _invitations.push_back(channel);
+}
+
+void Client::getKicked(Channel *channel)
+{
+    for (std::list<Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+    {
+        //TODO: find a channel if user's channels and delete it from list
+    }
+    (void)channel;  
+    //TODO: send the message to the client that ha was kicked. also send it to the channel
 }
 
 void Client::setUsername(const std::string &username)

@@ -44,6 +44,8 @@ class Client
 
         void                    joinChannel(Channel *channel);
         void                    leaveChannel(Channel *channel);
+        void                    getInvited(Channel *channel);
+        void                    getKicked(Channel *channel);
         
         void					setUsername(const std::string &username);
         void                    setHostname(const std::string &hostname);
@@ -57,13 +59,14 @@ class Client
     private:
         Client();
         const int               		_socketFd;
-    	std::string			       		_nickname;
+    	  std::string			       		_nickname;
         std::string             		_username;
         std::string             		_hostname;
         std::list<Channel *>    		_channels;
+        std::list<Channel *>    _invitations;
 
 		// List of all nicknames that are already in use
-		static std::set<std::string> 	_nicknames;
+		  static std::set<std::string> 	_nicknames;
 };
 
 #endif

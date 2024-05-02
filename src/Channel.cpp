@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
+/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/02 21:06:56 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/02 16:31:47 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,3 +82,21 @@ bool					Channel::isActive() const
 		return false;
 	return true;
 }
+
+// Message
+
+// B - broadcast
+// P - privat
+// C - channel
+
+// Server                            			
+// B somebody joins
+// B general info/broadcast(shut down, fuck you)
+// P login
+
+// Channel
+// C somebody joins
+// C general info(shut down, fuck you)
+
+// Client
+// P messages from other clients
