@@ -1,0 +1,18 @@
+MESSAGES FROM HEXCHAT: (WE SHOULD SAVE THIS FOR FRANCISCO AND THE KIDS)
+
+KICK
+!!! any operator can kick another operator, doesn't matter if he was the first one
+client who's not there        	KICK #TEST1 hhhhh
+just client		     	KICK #TEST1 anshovah_
+KICK ""		    		KICK #TEST1 "
+KICK " "           		KICK #TEST1
+KICK /KICK			KICK #TEST1 /KICK
+
+INVITE
+INVITE jojojo			INVITE jojojo #TEST1
+INVITE ""			INVITE " #TEST1
+INVITE " "			INVITE   #TEST1
+
+TOPIC
+if not set
+	

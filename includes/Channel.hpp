@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/01 23:24:03 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/02 03:09:35 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,11 +26,19 @@ class Channel
         Channel(const std::string &name, Client *client);
         ~Channel();
 
+		// Equal Overload for list remove
+		bool					operator==(const Channel& other) const;
+    
+
         void                    sendMessage(const std::string &ircMessage) const;
         void                    addClient(Client *client);
+        void                    addOperator(Client *client);
+
         void                    removeClient(Client *client); // delete empty channel
         const std::string       &getName() const;
-    //TODO: if all the ops left the channel, kick all the clients and delete the channel
+    
+	//TODO: if all the ops left the channel, kick all the clients and delete the channel
+		bool					isActive() const;
     private:
         Channel();
         const std::string       _name;

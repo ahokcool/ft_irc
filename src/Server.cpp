@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/02 02:50:13 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/02 03:14:46 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,13 +36,13 @@ void Server::initNetwork() throw(std::exception)
 
 void Server::goOnline()
 {
-	info("[START] Go online", CLR_YLW);
+	info("[START] Go online", CLR_GRN);
 	while (_keepRunning)
 	{
-		// TODO: DELETE LATER
+		poll(NULL, 0, 1000);
 		pause();
 	}
-	info("[>DONE] Go online", CLR_GRN);
+	info("[>DONE] Go online", CLR_YLW);
 }
 
 void Server::shutDown()
@@ -63,11 +63,11 @@ void Server::parseArgs(const std::string &port, const std::string &password)
 	
 	try
 	{
-		info("Port is not a number!", CLR_RED);
 		portInt = std::atoi(port.c_str());
 	}
 	catch (std::exception &e)
 	{
+		info("Port is not a number!", CLR_RED);
 		throw std::exception();
 	}
 
@@ -198,8 +198,8 @@ void Server::dealWithChannelMsg(Client *client, const std::string &ircMessage)
 			// 	_channels.pushback(new Channel(name, client)			
 			if (!createdNewChannel)
 			{
-				client.addChannel(channel);
-				channel.addClient(client);
+				client->joinChannel(channel);
+				channel->addClient(client);
 			}
 		}
 			
@@ -216,10 +216,10 @@ void Server::dealWithChannelMsg(Client *client, const std::string &ircMessage)
 				// 	_channel.remove(this)
 				// 		->this will call the destructor of the channel
 				// 			->destructor of channel will call alluser.leaveChannel
-			client.leaveChannel(channel);
-			channel.removeClient(client);
-			if (!channel.isActive())
-				_channels.remove(channel);
+			client->leaveChannel(channel);
+			channel->removeClient(client);
+			if (!channel->isActive())
+				_channels.remove(*channel);
 		}
 			break;
 		default:
@@ -261,8 +261,10 @@ volatile sig_atomic_t Server::_keepRunning = 1;
 
 void Server::sigIntHandler(int sig)
 {
+	if(sig != SIGINT)
+		return;
     _keepRunning = 0;  // Set flag to false to break the loop
-    std::cout << "Shutdown signal received, terminating server..." << std::endl;
+    info("Shutdown signal received, terminating server..." , CLR_RED);
 	// TODO: Implement the shutdown logic
 }
 

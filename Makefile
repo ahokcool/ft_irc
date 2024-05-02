@@ -39,7 +39,7 @@ INC 		= $(addprefix $(INCLUDE_FOLDER), \
 OBJS 		= $(SRCS:%.cpp=$(OBJ_FOLDER)%.o)
 
 # Targets
-.PHONY: all clean fclean re MSG_START MSG_DONE run val lol sub
+.PHONY: all clean fclean re MSG_START MSG_DONE run val lol sub runNoPort
 
 all: MSG_START $(NAME) MSG_DONE
 
@@ -61,6 +61,10 @@ fclean: clean
 	@echo $(RED) $(NAME) "removed program" $(RESET)
 
 re: fclean all
+
+runNoPort: re
+	@echo $(BLUE) $(NAME) "starting..." $(RESET)
+	@./$(NAME) 808000000 42
 
 run: re
 	@echo $(BLUE) $(NAME) "starting..." $(RESET)
