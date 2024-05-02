@@ -1,9 +1,23 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Client.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/05/01 22:55:33 by anshovah          #+#    #+#             */
+/*   Updated: 2024/05/01 22:57:18 by anshovah         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
 #include <iostream>
 #include <string>
 #include <list>
+#include <sys/types.h>
+#include <sys/socket.h>
 #include "Channel.hpp"
 
 class Channel;
