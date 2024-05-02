@@ -21,6 +21,7 @@ INCLUDE_FOLDER = ./includes/
 CXXINCLUDES    = -I$(INCLUDE_FOLDER)
 
 # Files
+GITPUSH 	= ./git_push.sh
 SRCS 		= $(addprefix $(SRC_FOLDER), \
 				main.cpp 	\
 				Server.cpp 	\
@@ -39,7 +40,7 @@ INC 		= $(addprefix $(INCLUDE_FOLDER), \
 OBJS 		= $(SRCS:%.cpp=$(OBJ_FOLDER)%.o)
 
 # Targets
-.PHONY: all clean fclean re MSG_START MSG_DONE run val lol sub runNoPort
+.PHONY: all clean fclean re MSG_START MSG_DONE run val lol sub runNoPort gp
 
 all: MSG_START $(NAME) MSG_DONE
 
@@ -82,6 +83,11 @@ MSG_DONE:
 
 sub:
 	evince *pdf &
+
+gp: fclean
+	@echo -n "Enter a commit message: $(NAME): " && \
+	read COMMIT_MSG && \
+	$(GITPUSH) "$$COMMIT_MSG"
 
 lol:
 	curl parrot.live

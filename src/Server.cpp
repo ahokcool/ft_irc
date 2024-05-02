@@ -6,14 +6,14 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/02 03:44:16 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/02 16:07:23 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
 // Constructor
-Server::Server(const std::string &port, const std::string &password) throw(std::exception)
+Server::Server(const std::string &port, const std::string &password) throw(ServerException)
 {
 	parseArgs(port, password);
 }
@@ -26,25 +26,27 @@ Server::~Server()
 
 // Public Member Functions
 // -----------------------------------------------------------------------------
-void Server::initNetwork() throw(std::exception)
+void Server::initNetwork() throw(ServerException)
 {
 	info("[START] Init network", CLR_YLW);
 
+	// This struct is holding the adress information about the socket
+	// It's part of the socket.h library <netinet/in.h>
     struct sockaddr_in address;
     
-    // Create a master socket
-    if ((_socket = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
-        perror("socket failed");
-        exit(EXIT_FAILURE);
-    }
+    // Create a master socket for the server
+	// AF_INET:			to use IPv4 (AF = Adress Family) (AF_INET6 for IPv6)
+	// SOCK_STREAM:		TCP two way connection using a stream of bytes
+	// 0:				Protocol (0 = default aka TCP/IP)
+	// https://pubs.opengroup.org/onlinepubs/009604499/functions/socket.html
+    if ((_socket = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+		throw ServerException("Socket creation failed");
 
     // Set master socket to allow multiple connections,
     // this is just a good habit, it will work without this
     int opt = 1;
-    if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0) {
-        perror("setsockopt");
-        exit(EXIT_FAILURE);
-    }
+    if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0)
+		throw ServerException("TODO");
 
     // Type of socket created
     address.sin_family = AF_INET;
@@ -54,17 +56,13 @@ void Server::initNetwork() throw(std::exception)
 
     // Bind the socket to localhost port _port
     if (bind(_socket, (struct sockaddr *)&address, sizeof(address)) < 0)
-	{
-        perror("bind failed");
-        exit(EXIT_FAILURE);
-    }
+		throw ServerException("TODO");
+
 
     // Try to specify maximum of 3 pending connections for the master socket
     if (listen(_socket, 3) < 0)
-	{
-        perror("listen");
-        exit(EXIT_FAILURE);
-    }
+		throw ServerException("TODO");
+
 	
 	info("[>DONE] Init network", CLR_GRN);
 }
@@ -228,26 +226,20 @@ void Server::shutDown()
 
 // Private Member Functions
 // -----------------------------------------------------------------------------
-void Server::parseArgs(const std::string &port, const std::string &password) throw (std::exception)
+void Server::parseArgs(const std::string &port, const std::string &password) throw (ServerException)
 {
 	u_int16_t	portInt;
 	std::istringstream iss(port);
 
 	if (!(iss >> portInt))
-	{
-    	info("Port is not a number!", CLR_RED);
-    	throw std::exception();
-	}
+    	throw ServerException("Invalid port number");
 
 	// 194 is the default port for IRC
 	// https://en.wikipedia.org/wiki/Port_(computer_networking)
 	// The ports up to 49151 are not as strictly controlled
 	// The ports from 49152 to 65535 are called dynamic ports
 	if (portInt != 194 && (portInt < 1024 || portInt > 65535))
-	{
-		info("Port is not the IRC port (194) or in the range 1024-65535!", CLR_RED);
-		throw std::exception();
-	}
+		throw ServerException("Port is not the IRC port (194) or in the range 1024-65535!");
 	_port = portInt;
 	// TODO: Check if password is valid
 	_password = password;
@@ -439,4 +431,22 @@ void Server::sigIntHandler(int sig)
 void Server::setupSignalHandling()
 {
     signal(SIGINT, Server::sigIntHandler);
+}
+
+// Server Exception Class Implementation
+// -----------------------------------------------------------------------------
+
+ServerException::ServerException(const std::string &message) : _message(message)
+{
+	// Nothing to do
+}
+
+ServerException::~ServerException() throw()
+{
+	// Nothing to do
+}
+
+const char *ServerException::what(void) const throw()
+{
+    return (_message.c_str());
 }

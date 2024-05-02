@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/02 03:30:25 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/02 16:02:33 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,20 +31,32 @@
 #include <errno.h>
 #include <poll.h>
 
-
-
 #include "utils.hpp"
 #include "Client.hpp"
 #include "Channel.hpp"
 
+// Standart exception class for Server
+class ServerException : public std::exception
+{
+	public:
+		ServerException(const std::string &message);
+		~ServerException() 			throw();
+		const char	*what() const	throw();
+
+	private:
+		std::string _message;
+};
+
 class Server
 {
     public:
-        Server(const std::string &port, const std::string &password) throw(std::exception);
+        Server(const std::string &port, const std::string &password)
+			throw(ServerException);
         ~Server();
 
 		// Public Member Functions
-        void                    initNetwork() throw(std::exception);
+        void                    initNetwork()
+			throw(ServerException);
         void                    goOnline();
         void                    shutDown();
 
@@ -56,7 +68,8 @@ class Server
         Server(); // No default constructor
         
 		// Private Member Functions
-        void                    parseArgs(const std::string &port, const std::string &password) throw(std::exception);
+        void                    parseArgs(const std::string &port, const std::string &password)
+			throw(ServerException);
         // void                    addClient(Client *client);
         // void                    removeClient(Client *client);
         // void                    addChannel(Channel &channel);
@@ -75,5 +88,5 @@ class Server
 
 		
 };
-
+	
 #endif

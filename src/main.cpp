@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 20:47:42 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/02 02:45:19 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/02 16:06:19 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,11 +32,21 @@ int main(int ac, char **av)
 		info("Create server instance", CLR_BLU);
         Server server(av[1], av[2]);
         server.initNetwork();
-        server.goOnline();
+        // server.goOnline();
     }
-    catch (std::exception &e)
+	catch (const ServerException &se)
+	{
+		info ("SERVER EXCEPTION CAUGHT: ", CLR_RED);
+		info(se.what(), CLR_RED);
+	}
+    catch (const std::exception &e)
     {
-        return 1;
+		info ("STANDARD EXCEPTION CAUGHT: ", CLR_RED);
+		info(e.what(), CLR_RED);
+    }
+	catch (...)
+    {
+		info ("UNKNOWN EXCEPTION CAUGHT: ", CLR_RED);
     }
 	title("IRC Server stopped!", true, true);
     return 0;
