@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
+/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/02 16:07:23 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/02 21:53:32 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -266,154 +266,161 @@ void Server::broadcastMessage(const std::string &message) const
 }
 
 // check the structure of a message, oif it alwazs has like 3 components
-void Server::dealWithChannelMsg(Client *client, const std::string &ircMessage)
+void Server::processMessage(Client *client, const std::string &ircMessage)
 {
-	// We deal with all thoe messages
-	// INVITE ash #testtest
-	// MODE #testtest i
-	// KICK #testtest anshovah_
-	//  MODE #testtest l 12
-	// JOIN #newChannel
-	// TOPIC #testtest :        hello             world        42
-
-	// we need to extract the channel name and the coomand
-	// if channel doest exist create it
-	
-	// after parsing this logic needs to be implemented:
-	
-	std::istringstream iss(ircMessage);
-	std::string token;
-	std::string cmd;
-	std::string channelName;
-	std::string arg1;
-	std::string arg2;
-	bool		createdNewChannel = false;
-	
-	while (iss >> token)
+	try 
 	{
-		if (cmd.empty())
-			cmd = token;
-		else if (token[0] == '#')
-			channelName = token;
-		else if (arg1.empty() && token[0] != ':')
-			arg1 = token;
-		else if (arg2.empty() && token[0] != ':')
-			arg2 = token;
-		else if (token[0] == ':')
-		{	
-			arg1 = ircMessage.substr(ircMessage.find(':') + 1);
-			break;
-		}
-	}
-
-	if (cmd.empty() || channelName.empty())
-	{
-		info("Invalid message", CLR_RED);
-		return;
-	}
-	Channel *channel = NULL;
-	for (std::list<Channel>::iterator it = _channels.begin(); it != _channels.end(); ++it)
-	{
-		if (it->getName() == channelName)
+		Message     message(client, ircMessage);
+		bool		createdNewChannel = false;
+		
+		// we now have a valid message 
+		Channel *channel = NULL;
+		
+		// If we have a channel name find / create it
+		if (!message.getChannelName().empty())
 		{
-			channel = &(*it);
-			break;
-		}
-	}
-	if (!channel && cmd[0] != 'J')
-	{
-		_channels.push_back(Channel(channelName, client));
-		channel = &(_channels.back());
-		createdNewChannel = true;
-	}
-	else
-	{
-		info("Channel not found", CLR_RED);
-		return;
-	}
-	
-	switch (cmd[0])
-	{
-		case 'I':
-			// INVITE
-			// invite(client, channelName, arg1);
-			break;
-		case 'M':
-			// MODE
-			// mode(client, channelName, arg1, arg2);
-			break;
-		case 'K':
-			// KICK
-			// kick(client, channelName, arg1, arg2);
-			break;
-		case 'J': // JOIN
-		{
-			// Server				Client			Channel
-			// if channel exist
-			// 	client.addChannel()	addChannel()
-			// 				 {_channels.pushBack...}	
-			// 	channel.addClient()				addClient()
-			// 						         {_clients.pushBack...}	
-			// else
-			// 	_channels.pushback(new Channel(name, client)			
-			if (!createdNewChannel)
+			// Try to find the channel
+			for (std::list<Channel>::iterator it = _channels.begin(); it != _channels.end(); ++it)
 			{
-				client->joinChannel(channel);
-				channel->addClient(client);
+				if (it->getName() == message.getChannelName())
+				{
+					channel = &(*it);
+					break;
+				}
+			}
+		
+			// Couldn"t find the channel -> create it (if cmd is JOIN)
+			if (!channel && message.getCmd()[0] != 'J')
+			{
+				_channels.push_back(Channel(message.getChannelName(), client));
+				channel = &(_channels.back());
+				createdNewChannel = true;
+			}
+			else
+			{
+				info("Channel not found", CLR_RED);
+				return;
 			}
 		}
-			
-			break;
-		case 'T':
-			// TOPIC
-			// topic(client, channelName, arg1);
-			break;
-		case 'P': // PART
+		
+		// Process the message aka call the right function
+		switch (message.getCmd()[0])
 		{
-				// client.leabvechannel
-				// channel.removeclient
-				// if !channel.isActive
-				// 	_channel.remove(this)
-				// 		->this will call the destructor of the channel
-				// 			->destructor of channel will call alluser.leaveChannel
-			client->leaveChannel(channel);
-			channel->removeClient(client);
-			if (!channel->isActive())
-				_channels.remove(*channel);
+			case 'I':
+				// INVITE <client> #<channel>
+				invite(message);
+				break;
+
+			case 'M':
+				// MODE #<channelName> flag
+				mode(message);
+				break;
+
+			case 'K':
+				// KICK #<channelName> <client>
+				kick(message);
+				break;
+
+			case 'J':
+				// JOIN #<channelName>
+				if (!createdNewChannel)
+					join(message, channel);
+				break;
+				
+			case 'T':
+				// TOPIC #<channelName> :<topic>
+				topic(message);
+				break;
+
+			case 'P':
+			{
+				if (message.getCmd()[1] == 'R') // PRIVMSG
+				{
+					// PRIVMSG <recepient> <message>
+					privmsg(message);
+				}
+				else // PART
+				{
+					// PART #<channelName>
+					part(client, message, channel);
+				}
+			}
+				break;
+
+			default:
+				info("Invalid message", CLR_RED);
+				break;
 		}
-			break;
-		default:
-			info("Invalid message", CLR_RED);
-			break;
 	}
-	// switch for first letter of cmd as char
-	
-/* 	JOIN ON SERVER
-Server				Client			Channel
-if channel exist
-	client.addChannel()	addChannel()
-				 {_channels.pushBack...}	
-	channel.addClient()				addClient()
-						         {_clients.pushBack...}	
-else
-	_channels.pushback(new Channel(name, client)
-				
-				
-				
-PART ON SERVER
-	client.leabvechannel
-	channel.removeclient
-	if !channel.isActive
-		_channel.remove(this)
-			->this will call the destructor of the channel
-				->destructor of channel will call alluser.leaveChannel
-
-
-MODE MODE i
-	call fucntion toggleInvite or so...
- */
+	catch (MessageException &e)
+	{
+		info(e.what(), CLR_RED);
+		return;
+	}
 }
 
+void Server::invite(const Message &message)
+{
+	// INVITE <client> #<channel>
+}
+
+void Server::mode(const Message &message)
+{
+	// MODE #<channelName> flag
+}
+
+void Server::kick(const Message &message)
+{
+	// KICK #<channelName> <client>
+}
+
+void Server::join(const Message &message, Channel *channel)
+{
+	message.getSender()->joinChannel(channel);
+	channel->addClient(message.getSender());
+	//TODO: send messages to the channel that the client has joined
+}
+
+void Server::topic(const Message &message)
+{
+	// TOPIC #<channelName> :<topic>
+}
+
+Client *Server::findUserByNickname(const std::string &nickname)
+{
+	for (std::list<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		if (it->getNickname() == nickname)
+			return &(*it);
+	}
+	return NULL;
+}
+
+void Server::privmsg(const Message &message)
+{
+	// PRIVMSG <recepient> <message>
+	// 1. need to find the recepient
+	Client *recepient = findUserByNickname(message.getArg1());
+
+	if (!recepient)
+	{
+		info("Recepient not found", CLR_RED);
+		// TODO: send a message to the sender that the recepient was not found
+		return;
+	}
+
+	// 2. send the message to the recepient
+	std::string ircMessage = "TODO:!" + message.getArg2() + "TODO:!";
+	recepient->sendMessage(ircMessage);
+}
+
+void Server::part(const Message &message, Channel *channel)
+{
+	message.getSender()->leaveChannel(channel);
+	channel->removeClient(message.getSender());
+	if (!channel->isActive())
+		_channels.remove(*channel);
+}
 
 // Signal handling for exit
 // -----------------------------------------------------------------------------

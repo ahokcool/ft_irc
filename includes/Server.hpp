@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
+/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/02 16:02:33 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/02 20:34:58 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,7 @@
 #include "utils.hpp"
 #include "Client.hpp"
 #include "Channel.hpp"
+#include "Message.hpp"
 
 // Standart exception class for Server
 class ServerException : public std::exception
@@ -74,10 +75,19 @@ class Server
         // void                    removeClient(Client *client);
         // void                    addChannel(Channel &channel);
         // void                    removeChannel(Channel *channel);
-		void 					dealWithChannelMsg(Client *client, const std::string &ircMessage);
+        Client                  *findUserByNickname(const std::string &nickname);
+		void 					processMessage(Client *client, const std::string &ircMessage);
 
         void                    broadcastMessage(const std::string &message) const;
         
+        void                    invite(const Message &message);
+        void                    mode(const Message &message);
+        void                    kick(const Message &message);
+        void                    join(const Message &message, Channel *channel);
+        void                    topic(const Message &message);
+        void                    part(const Message &message, Channel *channel);
+        void                    privmsg(const Message &message);
+
 		// Attributes
 		static volatile sig_atomic_t 	_keepRunning;
 		int                     		_socket;

@@ -27,6 +27,7 @@ SRCS 		= $(addprefix $(SRC_FOLDER), \
 				Server.cpp 	\
 				Channel.cpp \
 				Client.cpp	\
+				Message.cpp	\
 				utils.cpp)
 
 # Includes
@@ -34,6 +35,7 @@ INC 		= $(addprefix $(INCLUDE_FOLDER), \
 				Server.hpp	\
 				Channel.hpp	\
 				Client.hpp	\
+				Message.hpp	\
 				utils.hpp)
 
 # Object files
