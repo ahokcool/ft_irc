@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 20:47:42 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/02 16:06:19 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/02 17:38:24 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ int main(int ac, char **av)
 		info("Create server instance", CLR_BLU);
         Server server(av[1], av[2]);
         server.initNetwork();
-        // server.goOnline();
+        server.goOnline();
     }
 	catch (const ServerException &se)
 	{

@@ -16,6 +16,7 @@
 #include <iostream>      // For input and output
 #include <exception>     // Standard exceptions
 #include <list>          // For list container
+#include <vector>        // For storring the poll fds
 #include <string>        // For string operations
 #include <sstream>       // For string streams
 #include <cstdlib>       // General purpose utilities: memory management, program utilities, string conversions, random numbers, etc.
@@ -28,6 +29,7 @@
 #include <arpa/inet.h>   // For internet operations
 #include <sys/select.h>  // For select function
 #include <signal.h>      // For signal handling
+#include <cstdlib>		 // For getting the ip of the server
 #include <errno.h>
 #include <poll.h>
 
@@ -35,6 +37,8 @@
 #include "Client.hpp"
 #include "Channel.hpp"
 #include "Message.hpp"
+
+#define BUFFER_SIZE 1024
 
 // Standart exception class for Server
 class ServerException : public std::exception
@@ -58,7 +62,8 @@ class Server
 		// Public Member Functions
         void                    initNetwork()
 			throw(ServerException);
-        void                    goOnline();
+        void                    goOnline()
+			throw(ServerException);
         void                    shutDown();
 
 		// Signal handling for exit
@@ -69,13 +74,16 @@ class Server
         Server(); // No default constructor
         
 		// Private Member Functions
-        void                    parseArgs(const std::string &port, const std::string &password)
+        void                    	parseArgs(const std::string &port, const std::string &password)
 			throw(ServerException);
-        // void                    addClient(Client *client);
-        // void                    removeClient(Client *client);
-        // void                    addChannel(Channel &channel);
-        // void                    removeChannel(Channel *channel);
-        Client                  *findUserByNickname(const std::string &nickname);
+		std::vector<pollfd> 		getFdsAsVector() const;
+        void                    	processNewClient(Client client);
+        // void                    	removeClient(Client *client);
+        // void                    	addChannel(Channel &channel);
+		Client 						*getClientByFd(int fd);
+        // void                    	removeChannel(Channel *channel);
+		void 						dealWithChannelMsg(Client *client, const std::string &ircMessage);
+    Client                  *findUserByNickname(const std::string &nickname);
 		void 					processMessage(Client *client, const std::string &ircMessage);
 
         void                    broadcastMessage(const std::string &message) const;
@@ -90,6 +98,11 @@ class Server
 
 		// Attributes
 		static volatile sig_atomic_t 	_keepRunning;
+	
+		// This struct is holding the adress information about the socket
+		// It's part of the socket.h library <netinet/in.h>
+	    struct sockaddr_in 				_address;
+    
 		int                     		_socket;
         u_int16_t		           		_port;
         std::string             		_password;

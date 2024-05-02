@@ -22,6 +22,7 @@ Server::Server(const std::string &port, const std::string &password) throw(Serve
 Server::~Server()
 {
 	// NOthing to do
+	// TODO: Close all sockets
 }
 
 // Public Member Functions
@@ -30,188 +31,112 @@ void Server::initNetwork() throw(ServerException)
 {
 	info("[START] Init network", CLR_YLW);
 
-	// This struct is holding the adress information about the socket
-	// It's part of the socket.h library <netinet/in.h>
-    struct sockaddr_in address;
-    
     // Create a master socket for the server
 	// AF_INET:			to use IPv4 (AF = Adress Family) (AF_INET6 for IPv6)
 	// SOCK_STREAM:		TCP two way connection using a stream of bytes
 	// 0:				Protocol (0 = default aka TCP/IP)
 	// https://pubs.opengroup.org/onlinepubs/009604499/functions/socket.html
     if ((_socket = socket(AF_INET, SOCK_STREAM, 0)) == 0)
-		throw ServerException("Socket creation failed");
+		throw ServerException("Socket creation failed:\n\t" +	std::string(strerror(errno)));
 
-    // Set master socket to allow multiple connections,
-    // this is just a good habit, it will work without this
+    
+	// TODO: REVISE THIS
+	// here we futher configure the socket
+    // SOL_SOCKET:		Use SOL_SOCKET for general settings
+	// SO_REUSEADDR:	Allow the socket to be reused immediately after it is closed
+	// opt:				Option value set to 1; needs to be a void pointer
     int opt = 1;
-    if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0)
-		throw ServerException("TODO");
+    if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<void*>(&opt), sizeof(opt)) < 0)
+		throw ServerException("Setsockopt failed\n\t" +	std::string(strerror(errno)));
 
-    // Type of socket created
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(_port);
+    // Specify the type of socket created
+	// AF_INET:			to use IPv4 (AF = Adress Family) (AF_INET6 for IPv6)
+	// INADDR_ANY:		accept any incoming messages from all interfaces of the host machine
+	// htons(_port):	converts the port number to network byte order
+    _address.sin_family 		= AF_INET;
+    _address.sin_addr.s_addr	= INADDR_ANY;
+    _address.sin_port 			= htons(_port);
+
 	// TODO: SET THE PASSWORD
 
-    // Bind the socket to localhost port _port
-    if (bind(_socket, (struct sockaddr *)&address, sizeof(address)) < 0)
-		throw ServerException("TODO");
+	// Binds the socket to the previously defined address
+	// https://pubs.opengroup.org/onlinepubs/009695399/functions/bind.html
+    if (bind(_socket, (struct sockaddr *)&_address, sizeof(_address)) < 0)
+		throw ServerException("Bind failed\n\t" +	std::string(strerror(errno)));
 
+	// Listen for incoming connections
+	// 3: The maximum length to which the queue of pending connections for sockfd may grow
+	// https://pubs.opengroup.org/onlinepubs/009695399/functions/listen.html
+	if (listen(_socket, 3) < 0)
+		throw ServerException("Listen failed\n\t" +	std::string(strerror(errno)));
 
-    // Try to specify maximum of 3 pending connections for the master socket
-    if (listen(_socket, 3) < 0)
-		throw ServerException("TODO");
-
-	
 	info("[>DONE] Init network", CLR_GRN);
+	info("Server IP: ", CLR_GRN);
+	system("hostname -I | awk '{print $1}'");
 }
 
-void Server::goOnline()
+void Server::goOnline() throw(ServerException)
 {
 	info("[START] Go online", CLR_GRN);
-	// while (_keepRunning)
-	// {
-	// 	poll(NULL, 0, 1000);
-	// 	pause();
-	// }
+	std::vector<pollfd> fds;
+	while (_keepRunning)
+	{
+		fds = getFdsAsVector();
+		info ("Waiting for connections ...", CLR_ORN);
+		int pollReturn = poll(fds.data(), fds.size() , -1);
+		info ("DONE Waiting for connections ...", CLR_ORN);
+		if (pollReturn == -1)
+			throw ServerException("Poll failed\n\t" + std::string(strerror(errno)));
+		if (pollReturn == 0)
+			continue;
 
+		// Check for new connections
+        if (fds[0].revents & POLLIN)
+		{
+			// https://pubs.opengroup.org/onlinepubs/009695399/functions/accept.html
+			int	addrlen = sizeof(_address);
+			int new_socket = accept(fds[0].fd, (struct sockaddr *)&_address, (socklen_t*)&addrlen);
 
-    // Accept the incoming connection
-    // int addrlen = sizeof(address);
-    // puts("Waiting for connections ...");
+            if (new_socket < 0)
+				throw ServerException("Accept failed\n\t" + std::string(strerror(errno)));
+			try
+			{
+				processNewClient(Client(new_socket,"nicknamedefault")); //TODO: CHANGE NICKNAME
+            	std::cout << "New client connected with fd: " << new_socket << std::endl;
+			}
+			catch(const std::exception& e)
+			{
+				std::cerr << e.what() << '\n';
+			}
+        }
 
-// char buffer[1025];  //data buffer of 1K
-
-	// int new_socket, max_clients = 30 sd;
-	
-	// int activity, valread;
-    // int max_sd;
-
-	//a message
-    // const char *message = "ECHO Daemon v1.0 \r\n";
-
-
-    // while (true) {
-    //     // Clear the socket set
-    //     FD_ZERO(&FUUUUUUUUCK);
-
-    //     // Add master socket to set
-    //     FD_SET(_socket, &FUUUUUUUUCK);
-    //     max_sd = _socket;
-
-    //     // Add child sockets to set
-    //     for (i = 0; i < max_clients; i++) {
-    //         // Socket descriptor
-    //         sd = client_socket[i];
-
-    //         // If valid socket descriptor then add to read list
-    //         if (sd > 0) {
-    //             FD_SET(sd, &FUUUUUUUUCK);
-    //         }
-
-    //         // Highest file descriptor number, need it for the select function
-    //         if (sd > max_sd) {
-    //             max_sd = sd;
-    //         }
-    //     }
-
-    //     // Wait for an activity on one of the sockets, timeout is NULL,
-    //     // so wait indefinitely
-    //     activity = select(max_sd + 1, &FUUUUUUUUCK, NULL, NULL, NULL);
-
-    //     if ((activity < 0) && (errno != EINTR)) {
-    //         printf("select error");
-    //     }
-
-    //     // If something happened on the master socket,
-    //     // then its an incoming connection
-    //     if (FD_ISSET(_socket, &FUUUUUUUUCK)) {
-    //         if ((new_socket = accept(_socket, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0) {
-    //             perror("accept");
-    //             exit(EXIT_FAILURE);
-    //         }
-
-    //         // Inform user of socket number - used in send and receive commands
-    //         printf("New connection, socket fd is %d, ip is : %s, port : %d\n", new_socket, inet_ntoa(address.sin_addr), ntohs(address.sin_port));
-
-    //         // Send new connection greeting message
-	// 		if (send(new_socket, message, strlen(message), 0) != static_cast<ssize_t>(strlen(message))) 
-    // 			perror("send failed");
-
-
-    //         puts("Welcome message sent successfully");
-
-    //         // Add new socket to array of sockets
-    //         for (i = 0; i < max_clients; i++) {
-    //             // If position is empty
-    //             if (client_socket[i] == 0) {
-    //                 client_socket[i] = new_socket;
-    //                 printf("Adding to list of sockets as %d\n", i);
-    //                 break;
-    //             }
-    //         }
-    //     }
-
-    //     // Else its some IO operation on some other socket
-    //     for (i = 0; i < max_clients; i++) {
-    //         sd = client_socket[i];
-
-    //         if (FD_ISSET(sd, &FUUUUUUUUCK)) {
-    //             // Check if it was for closing, and also read the
-    //             // incoming message
-    //             if ((valread = read(sd, buffer, 1024)) == 0) {
-    //                 // Somebody disconnected, get his details and print
-    //                 getpeername(sd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
-    //                 printf("Host disconnected, ip %s, port %d \n", inet_ntoa(address.sin_addr), ntohs(address.sin_port));
-
-    //                 // Close the socket and mark as 0 in list for reuse
-    //                 close(sd);
-    //                 client_socket[i] = 0;
-    //             }
-
-    //             // Echo back the message that came in
-    //             else {
-	// 				printf("Message from client: %s\n", buffer);
-    //                 buffer[valread] = '\0';
-    //                 send(sd, buffer, strlen(buffer), 0);
-    //             }
-    //         }
-    //     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		
-	
+		// TODO: in client check for to long msgs
+		// Read from clients
+		char buffer[1024];
+		for (size_t i = 1; i < fds.size(); ++i)
+		{
+            if (fds[i].revents & POLLIN)
+			{
+                int valread = read(fds[i].fd, buffer, BUFFER_SIZE);
+                if (valread == 0)
+				{
+                    std::cout << "Client disconnected" << std::endl;
+                    close(fds[i].fd);
+                    fds.erase(fds.begin() + i);
+                    --i; // Adjust loop counter since we removed an element
+                } else if (valread < 0)
+				{
+                    perror("read");
+                    exit(EXIT_FAILURE);
+                } else
+				{
+                    buffer[valread] = '\0';
+                    std::cout << "Message from client: " << buffer << std::endl;
+					dealWithChannelMsg(getClientByFd(fds[i].fd), buffer);
+                }
+            }
+		}
+	}	
 	info("[>DONE] Go online", CLR_YLW);
 }
 
@@ -232,7 +157,7 @@ void Server::parseArgs(const std::string &port, const std::string &password) thr
 	std::istringstream iss(port);
 
 	if (!(iss >> portInt))
-    	throw ServerException("Invalid port number");
+    	throw ServerException("Invalid port number\n\t>>Port is not the IRC port (194) or in the range 1024-65535!");
 
 	// 194 is the default port for IRC
 	// https://en.wikipedia.org/wiki/Port_(computer_networking)
@@ -241,8 +166,50 @@ void Server::parseArgs(const std::string &port, const std::string &password) thr
 	if (portInt != 194 && (portInt < 1024 || portInt > 65535))
 		throw ServerException("Port is not the IRC port (194) or in the range 1024-65535!");
 	_port = portInt;
+	info ("port accepted: " + port, CLR_YLW);
 	// TODO: Check if password is valid
 	_password = password;
+}
+
+std::vector<pollfd> Server::getFdsAsVector() const
+{
+	std::vector<pollfd> fds;
+	pollfd fd;
+	fd.fd = _socket;
+	// POLLIN: There is data to read
+	fd.events = POLLIN;
+	fds.push_back(fd);
+	for (std::list<Client>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		fd.fd = it->getSocketFd();
+		fd.events = POLLIN;
+		fds.push_back(fd);
+	}
+	if(fds.size() == 0)
+		throw ServerException("No socket file descriptors found");
+	return fds;
+}
+
+void                    	Server::processNewClient(Client client)
+{
+	// // Messages has to be
+	// // NICK nickname
+	// // USER username hostname servername :realname
+	// // PING :server
+	// // PONG :server
+	// while(iss 
+	
+	_clients.push_back(client);
+}
+
+Client 						*Server::getClientByFd(int fd)
+{
+	for (std::list<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		if (it->getSocketFd() == fd)
+			return &(*it);
+	}
+	return NULL;
 }
 
 void Server::broadcastMessage(const std::string &message) const
@@ -266,6 +233,7 @@ void Server::broadcastMessage(const std::string &message) const
 }
 
 // check the structure of a message, oif it alwazs has like 3 components
+// TODO:CHECK FOR client NULL Pointer!!!!
 void Server::processMessage(Client *client, const std::string &ircMessage)
 {
 	try 

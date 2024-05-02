@@ -3,7 +3,7 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
 /*   Updated: 2024/05/02 23:15:00 by anshovah         ###   ########.fr       */
@@ -11,11 +11,20 @@
 /* ************************************************************************** */
 
 #include "Client.hpp"
+#include "utils.hpp"
 
-Client::Client(const int socketFd, const std::string &nickname) : _socketFd(socketFd), _nickname(nickname)
+std::set<std::string> Client::_nicknames;
+
+Client::Client(const int socketFd, const std::string &nickname) throw(NickNameException) :
+	_socketFd(socketFd), _nickname(nickname)
 {
+	Client::reserveNickName(nickname);	//If this fails we throw an exception
+	_nickname = nickname;
     _username = _nickname + " is too lazy to set a username";
     _hostname = "default";
+	info ("Created Client: ", CLR_BLU);
+	info ("\t->Nickname:\t" 	+ _nickname, CLR_BLU);
+	info ("\t->Username:\t" 	+ _username, CLR_BLU);
 }
 
 Client::~Client()
@@ -28,6 +37,7 @@ Client::~Client()
         it++;
     }
     _channels.clear();
+	Client::_nicknames.erase(_nickname);
 }
 
 // the last argument specifies the flags that control the behavior of the send operation. 
@@ -72,6 +82,11 @@ void Client::setHostname(const std::string &hostname)
     _hostname = hostname;
 }
 
+int Client::getSocketFd() const
+{
+	return _socketFd;
+}
+
 const std::string &Client::getNickname() const
 {
     return _nickname;
@@ -87,3 +102,32 @@ const std::string &Client::getHostname() const
     return _hostname;
 }
 
+// Static Function
+
+
+void	Client::reserveNickName(const std::string &nickname) throw(NickNameException)
+{
+	info ("Reserving Nickname: ", CLR_BLU);
+	info ("\t->Nickname:\t" 	+ nickname, CLR_BLU);
+	if (Client::_nicknames.find(nickname) != Client::_nicknames.end())
+	{
+		throw NickNameException("Nickname in use!"); // '" + nickname + "' already in use");
+	}
+	Client::_nicknames.insert(nickname);
+}
+
+// EXCEPTION
+NickNameException::NickNameException(const std::string &message) : _message(message)
+{
+	// Nothing to do here
+}
+
+NickNameException::~NickNameException() throw()
+{
+	// Nothing to do here
+}
+
+const char *NickNameException::what() const throw()
+{
+	return _message.c_str();
+}
