@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/03 02:54:06 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/03 17:02:05 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,7 +86,14 @@ void Server::goOnline() throw(ServerException)
 		int pollReturn = poll(fds.data(), fds.size() , -1);
 		info ("DONE Waiting for connections ...", CLR_ORN);
 		if (pollReturn == -1)
+		{
+			if (!_keepRunning)
+			{
+				shutDown();
+				return ;
+			}
 			throw ServerException("Poll failed\n\t" + std::string(strerror(errno)));
+		}
 		if (pollReturn == 0)
 			continue;
 
@@ -155,8 +162,8 @@ void Server::goOnline() throw(ServerException)
 void Server::shutDown()
 {
 	info("[START] Shut down", CLR_YLW);
-	broadcastMessage("!!!Server shutting down in 42 seconds!!!");
-	sleep(42);
+	broadcastMessage("!!!Server shutting down in 42 seconds!!!\r\n");
+	sleep(1);
 	// TODO: SLEEP is C! Use C++ sleep_for
 	info("[>DONE] Shut down", CLR_GRN);
 }
@@ -432,7 +439,7 @@ void Server::processMessage(Client *client, const std::string &ircMessage)
 	}
 }
 
-void Server::invite(const Message &message, Channel *channel)
+void Server::invite(Message &message, Channel *channel)
 {
 	// INVITE <client> #<channel>
 	// if (!findInList(message.getArg1(), _clients))
@@ -450,14 +457,14 @@ void Server::invite(const Message &message, Channel *channel)
 	// TODO: send a message that a client was invited to a channel
 }
 
-void Server::mode(const Message &message,  Channel *channel)
+void Server::mode(Message &message,  Channel *channel)
 {
 	(void)message;
 	(void)channel;
 	// MODE #<channelName> flag
 }
 
-void Server::kick(const Message &message, Channel *channel)
+void Server::kick(Message &message, Channel *channel)
 {
 	// KICK #<channelName> <client>
 	// if (!findInList(message.getArg1(), _clients))
@@ -474,7 +481,7 @@ void Server::kick(const Message &message, Channel *channel)
 	message.getSender()->getKicked(channel);
 }
 
-void Server::join(const Message &message, Channel *channel)
+void Server::join(Message &message, Channel *channel)
 {
 	std::cout << "fefefgcoitrhdo743gtfqr3y\n";
 	message.getSender()->joinChannel(channel);
@@ -483,7 +490,7 @@ void Server::join(const Message &message, Channel *channel)
 	//TODO: send messages to the channel that the client has joined
 }
 
-void Server::topic(const Message &message,  Channel *channel)
+void Server::topic(Message &message,  Channel *channel)
 {
 	(void)message;
 	(void)channel;
@@ -529,7 +536,7 @@ void Server::privmsg(Message &message)
 	message.getReceiver()->sendMessage(ircMessage);
 }
 
-void Server::part(const Message &message, Channel *channel)
+void Server::part(Message &message, Channel *channel)
 {
 	message.getSender()->leaveChannel(channel);
 	channel->removeClient(message.getSender());
@@ -541,18 +548,17 @@ void Server::part(const Message &message, Channel *channel)
 // -----------------------------------------------------------------------------
 volatile sig_atomic_t Server::_keepRunning = 1;
 
+void Server::setupSignalHandling()
+{
+    signal(SIGINT, Server::sigIntHandler);
+}
+
 void Server::sigIntHandler(int sig)
 {
 	if(sig != SIGINT)
 		return;
     _keepRunning = 0;  // Set flag to false to break the loop
-    info("Shutdown signal received, terminating server..." , CLR_RED);
-	// TODO: Implement the shutdown logic
-}
-
-void Server::setupSignalHandling()
-{
-    signal(SIGINT, Server::sigIntHandler);
+    std::cout << CLR_RED << "Shutdown signal received, terminating server..." << CLR_RST << std::endl;
 }
 
 // Server Exception Class Implementation

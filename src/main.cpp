@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
+/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 20:47:42 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/02 17:38:24 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/03 16:56:26 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ int main(int ac, char **av)
 		info(e.what(), CLR_RED);
     }
 	catch (...)
-    {
+    { //TODO: check if used
 		info ("UNKNOWN EXCEPTION CAUGHT: ", CLR_RED);
     }
 	title("IRC Server stopped!", true, true);

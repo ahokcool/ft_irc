@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/03 02:07:50 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/03 16:18:25 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,82 +54,78 @@ class ServerException : public std::exception
 
 class Server
 {
-    public:
-        Server(const std::string &port, const std::string &password)
-			throw(ServerException);
-        ~Server();
+	public:
+		Server(const std::string &port, const std::string &password) throw(ServerException);
+		~Server();
 
 		// Public Member Functions
-        void                    initNetwork()
-			throw(ServerException);
-        void                    goOnline()
-			throw(ServerException);
-        void                    shutDown();
+		void    		initNetwork()   throw(ServerException);
+		void    		goOnline()      throw(ServerException);
+		void    		shutDown();
 
 		// Signal handling for exit
-    	static void 					setupSignalHandling();
-    	static void 					sigIntHandler(int sig);
+		static void 	setupSignalHandling();
+		static void 	sigIntHandler(int sig);
 
-    private:
-        Server(); // No default constructor
-        
+	private:
+		Server(); // No default constructor
+		
 		// Private Member Functions
-        void                    	parseArgs(const std::string &port, const std::string &password)
-			throw(ServerException);
+		void                    	parseArgs(const std::string &port, const std::string &password) throw(ServerException);
 		std::vector<pollfd> 		getFdsAsVector() const;
-        void                    	addClient(Client client);
-        // void                    	removeClient(Client *client);
-        // void                    	addChannel(Channel &channel);
+		void                    	addClient(Client client);
+		// void                    	removeClient(Client *client);
+		// void                    	addChannel(Channel &channel);
 		Client 						*getClientByFd(int fd);
-        // void                    	removeChannel(Channel *channel);
-    Client                  *findUserByNickname(const std::string &nickname);
-		void 					processMessage(Client *client, const std::string &ircMessage);
+		// void                    	removeChannel(Channel *channel);
+		Client                  	*findUserByNickname(const std::string &nickname);
+		void 						processMessage(Client *client, const std::string &ircMessage);
 
-        void                    broadcastMessage(const std::string &message) const;
-        
-        void                    invite(const Message &message, Channel *channel);
-        void                    mode(const Message &message, Channel *channel);
-        void                    kick(const Message &message, Channel *channel);
-        void                    join(const Message &message, Channel *channel);
-        void                    topic(const Message &message, Channel *channel);
-        void                    part(const Message &message, Channel *channel);
-        void                    privmsg(Message &message);
+		void                    	broadcastMessage(const std::string &message) const;
+		
+		void                    	invite(Message &message, Channel *channel);
+		void                    	mode(Message &message, Channel *channel);
+		void                    	kick(Message &message, Channel *channel);
+		void                    	join(Message &message, Channel *channel);
+		void                    	topic(Message &message, Channel *channel);
+		void                    	part(Message &message, Channel *channel);
+		void                    	privmsg(Message &message);
 
 		// Attributes
 		static volatile sig_atomic_t 	_keepRunning;
 	
 		// This struct is holding the adress information about the socket
 		// It's part of the socket.h library <netinet/in.h>
-	    struct sockaddr_in 				_address;
-    
+		struct sockaddr_in 				_address;
+	
 		int                     		_socket;
-        u_int16_t		           		_port;
-        std::string             		_password;
-        std::list<Client>       		_clients;
-        std::list<Channel>      		_channels;
+		u_int16_t		           		_port;
+		std::string             		_password;
+		std::list<Client>       		_clients;
+		std::list<Channel>      		_channels;
 
-    
-    // template <typename T, typename O>
-    // bool findInList(const std::string &name, const T &l)
-    // {
-    //     for (typename T::iterator it = l.begin(); it != l.end(); ++it)
-    //     {
-    //         if (it->getName() == name)
-    //             return true;
-    //     }
-    //     return false;
-    // }
+	
+	// template <typename T, typename O>
+	// bool findInList(const std::string &name, const T &l)
+	// {
+	//     for (typename T::iterator it = l.begin(); it != l.end(); ++it)
+	//     {
+	//         if (it->getName() == name)
+	//             return true;
+	//     }
+	//     return false;
+	// }
 
-    // template <typename T>
-    // bool findInList(const std::string &name, const T &l)
-    // {
-    //     for (typename T::iterator it = l.begin(); it != l.end(); ++it)
-    //     {
-    //         if (it->getName() == name)
-    //             return true;
-    //     }
-    //     return false;
-    // }
+	// template <typename T>
+	// bool findInList(const std::string &name, const T &l)
+	// {
+	//     for (typename T::iterator it = l.begin(); it != l.end(); ++it)
+	//     {
+	//         if (it->getName() == name)
+	//             return true;
+	//     }
+	//     return false;
+	// }
 };
 	
 #endif
