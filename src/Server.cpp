@@ -6,28 +6,49 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/03 18:29:56 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/03 20:33:17 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
-// Constructor
-Server::Server(const std::string &port, const std::string &password) throw(ServerException)
+// -----------------------------------------------------------------------------
+// Construction / Destruction
+// -----------------------------------------------------------------------------
+Server::Server(const std::string &port, const std::string &password)
 {
 	parseArgs(port, password);
 }
 
-// Destructor
 Server::~Server()
 {
-	// NOthing to do
 	// TODO: Close all sockets
 }
 
-// Public Member Functions
+void Server::parseArgs(const std::string &port, const std::string &password)
+{
+	u_int16_t	portInt;
+	std::istringstream iss(port);
+
+	if (!(iss >> portInt))
+    	throw ServerException("Invalid port number\n\t>>Port is not the IRC port (194) or in the range 1024-65535!");
+
+	// 194 is the default port for IRC
+	// https://en.wikipedia.org/wiki/Port_(computer_networking)
+	// The ports up to 49151 are not as strictly controlled
+	// The ports from 49152 to 65535 are called dynamic ports
+	if (portInt != 194 && (portInt < 1024 || portInt > 65535))
+		throw ServerException("Port is not the IRC port (194) or in the range 1024-65535!");
+	_port = portInt;
+	info ("port accepted: " + port, CLR_YLW);
+	// TODO: Check if password is valid
+	_password = password;
+}
+
 // -----------------------------------------------------------------------------
-void Server::initNetwork() throw(ServerException)
+// Server Methods
+// -----------------------------------------------------------------------------
+void	Server::initNetwork()
 {
 	info("[START] Init network", CLR_YLW);
 
@@ -75,7 +96,7 @@ void Server::initNetwork() throw(ServerException)
 	system("hostname -I | awk '{print $1}'");
 }
 
-void Server::goOnline() throw(ServerException)
+void	Server::goOnline()
 {
 	info("[START] Go online", CLR_GRN);
 	std::vector<pollfd> fds;
@@ -159,7 +180,7 @@ void Server::goOnline() throw(ServerException)
 	info("[>DONE] Go online", CLR_YLW);
 }
 
-void Server::shutDown()
+void	Server::shutDown()
 {
 	info("[START] Shut down", CLR_YLW);
 	broadcastMessage("!!!Server shutting down in 42 seconds!!!\r\n");
@@ -168,29 +189,7 @@ void Server::shutDown()
 	info("[>DONE] Shut down", CLR_GRN);
 }
 
-// Private Member Functions
-// -----------------------------------------------------------------------------
-void Server::parseArgs(const std::string &port, const std::string &password) throw (ServerException)
-{
-	u_int16_t	portInt;
-	std::istringstream iss(port);
-
-	if (!(iss >> portInt))
-    	throw ServerException("Invalid port number\n\t>>Port is not the IRC port (194) or in the range 1024-65535!");
-
-	// 194 is the default port for IRC
-	// https://en.wikipedia.org/wiki/Port_(computer_networking)
-	// The ports up to 49151 are not as strictly controlled
-	// The ports from 49152 to 65535 are called dynamic ports
-	if (portInt != 194 && (portInt < 1024 || portInt > 65535))
-		throw ServerException("Port is not the IRC port (194) or in the range 1024-65535!");
-	_port = portInt;
-	info ("port accepted: " + port, CLR_YLW);
-	// TODO: Check if password is valid
-	_password = password;
-}
-
-std::vector<pollfd> Server::getFdsAsVector() const
+std::vector<pollfd>	Server::getFdsAsVector() const
 {
 	std::vector<pollfd> fds;
 	pollfd fd;
@@ -209,22 +208,7 @@ std::vector<pollfd> Server::getFdsAsVector() const
 	return fds;
 }
 
-void	Server::addClient(Client client)
-{
-	_clients.push_back(client);
-}
-
-Client	*Server::getClientByFd(int fd)
-{
-	for (std::list<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
-	{
-		if (it->getSocketFd() == fd)
-			return &(*it);
-	}
-	return NULL;
-}
-
-void Server::broadcastMessage(const std::string &message) const
+void	Server::broadcastMessage(const std::string &message) const
 {
 	info("[START] Broadcast message", CLR_YLW);
 	std::string ircMessage = "TODO:!" + message + "TODO:!";
@@ -242,6 +226,35 @@ void Server::broadcastMessage(const std::string &message) const
 		it->sendMessage(ircMessage);
 	}
 	info("[>DONE] Broadcast message", CLR_GRN);
+}
+
+// -----------------------------------------------------------------------------
+// Processing the Messages
+// -----------------------------------------------------------------------------
+void	Server::processMessage(Client *client, const std::string &ircMessage)
+{
+	try 
+	{
+		// Parse the IRC Message
+		Message     msg(client, ircMessage);
+
+		//Execute IRC Message
+		//	1. Check if CLIENT is loggedin
+		if (!isLoggedIn(msg))
+			return ;
+		
+		//	2. Execute normal commands
+		//		3.1. Find the channel if there is  channelname in the msg
+		Channel *channel = getChannelByName(msg.getChannelName());
+		
+		// 		3.2 Process the msg aka call the right function
+		chooseCommand(msg, channel);
+	}
+	catch (MessageException &e)
+	{
+		info(e.what(), CLR_RED);
+		return;
+	}
 }
 
 bool	Server::isLoggedIn(Message &msg)
@@ -281,196 +294,62 @@ bool	Server::isLoggedIn(Message &msg)
 	return true;
 }
 
-// check the structure of a message, oif it alwazs has like 3 components
-void Server::processMessage(Client *client, const std::string &ircMessage)
+void	Server::chooseCommand(Message &msg, Channel *cnl)
 {
-	try 
+	switch (msg.getCmd()[0])
 	{
-		// Parse the IRC Message
-		Message     msg(client, ircMessage);
+		case 'I':
+			// INVITE <client> #<channel>
+			invite(msg, cnl);
+			break;
 
-		//Execute IRC Message
-		//	1. Check if CLIENT is loggedin
-		if (!isLoggedIn(msg))
-			return ;
-		
-		//	2. Execute normal commands
-		//		3.1. Find the channel if there is  channelname in the msg
-		Channel *channel = NULL;
-		if (!msg.getChannelName().empty())
-			channel = getChannelByName();
-		info("switch", CLR_BLU);
-		
-		// 		3.2 Process the msg aka call the right function
-		switch (msg.getCmd()[0])
+		case 'M':
+			// MODE #<cnlName> flag
+			mode(msg, cnl);
+			break;
+
+		case 'K':
+			// KICK #<cnlName> <client>
+			kick(msg, cnl);
+			break;
+
+		case 'J':
+			// JOIN #<cnlName>
+			join(msg, cnl);
+			break;
+			
+		case 'T':
+			// TOPIC #<cnlName> :<topic>
+			topic(msg, cnl);
+			break;
+
+		case 'P':
 		{
-			case 'I':
-				// INVITE <client> #<channel>
-				invite(msg, channel);
-				break;
-
-			case 'M':
-				// MODE #<channelName> flag
-				mode(msg, channel);
-				break;
-
-			case 'K':
-				// KICK #<channelName> <client>
-				kick(msg, channel);
-				break;
-
-			case 'J':
-				// JOIN #<channelName>
-				join(msg, channel);
-				break;
-				
-			case 'T':
-				// TOPIC #<channelName> :<topic>
-				topic(msg, channel);
-				break;
-
-			case 'P':
+			if (msg.getCmd()[1] == 'R') // PRIVMSG
 			{
-					info("case p", CLR_BLU);
-
-				if (msg.getCmd()[1] == 'R') // PRIVMSG
-				{
-					// PRIVMSG <recepient> <msg>
-					privmsg(msg);
-				}
-				else // PART
-				{
-					// PART #<channelName>
-					part(msg, channel);
-				}
+				// PRIVMSG <recepient> <msg>
+				privmsg(msg);
 			}
-				break;
-
-			default:
-				info("Invalid msg", CLR_RED);
-				break;
-		}
-	}
-	catch (MessageException &e)
-	{
-		info(e.what(), CLR_RED);
-		return;
-	}
-}
-
-Channel	*Server::getChannelByName(const std::string &channelName)
-{
-	Channel *channel = NULL;
-	std::cout << "DICKI DICKI\n";
-		
-	// If we have a channel name find / create it
-	if (!channelName.empty())
-	{
-		// Try to find the channel
-		for (std::list<Channel>::iterator it = _channels.begin(); it != _channels.end(); ++it)
-		{
-			if (it->getName() == msg.getChannelName())
+			else // PART
 			{
-				channel = &(*it);
-				std::cout << "DICKI DICKCSDCDSCDSCDSCDSCI\n";
-				break;
+				// PART #<cnlName>
+				part(msg, cnl);
 			}
 		}
-		std::cout << "DICKI DICKI\n";
-	
-		std::cout << channel << std::endl;
-		std::cout << msg.getCmd()[0] << std::endl;
+			break;
 
-		// Couldn"t find the channel -> create it (if cmd is JOIN)
-		if (!channel && msg.getCmd()[0] == 'J')
-		{
-			std::cout << "DICKI DICKI3333333333333333333333333333333\n";
-			_channels.push_back(Channel(msg.getChannelName(), client));
-			channel = &(_channels.back());
-			createdNewChannel = true;
-		}
-		else if (!channel)
-		{
-			info("Channel not found", CLR_RED);
-			return;
-		}
+		default:
+			info("Invalid msg", CLR_RED);
+			msg.getSender()->sendMessage("Command is not supported");
+			break;
 	}
 }
 
-void Server::invite(Message &message, Channel *channel)
-{
-	// INVITE <client> #<channel>
-	// if (!findInList(message.getArg1(), _clients))
-	// {
-	// 	// info(":No such nick", CLR_RED);
-	// 	// TODO: no suck nick
-	// 	return;
-	// }
-	// if (!findInList(message.getChannelName(), _channels))
-	// {
-	// 	// TODO: no such channel
-	// 	return ;
-	// }
-	message.getReceiver()->getInvited(channel);
-	// TODO: send a message that a client was invited to a channel
-}
-
-void Server::mode(Message &message,  Channel *channel)
-{
-	(void)message;
-	(void)channel;
-	// MODE #<channelName> flag
-}
-
-void Server::kick(Message &message, Channel *channel)
-{
-	// KICK #<channelName> <client>
-	// if (!findInList(message.getArg1(), _clients))
-	// {
-	// 	// info(":No such nick", CLR_RED);
-	// 	// TODO: no suck nick
-	// 	return;
-	// }
-	// if (!findInList(message.getChannelName(), _channels))
-	// {
-	// 	// TODO: no such channel
-	// 	return ;
-	// }
-	message.getSender()->getKicked(channel);
-}
-
-void Server::join(Message &message, Channel *channel)
-{
-	std::cout << "fefefgcoitrhdo743gtfqr3y\n";
-	message.getSender()->joinChannel(channel);
-	channel->addClient(message.getSender());
-	info(message.getSender()->getNickname() + " JOINED Channel " + channel->getName(), CLR_GRN);
-	//TODO: send messages to the channel that the client has joined
-}
-
-void Server::topic(Message &message,  Channel *channel)
-{
-	(void)message;
-	(void)channel;
-	// TOPIC #<channelName> :<topic>
-	
-}
-
-Client *Server::findUserByNickname(const std::string &nickname)
-{
-	for (std::list<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
-	{
-		if (it->getNickname() == nickname)
-			return &(*it);
-	}
-	return NULL;
-}
-
-void Server::privmsg(Message &message)
+void	Server::privmsg(Message &message)
 {
 	// PRIVMSG <recepient> <message>
 	// 1. need to find the recepient
-	message.setReceiver(findUserByNickname(message.getArg(0)));
+	message.setReceiver(getClientByNick(message.getArg(0)));
 	info("privmsg", CLR_BLU);
 
 	if (!message.getSender() || !message.getReceiver())
@@ -494,7 +373,73 @@ void Server::privmsg(Message &message)
 	message.getReceiver()->sendMessage(ircMessage);
 }
 
-void Server::part(Message &message, Channel *channel)
+void	Server::join(Message &message, Channel *channel)
+{
+	if (!channel)
+		channel = createNewChannel(message);
+	if (!channel)
+	{
+		info ("STRANGE CASE: COULD NOT FIND NOR CREATE CHANNEL", CLR_RED);
+		message.getSender()->sendMessage("Could not create channel"); 
+		return ;
+	}
+	message.getSender()->joinChannel(channel);
+	channel->addClient(message.getSender());
+	info(message.getSender()->getNickname() + " JOINED Channel " + channel->getName(), CLR_GRN);
+	//TODO: send messages to the channel that the client has joined
+}
+
+void	Server::invite(Message &message, Channel *channel)
+{
+	// INVITE <client> #<channel>
+	// if (!findInList(message.getArg1(), _clients))
+	// {
+	// 	// info(":No such nick", CLR_RED);
+	// 	// TODO: no suck nick
+	// 	return;
+	// }
+	// if (!findInList(message.getChannelName(), _channels))
+	// {
+	// 	// TODO: no such channel
+	// 	return ;
+	// }
+	message.getReceiver()->getInvited(channel);
+	// TODO: send a message that a client was invited to a channel
+}
+
+void	Server::topic(Message &message,  Channel *channel)
+{
+	(void)message;
+	(void)channel;
+	// TOPIC #<channelName> :<topic>
+	
+}
+
+void	Server::mode(Message &message,  Channel *channel)
+{
+	(void)message;
+	(void)channel;
+	// MODE #<channelName> flag
+}
+
+void	Server::kick(Message &message, Channel *channel)
+{
+	// KICK #<channelName> <client>
+	// if (!findInList(message.getArg1(), _clients))
+	// {
+	// 	// info(":No such nick", CLR_RED);
+	// 	// TODO: no suck nick
+	// 	return;
+	// }
+	// if (!findInList(message.getChannelName(), _channels))
+	// {
+	// 	// TODO: no such channel
+	// 	return ;
+	// }
+	message.getSender()->getKicked(channel);
+}
+
+void	Server::part(Message &message, Channel *channel)
 {
 	message.getSender()->leaveChannel(channel);
 	channel->removeClient(message.getSender());
@@ -502,16 +447,91 @@ void Server::part(Message &message, Channel *channel)
 		_channels.remove(*channel);
 }
 
-// Signal handling for exit
 // -----------------------------------------------------------------------------
-volatile sig_atomic_t Server::_keepRunning = 1;
+// Client Methods
+// -----------------------------------------------------------------------------
+void	Server::addClient(Client client)
+{
+	_clients.push_back(client);
+}
 
-void Server::setupSignalHandling()
+void	Channel::removeClient(Client *client)
+{
+    // TODO: test check if one op can kick another op
+    _clients.remove(client);
+    _operators.remove(client); // TODO: test if this fails if the client isnt in the list
+}
+
+Client	*Server::getClientByFd(int fd)
+{
+	for (std::list<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		if (it->getSocketFd() == fd)
+			return &(*it);
+	}
+	return NULL;
+}
+
+Client	*Server::getClientByNick(const std::string &nickname)
+{
+	for (std::list<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		if (it->getNickname() == nickname)
+			return &(*it);
+	}
+	return NULL;
+}
+
+// -----------------------------------------------------------------------------
+// Channel Methods
+// -----------------------------------------------------------------------------
+void	Server::addChannel(Channel &channel)
+{
+	(void)channel;
+	//TODO:
+}
+
+void	Server::removeChannel(Channel *channel)
+{
+	(void)channel;
+	//TODO:
+}
+
+Channel	*Server::getChannelByName(const std::string &channelName)
+{
+	if (channelName.empty())
+		return NULL;
+
+	// If we have a channel name find
+	// Try to find the channel
+	for (std::list<Channel>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+	{
+		if (it->getName() == channelName)
+			return &(*it);
+	}
+	return NULL;
+}
+
+Channel	*Server::createNewChannel(Message &msg)
+{
+	if (getChannelByName(msg.getChannelName()))
+		return NULL;
+	// Couldn't find the channel -> create it
+	_channels.push_back(Channel(msg.getChannelName(), msg.getSender()));
+	return &(_channels.back());
+}
+
+// -----------------------------------------------------------------------------
+// Static Signal handling (for exit with CTRL C)
+// -----------------------------------------------------------------------------
+volatile sig_atomic_t	Server::_keepRunning = 1;
+
+void	Server::setupSignalHandling()
 {
     signal(SIGINT, Server::sigIntHandler);
 }
 
-void Server::sigIntHandler(int sig)
+void	Server::sigIntHandler(int sig)
 {
 	if(sig != SIGINT)
 		return;
@@ -519,9 +539,9 @@ void Server::sigIntHandler(int sig)
     std::cout << CLR_RED << "Shutdown signal received, terminating server..." << CLR_RST << std::endl;
 }
 
-// Server Exception Class Implementation
 // -----------------------------------------------------------------------------
-
+// Standard exception class for server
+// -----------------------------------------------------------------------------
 ServerException::ServerException(const std::string &message) : _message(message)
 {
 	// Nothing to do

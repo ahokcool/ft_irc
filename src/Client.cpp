@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/03 18:05:47 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/03 19:45:40 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,9 @@ if (bytesSent == -1) {
 void Client::joinChannel(Channel *channel)
 {
     _channels.push_back(channel);
+    //  Now talking on #newwww
+    //  astein (alex@F456A.75198A.60D2B2.ADA236.IP) has joined
+    // info() TODO:
 }
 
 void Client::leaveChannel(Channel *channel)
