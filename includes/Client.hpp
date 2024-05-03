@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
+/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:33 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/02 22:36:55 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/03 02:16:39 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ class NickNameException : public std::exception
 class Client
 {   
     public:
-        Client(const int socketFd, const std::string &nickname) throw(NickNameException);
+        Client(const int socketFd);
         ~Client();
 
         void                    sendMessage(const std::string &ircMessage) const;
@@ -47,6 +47,7 @@ class Client
         void                    getInvited(Channel *channel);
         void                    getKicked(Channel *channel);
         
+        void					setNickname(const std::string &nickname) throw(NickNameException);
         void					setUsername(const std::string &username);
         void                    setHostname(const std::string &hostname);
 		int						getSocketFd() const;
@@ -54,19 +55,17 @@ class Client
         const std::string		&getUsername() const;
         const std::string		&getHostname() const;
 
-		static void				reserveNickName(const std::string &nickname) throw(NickNameException);
-    
     private:
         Client();
-        const int               		_socketFd;
-    	  std::string			       		_nickname;
+        int               		_socketFd;
+        std::string			       		_nickname;
         std::string             		_username;
         std::string             		_hostname;
         std::list<Channel *>    		_channels;
-        std::list<Channel *>    _invitations;
+        std::list<Channel *>            _invitations;
 
 		// List of all nicknames that are already in use
-		  static std::set<std::string> 	_nicknames;
+        static std::set<std::string> 	_nicknames;
 };
 
 #endif

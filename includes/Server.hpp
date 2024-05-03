@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/02 23:14:09 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/03 02:07:50 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,12 +77,11 @@ class Server
         void                    	parseArgs(const std::string &port, const std::string &password)
 			throw(ServerException);
 		std::vector<pollfd> 		getFdsAsVector() const;
-        void                    	processNewClient(Client client);
+        void                    	addClient(Client client);
         // void                    	removeClient(Client *client);
         // void                    	addChannel(Channel &channel);
 		Client 						*getClientByFd(int fd);
         // void                    	removeChannel(Channel *channel);
-		void 						dealWithChannelMsg(Client *client, const std::string &ircMessage);
     Client                  *findUserByNickname(const std::string &nickname);
 		void 					processMessage(Client *client, const std::string &ircMessage);
 
@@ -94,7 +93,7 @@ class Server
         void                    join(const Message &message, Channel *channel);
         void                    topic(const Message &message, Channel *channel);
         void                    part(const Message &message, Channel *channel);
-        void                    privmsg(const Message &message);
+        void                    privmsg(Message &message);
 
 		// Attributes
 		static volatile sig_atomic_t 	_keepRunning;

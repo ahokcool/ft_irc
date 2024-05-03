@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/02 23:14:37 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/03 02:54:06 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,15 +99,7 @@ void Server::goOnline() throw(ServerException)
 
             if (new_socket < 0)
 				throw ServerException("Accept failed\n\t" + std::string(strerror(errno)));
-			try
-			{
-				processNewClient(Client(new_socket,"nicknamedefault")); //TODO: CHANGE NICKNAME
-            	std::cout << "New client connected with fd: " << new_socket << std::endl;
-			}
-			catch(const std::exception& e)
-			{
-				std::cerr << e.what() << '\n';
-			}
+			addClient(Client(new_socket));
         }
 
 		// TODO: in client check for to long msgs
@@ -131,8 +123,28 @@ void Server::goOnline() throw(ServerException)
                 } else
 				{
                     buffer[valread] = '\0';
-                    std::cout << "Message from client: " << buffer << std::endl;
-					dealWithChannelMsg(getClientByFd(fds[i].fd), buffer);
+					info("1", CLR_BLU);
+					
+					std::string::size_type start = 0;
+					std::string::size_type end;
+					std::string msg(buffer);
+
+					while ((end = msg.find('\n', start)) != std::string::npos) {
+                    std::cout << "Message PART from client: " << msg.substr(start, end - start) << std::endl;
+
+						processMessage(getClientByFd(fds[i].fd), msg.substr(start, end - start));
+						start = end + 1;
+					}
+
+					if (start < msg.size()) {
+                    std::cout << "Message PART from client: " << msg.substr(start) << std::endl;
+
+						processMessage(getClientByFd(fds[i].fd), msg.substr(start));
+
+    }
+					// if (buffer[0] == '.')
+					// 	send(fds[i].fd, ".", 1, 0);
+					// processMessage(getClientByFd(fds[i].fd), buffer);
                 }
             }
 		}
@@ -190,19 +202,12 @@ std::vector<pollfd> Server::getFdsAsVector() const
 	return fds;
 }
 
-void                    	Server::processNewClient(Client client)
+void	Server::addClient(Client client)
 {
-	// // Messages has to be
-	// // NICK nickname
-	// // USER username hostname servername :realname
-	// // PING :server
-	// // PONG :server
-	// while(iss 
-	
 	_clients.push_back(client);
 }
 
-Client 						*Server::getClientByFd(int fd)
+Client	*Server::getClientByFd(int fd)
 {
 	for (std::list<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 	{
@@ -233,16 +238,107 @@ void Server::broadcastMessage(const std::string &message) const
 }
 
 // check the structure of a message, oif it alwazs has like 3 components
-// TODO:CHECK FOR client NULL Pointer!!!!
 void Server::processMessage(Client *client, const std::string &ircMessage)
 {
+	// check if client is registered aka has a NICKNAME
+	if (!client)
+		return ;
+	// This is part 1 of registation aka NICK
+	if (client->getNickname().empty())
+	{
+		info("1.1", CLR_BLU);
+		// parse message: e.g. NICK ash
+		std::istringstream iss(ircMessage);
+   		std::string token;
+   		std::string nickname;
+		bool foundNick = false;
+
+		while (iss >> token)
+		{
+			if (!foundNick)
+			{
+				if (token == "NICK")
+				{
+					foundNick = true;
+					continue;
+				}
+				return ;// TODO: send a message to client that he has to use NICK first
+			}
+			else
+			{
+				if (nickname.empty())
+					nickname = token;
+				else
+					return ;// TODO: send a message to client that he has to use NICK first
+			}
+		}
+		client->setNickname(nickname);
+		if (client->getNickname().empty())
+		{
+			// TODO: send a message to client that he has to use NICK first
+			return ;
+		}
+	}
+	info("2", CLR_BLU);
+	
+	// This is part 2 of registation aka USER
+	if (client->getUsername().empty())
+	{
+		// parse message: e.g. USER nickname * * :user name with spaces
+		std::istringstream iss(ircMessage);
+   		std::string token;
+		bool foundUser = false;
+		bool foundNickname = false;
+		int  args = 0;
+
+		while (iss >> token)
+		{
+			if (!foundUser)
+			{
+				if (token == "USER")
+				{
+					foundUser = true;
+					continue;
+				}
+				return ;// TODO: send a message to client that he has to use USER first
+			}
+			else if (!foundNickname)
+			{
+				client->setUsername(token);
+				return ;
+				if (token == client->getNickname())
+				{
+					foundNickname = true;
+					continue;
+				}
+				return ; // TODO: send a message to client that his nickname does not match
+			}
+			else if (token[0] == ':')
+				client->setUsername(ircMessage.substr(ircMessage.find(':') + 1));
+			else
+			{
+				args++;
+				if (args > 2)
+					return ;
+			}
+		}
+		if (client->getUsername().empty())
+		{
+			// TODO: send a message to client that he has to use USER first
+			return ;
+		}
+	}
+					info("3", CLR_BLU);
+
 	try 
 	{
 		Message     message(client, ircMessage);
 		bool		createdNewChannel = false;
+		info("4", CLR_BLU);
 		
 		// we now have a valid message 
 		Channel *channel = NULL;
+				std::cout << "DICKI DICKI\n";
 		
 		// If we have a channel name find / create it
 		if (!message.getChannelName().empty())
@@ -253,23 +349,30 @@ void Server::processMessage(Client *client, const std::string &ircMessage)
 				if (it->getName() == message.getChannelName())
 				{
 					channel = &(*it);
+					std::cout << "DICKI DICKCSDCDSCDSCDSCDSCI\n";
 					break;
 				}
 			}
+			std::cout << "DICKI DICKI\n";
 		
+			std::cout << channel << std::endl;
+			std::cout << message.getCmd()[0] << std::endl;
+
 			// Couldn"t find the channel -> create it (if cmd is JOIN)
-			if (!channel && message.getCmd()[0] != 'J')
+			if (!channel && message.getCmd()[0] == 'J')
 			{
+				std::cout << "DICKI DICKI3333333333333333333333333333333\n";
 				_channels.push_back(Channel(message.getChannelName(), client));
 				channel = &(_channels.back());
 				createdNewChannel = true;
 			}
-			else
+			else if (!channel)
 			{
 				info("Channel not found", CLR_RED);
 				return;
 			}
 		}
+					info("switch", CLR_BLU);
 		
 		// Process the message aka call the right function
 		switch (message.getCmd()[0])
@@ -302,6 +405,8 @@ void Server::processMessage(Client *client, const std::string &ircMessage)
 
 			case 'P':
 			{
+					info("case p", CLR_BLU);
+
 				if (message.getCmd()[1] == 'R') // PRIVMSG
 				{
 					// PRIVMSG <recepient> <message>
@@ -371,8 +476,10 @@ void Server::kick(const Message &message, Channel *channel)
 
 void Server::join(const Message &message, Channel *channel)
 {
+	std::cout << "fefefgcoitrhdo743gtfqr3y\n";
 	message.getSender()->joinChannel(channel);
 	channel->addClient(message.getSender());
+	info(message.getSender()->getNickname() + " JOINED Channel " + channel->getName(), CLR_GRN);
 	//TODO: send messages to the channel that the client has joined
 }
 
@@ -394,22 +501,32 @@ Client *Server::findUserByNickname(const std::string &nickname)
 	return NULL;
 }
 
-void Server::privmsg(const Message &message)
+void Server::privmsg(Message &message)
 {
 	// PRIVMSG <recepient> <message>
 	// 1. need to find the recepient
-	Client *recepient = findUserByNickname(message.getArg1());
+	message.setReceiver(findUserByNickname(message.getArg1()));
+	info("privmsg", CLR_BLU);
 
-	if (!recepient)
+	if (!message.getSender() || !message.getReceiver())
 	{
-		info("Recepient not found", CLR_RED);
+		info("Sender/Recepient not found", CLR_RED);
 		// TODO: send a message to the sender that the recepient was not found
 		return;
 	}
+	info("privmsg2", CLR_BLU);
 
 	// 2. send the message to the recepient
-	std::string ircMessage = "TODO:!" + message.getArg2() + "TODO:!";
-	recepient->sendMessage(ircMessage);
+	std::string ircMessage = 
+		":" + message.getSender()->getNickname() + "!" +
+		message.getSender()->getUsername() +
+		"@HELLOWORLD PRIVMSG " +
+		message.getReceiver()->getNickname() +
+		" :" +
+		message.getArg2() + "\r\n";
+	// std::cout << "HERE\n" << ircMessage << "\n";
+	// :anshovah_!anshovah@F456A.75198A.60D2B2.ADA236.IP PRIVMSG astein :joao is lazyao
+	message.getReceiver()->sendMessage(ircMessage);
 }
 
 void Server::part(const Message &message, Channel *channel)

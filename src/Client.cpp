@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
+/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/02 23:15:00 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/03 02:24:59 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,16 +15,9 @@
 
 std::set<std::string> Client::_nicknames;
 
-Client::Client(const int socketFd, const std::string &nickname) throw(NickNameException) :
-	_socketFd(socketFd), _nickname(nickname)
+Client::Client(const int socketFd) : _socketFd(socketFd)
 {
-	Client::reserveNickName(nickname);	//If this fails we throw an exception
-	_nickname = nickname;
-    _username = _nickname + " is too lazy to set a username";
-    _hostname = "default";
-	info ("Created Client: ", CLR_BLU);
-	info ("\t->Nickname:\t" 	+ _nickname, CLR_BLU);
-	info ("\t->Username:\t" 	+ _username, CLR_BLU);
+	info ("Created Client Inctance", CLR_BLU);
 }
 
 Client::~Client()
@@ -40,11 +33,18 @@ Client::~Client()
 	Client::_nicknames.erase(_nickname);
 }
 
+ #include <string.h>
+ #include <errno.h>
+
 // the last argument specifies the flags that control the behavior of the send operation. 
 // When set to 0, it means that no special flags are being used, and the send operation should proceed with default behavior.
 void Client::sendMessage(const std::string &ircMessage) const
 {
-    send(_socketFd, ircMessage.c_str(), ircMessage.length(), 0);
+    ssize_t bytesSent = send(_socketFd, ircMessage.c_str(), ircMessage.length(), 0);
+if (bytesSent == -1) {
+    std::cerr << "send failed: " << strerror(errno) << "\n";
+} else {
+    std::cout << "Bytes sent: " << bytesSent << "\n"; }
 }
 
 void Client::joinChannel(Channel *channel)
@@ -72,8 +72,22 @@ void Client::getKicked(Channel *channel)
     //TODO: send the message to the client that ha was kicked. also send it to the channel
 }
 
+void    Client::setNickname(const std::string &nickname) throw(NickNameException)
+{
+    info ("Reserving Nickname: ", CLR_BLU);
+	info (nickname, CLR_BLU);
+	if (Client::_nicknames.find(nickname) != Client::_nicknames.end())
+	{
+		throw NickNameException("Nickname in used!"); // '" + nickname + "' already in use");
+        //TODO: send a message to inform client that he need another nickname
+	}
+	Client::_nicknames.insert(nickname);
+    _nickname = nickname;
+}
+
 void Client::setUsername(const std::string &username)
 {
+    info("Set username " + username, CLR_GRN);
     _username = username;
 }
 
@@ -105,16 +119,16 @@ const std::string &Client::getHostname() const
 // Static Function
 
 
-void	Client::reserveNickName(const std::string &nickname) throw(NickNameException)
-{
-	info ("Reserving Nickname: ", CLR_BLU);
-	info ("\t->Nickname:\t" 	+ nickname, CLR_BLU);
-	if (Client::_nicknames.find(nickname) != Client::_nicknames.end())
-	{
-		throw NickNameException("Nickname in use!"); // '" + nickname + "' already in use");
-	}
-	Client::_nicknames.insert(nickname);
-}
+// void	Client::reserveNickName(const std::string &nickname) throw(NickNameException)
+// {
+// 	info ("Reserving Nickname: ", CLR_BLU);
+// 	info ("\t->Nickname:\t" 	+ nickname, CLR_BLU);
+// 	if (Client::_nicknames.find(nickname) != Client::_nicknames.end())
+// 	{
+// 		throw NickNameException("Nickname in use!"); // '" + nickname + "' already in use");
+// 	}
+// 	Client::_nicknames.insert(nickname);
+// }
 
 // EXCEPTION
 NickNameException::NickNameException(const std::string &message) : _message(message)

@@ -75,7 +75,7 @@ run: re
 
 val: re
 	@echo $(BLUE) $(NAME) "starting with valgrind..." $(RESET)
-	@valgrind --leak-check=full ./$(NAME) 8080 42
+	@valgrind --leak-check=full ./$(NAME) 1234 42
 
 MSG_START:
 	@echo $(ORANGE) $(NAME) "compiling" $(RESET)

@@ -6,11 +6,12 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/02 16:44:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/02 23:15:44 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/03 02:37:58 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Message.hpp"
+#include "utils.hpp"
 
 Message::Message()
 {
@@ -25,8 +26,12 @@ Message::Message(Client *sender, const std::string &ircMessage) throw(MessageExc
 
 	if (!sender)
 		throw MessageException("No sender");
+
     if (ircMessage.empty())
         throw MessageException("Empty message");
+
+
+		
     while (iss >> token)
 	{
 		if (_cmd.empty())
@@ -43,8 +48,17 @@ Message::Message(Client *sender, const std::string &ircMessage) throw(MessageExc
 			break;
 		}
 	}
-    if (_cmd.empty() || _channelName.empty())
+    if (_cmd.empty())
         throw MessageException("Invalid message format");
+		
+
+
+
+
+
+
+
+std::cout << "CMD --> " << _cmd << " CHANNEL --> " << _channelName << " ARG1 --> " << _arg1 << " ARG2 --> " << _arg2 << "\n";
 }
 
 Message::~Message()

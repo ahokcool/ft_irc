@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/02 16:31:47 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/03 02:45:19 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@ Channel::Channel(const std::string &name, Client *client) : _name(name)
     client->joinChannel(this);
     this->addClient(client);
     this->addOperator(client);
+    std::cout << "NEW CHANNEL --> " << name << "\n";
 }
 
 // Destructor
