@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/02 16:37:13 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/03 16:27:33 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/03 17:41:32 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,18 +41,19 @@ class Message
         Client *getReceiver() const;
         const std::string &getCmd() const;
         const std::string &getChannelName() const;
-        const std::string &getArg1() const;
-        const std::string &getArg2() const;
+        const std::string &getColon() const;
+        const std::string &getArg(size_t index) const;
 
     private:
-        Client      *_sender;
-        Client      *_receiver; //TODO: do we  need this?
-        std::string _cmd;
-        std::string _channelName;
-        std::string _arg1;
-        std::string _arg2;
-
         Message();
+        void parseMessage(const std::string &ircMessage) throw(MessageException);
+
+        Client          *_sender;
+        Client          *_receiver; //TODO: do we  need this?
+        std::string     _cmd;
+        std::string     _channelName;
+        std::string     _colon;
+        std::string     _args[3];
 };
 
 /*

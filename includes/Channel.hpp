@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/02 22:41:12 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/03 19:33:10 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include <string>
 #include <list>
 #include "Client.hpp"
+#include "utils.hpp"
 
 class Client;
 

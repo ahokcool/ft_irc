@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/03 02:45:19 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/03 20:27:38 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ Channel::Channel(const std::string &name, Client *client) : _name(name)
     client->joinChannel(this);
     this->addClient(client);
     this->addOperator(client);
-    std::cout << "NEW CHANNEL --> " << name << "\n";
+    info("NEW CHANNEL " + name + " CREATED", CLR_GRN);
 }
 
 // Destructor
@@ -63,12 +63,7 @@ void Channel::addOperator(Client *client)
 	_operators.push_back(client);
 }
 
-void Channel::removeClient(Client *client)
-{
-    // TODO: test check if one op can kick another op
-    _clients.remove(client);
-    _operators.remove(client); // TODO: test if this fails if the client isnt in the list
-}
+
 
 const std::string &Channel::getName() const
 {

@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/03 16:18:25 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/03 20:24:33 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,9 @@
 
 #define BUFFER_SIZE 1024
 
-// Standart exception class for Server
+// -------------------------------------------------------------------------
+// Standard exception class for server
+// -------------------------------------------------------------------------
 class ServerException : public std::exception
 {
 	public:
@@ -54,78 +56,79 @@ class ServerException : public std::exception
 
 class Server
 {
+	// -------------------------------------------------------------------------
+	// Construction / Destruction
+	// -------------------------------------------------------------------------
 	public:
-		Server(const std::string &port, const std::string &password) throw(ServerException);
+		Server(const std::string &port, const std::string &password);
 		~Server();
-
-		// Public Member Functions
-		void    		initNetwork()   throw(ServerException);
-		void    		goOnline()      throw(ServerException);
-		void    		shutDown();
-
-		// Signal handling for exit
-		static void 	setupSignalHandling();
-		static void 	sigIntHandler(int sig);
-
+		void parseArgs(const std::string &port, const std::string &password);
 	private:
-		Server(); // No default constructor
-		
-		// Private Member Functions
-		void                    	parseArgs(const std::string &port, const std::string &password) throw(ServerException);
-		std::vector<pollfd> 		getFdsAsVector() const;
-		void                    	addClient(Client client);
-		// void                    	removeClient(Client *client);
-		// void                    	addChannel(Channel &channel);
-		Client 						*getClientByFd(int fd);
-		// void                    	removeChannel(Channel *channel);
-		Client                  	*findUserByNickname(const std::string &nickname);
-		void 						processMessage(Client *client, const std::string &ircMessage);
+		Server(); // Private default constructor
 
-		void                    	broadcastMessage(const std::string &message) const;
-		
-		void                    	invite(Message &message, Channel *channel);
-		void                    	mode(Message &message, Channel *channel);
-		void                    	kick(Message &message, Channel *channel);
-		void                    	join(Message &message, Channel *channel);
-		void                    	topic(Message &message, Channel *channel);
-		void                    	part(Message &message, Channel *channel);
-		void                    	privmsg(Message &message);
+	// -------------------------------------------------------------------------
+	// Server Methods
+	// -------------------------------------------------------------------------
+	public :
+		void				initNetwork();
+		void				goOnline();
+		void				shutDown();
+	private:
+		std::vector<pollfd>	getFdsAsVector() const;
+		void				broadcastMessage(const std::string &message) const;
 
-		// Attributes
-		static volatile sig_atomic_t 	_keepRunning;
+	// -------------------------------------------------------------------------
+	// Processing the Messages
+	// -------------------------------------------------------------------------
+	private:
+		void	processMessage(Client *client, const std::string &ircMessage);
+		bool	isLoggedIn(Message &msg);
+		void	chooseCommand(Message &msg, Channel *cnl);
+
+		void	privmsg	(Message &message);
+		void	join	(Message &message, Channel *channel);
+		void	invite	(Message &message, Channel *channel);
+		void	topic	(Message &message, Channel *channel);
+		void	mode	(Message &message, Channel *channel);
+		void	kick	(Message &message, Channel *channel);
+		void	part	(Message &message, Channel *channel);
+
+	// -------------------------------------------------------------------------
+	// Client Methods
+	// -------------------------------------------------------------------------
+	private:
+		void	addClient(Client client);
+		void	removeClient(Client *client);
+		Client	*getClientByFd(int fd);
+		Client	*getClientByNick(const std::string &nickname);	
 	
-		// This struct is holding the adress information about the socket
-		// It's part of the socket.h library <netinet/in.h>
-		struct sockaddr_in 				_address;
-	
-		int                     		_socket;
-		u_int16_t		           		_port;
-		std::string             		_password;
-		std::list<Client>       		_clients;
-		std::list<Channel>      		_channels;
+	// -------------------------------------------------------------------------
+	// Channel Methods
+	// -------------------------------------------------------------------------
+	private:
+		void	addChannel(Channel &channel);
+		void	removeChannel(Channel *channel);
+		Channel	*getChannelByName(const std::string &channelName);
+		Channel	*createNewChannel(Message &msg);
 
-	
-	// template <typename T, typename O>
-	// bool findInList(const std::string &name, const T &l)
-	// {
-	//     for (typename T::iterator it = l.begin(); it != l.end(); ++it)
-	//     {
-	//         if (it->getName() == name)
-	//             return true;
-	//     }
-	//     return false;
-	// }
+	// -------------------------------------------------------------------------
+	// Attributes
+	// -------------------------------------------------------------------------
+	private:
+		struct sockaddr_in	_address;
+		int					_socket;
+		u_int16_t			_port;
+		std::string			_password;
+		std::list<Client>	_clients;
+		std::list<Channel>	_channels;
 
-	// template <typename T>
-	// bool findInList(const std::string &name, const T &l)
-	// {
-	//     for (typename T::iterator it = l.begin(); it != l.end(); ++it)
-	//     {
-	//         if (it->getName() == name)
-	//             return true;
-	//     }
-	//     return false;
-	// }
+	// -------------------------------------------------------------------------
+	// Static Signal handling (for exit with CTRL C)
+	// -------------------------------------------------------------------------
+	public:
+		static volatile sig_atomic_t	_keepRunning;
+		static void						setupSignalHandling();
+		static void						sigIntHandler(int sig);
 };
 	
 #endif

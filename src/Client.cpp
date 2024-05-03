@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/03 02:24:59 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/03 19:45:40 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,8 @@ Client::~Client()
 // When set to 0, it means that no special flags are being used, and the send operation should proceed with default behavior.
 void Client::sendMessage(const std::string &ircMessage) const
 {
-    ssize_t bytesSent = send(_socketFd, ircMessage.c_str(), ircMessage.length(), 0);
+    std::string msgN = ircMessage + "\r\n";
+    ssize_t bytesSent = send(_socketFd, msgN.c_str(), msgN.length(), 0);
 if (bytesSent == -1) {
     std::cerr << "send failed: " << strerror(errno) << "\n";
 } else {
@@ -50,6 +51,9 @@ if (bytesSent == -1) {
 void Client::joinChannel(Channel *channel)
 {
     _channels.push_back(channel);
+    //  Now talking on #newwww
+    //  astein (alex@F456A.75198A.60D2B2.ADA236.IP) has joined
+    // info() TODO:
 }
 
 void Client::leaveChannel(Channel *channel)
@@ -91,6 +95,11 @@ void Client::setUsername(const std::string &username)
     _username = username;
 }
 
+void Client::setFullname(const std::string &fullname)
+{
+    _fullname = fullname;
+}
+
 void Client::setHostname(const std::string &hostname)
 {
     _hostname = hostname;
@@ -109,6 +118,11 @@ const std::string &Client::getNickname() const
 const std::string &Client::getUsername() const
 {
     return _username;
+}
+
+const std::string &Client::getFullname() const
+{
+    return _fullname;
 }
 
 const std::string &Client::getHostname() const

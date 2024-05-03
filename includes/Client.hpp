@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:33 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/03 02:16:39 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/03 17:44:44 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,10 +49,12 @@ class Client
         
         void					setNickname(const std::string &nickname) throw(NickNameException);
         void					setUsername(const std::string &username);
+        void					setFullname(const std::string &fullname);
         void                    setHostname(const std::string &hostname);
 		int						getSocketFd() const;
         const std::string		&getNickname() const;
         const std::string		&getUsername() const;
+        const std::string		&getFullname() const;
         const std::string		&getHostname() const;
 
     private:
@@ -60,6 +62,7 @@ class Client
         int               		_socketFd;
         std::string			       		_nickname;
         std::string             		_username;
+        std::string                     _fullname;
         std::string             		_hostname;
         std::list<Channel *>    		_channels;
         std::list<Channel *>            _invitations;
