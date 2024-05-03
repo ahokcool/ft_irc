@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/03 16:18:25 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/03 18:29:16 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,6 +80,8 @@ class Server
 		// void                    	removeChannel(Channel *channel);
 		Client                  	*findUserByNickname(const std::string &nickname);
 		void 						processMessage(Client *client, const std::string &ircMessage);
+		Channel						*getChannelByName(const std::string &name);
+		bool						isLoggedIn(Message &msg);
 
 		void                    	broadcastMessage(const std::string &message) const;
 		

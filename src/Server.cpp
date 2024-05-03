@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/03 17:02:05 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/03 18:29:56 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -244,191 +244,110 @@ void Server::broadcastMessage(const std::string &message) const
 	info("[>DONE] Broadcast message", CLR_GRN);
 }
 
+bool	Server::isLoggedIn(Message &msg)
+{
+	//	1. Check if NICK is set
+	if (msg.getSender()->getNickname().empty())
+	{
+		if (msg.getCmd() == "NICK" && !msg.getArg(0).empty())
+		try 
+		{
+			msg.getSender()->setNickname(msg.getArg(0));
+		}
+		catch (NickNameException &nne)
+		{
+			info(nne.what(), CLR_RED);
+			msg.getSender()->sendMessage(nne.what());
+			return false;
+		}
+		else
+			msg.getSender()->sendMessage("Select unique nickname first!");
+		return false;
+	}
+
+	//	2. Check if USER is set
+	if (msg.getSender()->getUsername().empty())
+	{
+		if (msg.getCmd() == "USER" && !msg.getArg(0).empty() && !msg.getArg(1).empty() &&
+			!msg.getArg(2).empty() && !msg.getColon().empty())
+		{
+			msg.getSender()->setUsername(msg.getArg(0));
+			msg.getSender()->setFullname(msg.getColon());
+		}
+		else
+			msg.getSender()->sendMessage("Select username first!");
+		return false;
+	}
+	return true;
+}
+
 // check the structure of a message, oif it alwazs has like 3 components
 void Server::processMessage(Client *client, const std::string &ircMessage)
 {
-	// check if client is registered aka has a NICKNAME
-	if (!client)
-		return ;
-	// This is part 1 of registation aka NICK
-	if (client->getNickname().empty())
-	{
-		info("1.1", CLR_BLU);
-		// parse message: e.g. NICK ash
-		std::istringstream iss(ircMessage);
-   		std::string token;
-   		std::string nickname;
-		bool foundNick = false;
-
-		while (iss >> token)
-		{
-			if (!foundNick)
-			{
-				if (token == "NICK")
-				{
-					foundNick = true;
-					continue;
-				}
-				return ;// TODO: send a message to client that he has to use NICK first
-			}
-			else
-			{
-				if (nickname.empty())
-					nickname = token;
-				else
-					return ;// TODO: send a message to client that he has to use NICK first
-			}
-		}
-		client->setNickname(nickname);
-		if (client->getNickname().empty())
-		{
-			// TODO: send a message to client that he has to use NICK first
-			return ;
-		}
-	}
-	info("2", CLR_BLU);
-	
-	// This is part 2 of registation aka USER
-	if (client->getUsername().empty())
-	{
-		// parse message: e.g. USER nickname * * :user name with spaces
-		std::istringstream iss(ircMessage);
-   		std::string token;
-		bool foundUser = false;
-		bool foundNickname = false;
-		int  args = 0;
-
-		while (iss >> token)
-		{
-			if (!foundUser)
-			{
-				if (token == "USER")
-				{
-					foundUser = true;
-					continue;
-				}
-				return ;// TODO: send a message to client that he has to use USER first
-			}
-			else if (!foundNickname)
-			{
-				client->setUsername(token);
-				return ;
-				if (token == client->getNickname())
-				{
-					foundNickname = true;
-					continue;
-				}
-				return ; // TODO: send a message to client that his nickname does not match
-			}
-			else if (token[0] == ':')
-				client->setUsername(ircMessage.substr(ircMessage.find(':') + 1));
-			else
-			{
-				args++;
-				if (args > 2)
-					return ;
-			}
-		}
-		if (client->getUsername().empty())
-		{
-			// TODO: send a message to client that he has to use USER first
-			return ;
-		}
-	}
-					info("3", CLR_BLU);
-
 	try 
 	{
-		Message     message(client, ircMessage);
-		bool		createdNewChannel = false;
-		info("4", CLR_BLU);
-		
-		// we now have a valid message 
-		Channel *channel = NULL;
-				std::cout << "DICKI DICKI\n";
-		
-		// If we have a channel name find / create it
-		if (!message.getChannelName().empty())
-		{
-			// Try to find the channel
-			for (std::list<Channel>::iterator it = _channels.begin(); it != _channels.end(); ++it)
-			{
-				if (it->getName() == message.getChannelName())
-				{
-					channel = &(*it);
-					std::cout << "DICKI DICKCSDCDSCDSCDSCDSCI\n";
-					break;
-				}
-			}
-			std::cout << "DICKI DICKI\n";
-		
-			std::cout << channel << std::endl;
-			std::cout << message.getCmd()[0] << std::endl;
+		// Parse the IRC Message
+		Message     msg(client, ircMessage);
 
-			// Couldn"t find the channel -> create it (if cmd is JOIN)
-			if (!channel && message.getCmd()[0] == 'J')
-			{
-				std::cout << "DICKI DICKI3333333333333333333333333333333\n";
-				_channels.push_back(Channel(message.getChannelName(), client));
-				channel = &(_channels.back());
-				createdNewChannel = true;
-			}
-			else if (!channel)
-			{
-				info("Channel not found", CLR_RED);
-				return;
-			}
-		}
-					info("switch", CLR_BLU);
+		//Execute IRC Message
+		//	1. Check if CLIENT is loggedin
+		if (!isLoggedIn(msg))
+			return ;
 		
-		// Process the message aka call the right function
-		switch (message.getCmd()[0])
+		//	2. Execute normal commands
+		//		3.1. Find the channel if there is  channelname in the msg
+		Channel *channel = NULL;
+		if (!msg.getChannelName().empty())
+			channel = getChannelByName();
+		info("switch", CLR_BLU);
+		
+		// 		3.2 Process the msg aka call the right function
+		switch (msg.getCmd()[0])
 		{
 			case 'I':
 				// INVITE <client> #<channel>
-				invite(message, channel);
+				invite(msg, channel);
 				break;
 
 			case 'M':
 				// MODE #<channelName> flag
-				mode(message, channel);
+				mode(msg, channel);
 				break;
 
 			case 'K':
 				// KICK #<channelName> <client>
-				kick(message, channel);
+				kick(msg, channel);
 				break;
 
 			case 'J':
 				// JOIN #<channelName>
-				if (!createdNewChannel)
-					join(message, channel);
+				join(msg, channel);
 				break;
 				
 			case 'T':
 				// TOPIC #<channelName> :<topic>
-				topic(message, channel);
+				topic(msg, channel);
 				break;
 
 			case 'P':
 			{
 					info("case p", CLR_BLU);
 
-				if (message.getCmd()[1] == 'R') // PRIVMSG
+				if (msg.getCmd()[1] == 'R') // PRIVMSG
 				{
-					// PRIVMSG <recepient> <message>
-					privmsg(message);
+					// PRIVMSG <recepient> <msg>
+					privmsg(msg);
 				}
 				else // PART
 				{
 					// PART #<channelName>
-					part(message, channel);
+					part(msg, channel);
 				}
 			}
 				break;
 
 			default:
-				info("Invalid message", CLR_RED);
+				info("Invalid msg", CLR_RED);
 				break;
 		}
 	}
@@ -436,6 +355,45 @@ void Server::processMessage(Client *client, const std::string &ircMessage)
 	{
 		info(e.what(), CLR_RED);
 		return;
+	}
+}
+
+Channel	*Server::getChannelByName(const std::string &channelName)
+{
+	Channel *channel = NULL;
+	std::cout << "DICKI DICKI\n";
+		
+	// If we have a channel name find / create it
+	if (!channelName.empty())
+	{
+		// Try to find the channel
+		for (std::list<Channel>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+		{
+			if (it->getName() == msg.getChannelName())
+			{
+				channel = &(*it);
+				std::cout << "DICKI DICKCSDCDSCDSCDSCDSCI\n";
+				break;
+			}
+		}
+		std::cout << "DICKI DICKI\n";
+	
+		std::cout << channel << std::endl;
+		std::cout << msg.getCmd()[0] << std::endl;
+
+		// Couldn"t find the channel -> create it (if cmd is JOIN)
+		if (!channel && msg.getCmd()[0] == 'J')
+		{
+			std::cout << "DICKI DICKI3333333333333333333333333333333\n";
+			_channels.push_back(Channel(msg.getChannelName(), client));
+			channel = &(_channels.back());
+			createdNewChannel = true;
+		}
+		else if (!channel)
+		{
+			info("Channel not found", CLR_RED);
+			return;
+		}
 	}
 }
 
@@ -512,7 +470,7 @@ void Server::privmsg(Message &message)
 {
 	// PRIVMSG <recepient> <message>
 	// 1. need to find the recepient
-	message.setReceiver(findUserByNickname(message.getArg1()));
+	message.setReceiver(findUserByNickname(message.getArg(0)));
 	info("privmsg", CLR_BLU);
 
 	if (!message.getSender() || !message.getReceiver())
@@ -530,7 +488,7 @@ void Server::privmsg(Message &message)
 		"@HELLOWORLD PRIVMSG " +
 		message.getReceiver()->getNickname() +
 		" :" +
-		message.getArg2() + "\r\n";
+		message.getArg(1) + "\r\n";
 	// std::cout << "HERE\n" << ircMessage << "\n";
 	// :anshovah_!anshovah@F456A.75198A.60D2B2.ADA236.IP PRIVMSG astein :joao is lazyao
 	message.getReceiver()->sendMessage(ircMessage);
