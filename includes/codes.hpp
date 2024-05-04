@@ -6,17 +6,20 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/04 02:01:01 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/04 03:52:33 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/04 06:00:09 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CODES_HPP
 #define CODES_HPP
 
-#define ERR_UNKNOWNCOMMAND      "421"     // "<command> :Unknown command"
-#define ERR_NORECIPIENT         "411"     // ":No recipient given (<command>)"
-#define ERR_NOTEXTTOSEND        "412"     // ":No text to send"
-#define ERR_NOSUCHNICK          "401"     // "<nickname>	:No such nick/channel"
+#define ERR_UNKNOWNCOMMAND      "421"       // "<command> :Unknown command"
+#define ERR_NORECIPIENT         "411"       // ":No recipient given (<command>)"
+#define ERR_NOTEXTTOSEND        "412"       // ":No text to send"
+#define ERR_NOSUCHNICK          "401"       // "<nickname>	:No such nick/channel"
+#define ERR_NONICKNAMEGIVEN     "431"       // ":No nickname given"
+#define ERR_NICKNAMEINUSE       "433"       // "<nick> :Nickname is already in use"
+#define ERR_NOTREGISTERED       "451"       // ":You have not registered"
 
 
 
@@ -64,7 +67,6 @@
 
 
 // topic
-#define ERR_NONICKNAMEGIVEN     431      // ":No nickname given"
 #define ERR_NOSUCHSERVER        402      // "<server name> :No such server"
 
 // whois

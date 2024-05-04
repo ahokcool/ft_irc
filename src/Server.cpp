@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/04 05:04:37 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/04 06:10:08 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -273,19 +273,10 @@ bool	Server::isLoggedIn(Message &msg)
 	//	1. Check if NICK is set
 	if (msg.getSender().getUniqueName().empty())
 	{
-		if (msg.getCmd() == "NICK" && !msg.getArg(0).empty())
-		try 
-		{
-			msg.getSender().setUniqueName(msg.getArg(0));
-		}
-		catch (NickNameException &nne)
-		{
-			info(nne.what(), CLR_RED);
-			msg.getSender().sendMessage(nne.what());
-			return false;
-		}
+		if (msg.getCmd() == "NICK")
+			nick(msg);
 		else
-			msg.getSender().sendMessage("Select unique nickname first!");
+			msg.getSender().sendMessage(ERR_NOTREGISTERED, ":You have not registered");
 		return false;
 	}
 
@@ -319,18 +310,29 @@ void	Server::chooseCommand(Message &msg)
 			return ;
 		}
 	}
-	// :10.11.3.6 421 anshovah_ PRIMSG :Unknown command TODO:
+	// :10.11.3.6 421 anshovah_ PRIMSG :Unknown command
 	msg.getSender().sendMessage(ERR_UNKNOWNCOMMAND, msg.getCmd() + " :Unknown command");
-
-	// sender->sendMessage(ERR_NORECIPIENT, ":No recipient given (<command>)");
-	// throw MessageException(ERR_NORECIPIENT);
-    // if (ircMessage.empty())
-	// 	throw MessageException("Empty message");
 }
 
-void	Server::nick	(Message &message)
-{
-(void)message;
+// /NICK
+void	Server::nick(Message &message)
+{	
+	std::string newNickname = message.getArg(0);
+
+	if (newNickname.empty())
+		message.getSender().sendMessage(ERR_NONICKNAMEGIVEN, ":No nickname given");
+	else if (!isNameAvailable(_clients, newNickname))
+		message.getSender().sendMessage(ERR_NICKNAMEINUSE, newNickname + " :Nickname is already in use");
+	else
+	{
+		message.getSender().setUniqueName(newNickname);
+		std::string ircMessage = 
+			":" + message.getSender().getUniqueName() + "!" +
+			message.getSender().getUsername() +
+			"@localhost NICK :" +
+			newNickname;
+		message.getReceiver()->sendMessage(ircMessage);
+	}
 }
 
 void	Server::user	(Message &message)
@@ -368,10 +370,8 @@ void	Server::privmsg(Message &message)
 	}
 
 	// NO SUCH NICK 401
-	// message.setReceiver(getInstanceByName(&_clients, receiverNickname));
 	message.setReceiver(getInstanceByName(_clients, receiverNickname));
 	if (!message.getReceiver())
-
 	{
 		message.getSender().sendMessage(ERR_NOSUCHNICK, receiverNickname + " :No such nick/channel");
 		return ;

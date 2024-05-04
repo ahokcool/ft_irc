@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/04 05:05:04 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/04 06:11:36 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,10 +78,9 @@ void Client::sendMessage(const std::string &ircMessage) const
 	if(msg[msg.size() - 1] != '\n')
 		msg += "\n";
 	ssize_t bytesSent = send(_socketFd, msg.c_str(), msg.length(), 0);
+	Logger::log("Message send:\n\tMSG -->\t\t" 		+ msg);
 	if (bytesSent == -1)
-		std::cerr << "send failed: " << strerror(errno) << "\n";
-	else
-		std::cout << "Bytes sent: " << bytesSent << "\n";
+		Logger::log("\t ERROR -->\n\t" + std::string(strerror(errno)));
 }
 
 void	Client::sendMessage(const std::string &code, const std::string &message) const
