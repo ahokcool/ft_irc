@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:33 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/04 01:41:06 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/04 04:22:21 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include "Channel.hpp"
+#include "codes.hpp"
 
 class Channel;
 
@@ -53,12 +54,12 @@ class Client
         void                    getInvited(Channel *channel);
         void                    getKicked(Channel *channel);
         
-        void					setNickname(const std::string &nickname) throw(NickNameException);
+        void					setUniqueName(const std::string &nickname);
         void					setUsername(const std::string &username);
         void					setFullname(const std::string &fullname);
         void                    setHostname(const std::string &hostname);
 		int						getSocketFd() const;
-        const std::string		&getNickname() const;
+        const std::string		&getUniqueName() const;
         const std::string		&getUsername() const;
         const std::string		&getFullname() const;
         const std::string		&getHostname() const;
@@ -73,9 +74,6 @@ class Client
         std::string         	_hostname;
         std::list<Channel *>	_channels;
         std::list<Channel *>	_invitations;
-
-		// List of all nicknames that are already in use
-        static std::set<std::string> 	_nicknames;
 };
 
 #endif

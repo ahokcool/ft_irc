@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
+/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/03 23:58:34 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/04 04:18:02 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ class Channel
         void                    addOperator(Client *client);
 
         void                    removeClient(Client *client); // delete empty channel
-        const std::string       &getName() const;
+        const std::string       &getUniqueName() const;
     
 	//TODO: if all the ops left the channel, kick all the clients and delete the channel
 		bool					isActive() const;

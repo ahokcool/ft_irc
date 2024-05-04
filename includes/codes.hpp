@@ -1,8 +1,33 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   codes.hpp                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/05/04 02:01:01 by anshovah          #+#    #+#             */
+/*   Updated: 2024/05/04 03:52:33 by anshovah         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#ifndef CODES_HPP
+#define CODES_HPP
+
+#define ERR_UNKNOWNCOMMAND      "421"     // "<command> :Unknown command"
+#define ERR_NORECIPIENT         "411"     // ":No recipient given (<command>)"
+#define ERR_NOTEXTTOSEND        "412"     // ":No text to send"
+#define ERR_NOSUCHNICK          "401"     // "<nickname>	:No such nick/channel"
+
+
+
+// EVERYTHING BELOW IS NOT USED YET
+// -----------------------------------------------------------------------------
+
+
+
 // privmsg
-#define ERR_NORECIPIENT         411     // ":No recipient given (<command>)"
 
 
-#define ERR_NOTEXTTOSEND        412     // ":No text to send"
 #define ERR_TOOMANYTARGETS      407     // "<target> :Duplicate recipients. No message delivered"
 
 // invite
@@ -35,7 +60,7 @@
 #define ERR_CHANOPRIVSNEEDED    482     // "<channel> 	:You're not channel operator"
 #define RPL_NOTOPIC             331  	//"<channel>	:No topic is set"
 
-composeChnlMsg(int number, msg)
+// composeChnlMsg(int number, msg)
 
 
 // topic
@@ -43,7 +68,6 @@ composeChnlMsg(int number, msg)
 #define ERR_NOSUCHSERVER        402      // "<server name> :No such server"
 
 // whois
-#define ERR_NOSUCHNICK          401     // "<nickname>	:No such nick/channel"
 #define RPL_AWAY                301     // "<nick> 		:<away message>"
 #define RPL_WHOISCHANNELS       319     // "<nick> 		:{[@|+]<channel><space>}"
 #define RPL_ENDOFWHOIS          318     // "<nick> 		:End of /WHOIS list"
@@ -109,3 +133,5 @@ composeChnlMsg(int number, msg)
 // #define ERR_NONICKNAMEGIVEN     431      // ":No nickname given"
 // #define RPL_WHOISSERVER         312      // "<nick> <server> :<server info>"
 // #define RPL_WHOISOPERATOR       313      // "<nick> :is an IRC operator"
+
+#endif

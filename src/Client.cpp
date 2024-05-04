@@ -6,15 +6,13 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/04 01:41:38 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/04 05:05:04 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Client.hpp"
 #include "Server.hpp"
 #include "utils.hpp"
-
-std::set<std::string> Client::_nicknames;
 
 Client::Client(const int socketFd) : _socketFd(socketFd)
 {
@@ -31,7 +29,7 @@ Client::~Client()
 				it++;
 		}
 		_channels.clear();
-	Client::_nicknames.erase(_nickname);
+	// Client::_nicknames.erase(_nickname);
 }
 
 bool	Client::appendBuffer(const char *buffer)
@@ -122,23 +120,15 @@ void Client::getKicked(Channel *channel)
 		//TODO: send the message to the client that ha was kicked. also send it to the channel
 }
 
-void    Client::setNickname(const std::string &nickname) throw(NickNameException)
+void    Client::setUniqueName(const std::string &nickname)
 {
-		info ("Reserving Nickname: ", CLR_BLU);
-	info (nickname, CLR_BLU);
-	if (Client::_nicknames.find(nickname) != Client::_nicknames.end())
-	{
-		throw NickNameException("Nickname in used!"); // '" + nickname + "' already in use");
-				//TODO: send a message to inform client that he need another nickname
-	}
-	Client::_nicknames.insert(nickname);
-		_nickname = nickname;
+	_nickname = nickname;
 }
 
 void Client::setUsername(const std::string &username)
 {
-		info("Set username " + username, CLR_GRN);
-		_username = username;
+	info("Set username " + username, CLR_GRN);
+	_username = username;
 }
 
 void Client::setFullname(const std::string &fullname)
@@ -156,7 +146,7 @@ int Client::getSocketFd() const
 	return _socketFd;
 }
 
-const std::string &Client::getNickname() const
+const std::string &Client::getUniqueName() const
 {
 		return _nickname;
 }

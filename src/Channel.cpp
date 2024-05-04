@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
+/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/03 23:32:02 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/04 04:18:02 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ void Channel::sendMessage(const std::string &ircMessage) const
 
     while (it != _clients.end())
     {
-        // if ((*it)->getNickname() != ircMessage.substr(1, ircMessage.find(' ', 1) - 1))
+        // if ((*it)->getUniqueName() != ircMessage.substr(1, ircMessage.find(' ', 1) - 1))
         //TODO: not send a message to itself
         (*it)->sendMessage(ircMessage);
         it++;
@@ -71,7 +71,7 @@ void	Channel::removeClient(Client *client)
 	// TODO: send a message to the channel?
 }
 
-const std::string &Channel::getName() const
+const std::string &Channel::getUniqueName() const
 {
     return _name;
 }

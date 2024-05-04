@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/04 01:42:29 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/04 05:01:47 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@
 #include <arpa/inet.h>   // For internet operations
 #include <sys/select.h>  // For select function
 #include <signal.h>      // For signal handling
+#include <map>
 #include <cstdlib>		 // For getting the ip of the server
 #include <errno.h>
 #include <poll.h>
@@ -50,7 +51,7 @@ class ServerException : public std::exception
 		ServerException(const std::string &message);
 		~ServerException() 			throw();
 		const char	*what() const	throw();
-
+		
 	private:
 		std::string _message;
 };
@@ -82,17 +83,21 @@ class Server
 	// Processing the Messages
 	// -------------------------------------------------------------------------
 	private:
-		void	processMessage(Client *client, const std::string &ircMessage);
+		void	processMessage(Client &sender, const std::string &ircMessage);
 		bool	isLoggedIn(Message &msg);
-		void	chooseCommand(Message &msg, Channel *cnl);
+		void	chooseCommand(Message &msg);
 
+		typedef void	(Server::*CommandFunction)(Message&);
+		void	nick	(Message &message);
+		void	user	(Message &message);
+		void	whois	(Message &message);
 		void	privmsg	(Message &message);
-		void	join	(Message &message, Channel *channel);
-		void	invite	(Message &message, Channel *channel);
-		void	topic	(Message &message, Channel *channel);
-		void	mode	(Message &message, Channel *channel);
-		void	kick	(Message &message, Channel *channel);
-		void	part	(Message &message, Channel *channel);
+		void	join	(Message &message);
+		void	invite	(Message &message);
+		void	topic	(Message &message);
+		void	mode	(Message &message);
+		void	kick	(Message &message);
+		void	part	(Message &message);
 
 	// -------------------------------------------------------------------------
 	// Client Methods
@@ -123,6 +128,9 @@ class Server
 		std::string			_password;
 		std::list<Client>	_clients;
 		std::list<Channel>	_channels;
+		
+		// Declare the map of all allowed cmds
+		std::map<std::string, CommandFunction> _cmds;
 
 	// -------------------------------------------------------------------------
 	// Static Signal handling (for exit with CTRL C)
@@ -131,6 +139,35 @@ class Server
 		static volatile sig_atomic_t	_keepRunning;
 		static void						setupSignalHandling();
 		static void						sigIntHandler(int sig);
+
+	template <typename L>
+	bool	isNameAvailable(L &list, const std::string &name)
+	{
+		typename L::iterator it;
+
+		for (it = list.begin(); it != list.end(); ++it)
+		{
+			if (it->getUniqueName() == name)
+				return false;
+		}
+		return true;
+	}
+
+	template <typename L>
+	typename L::value_type	*getInstanceByName(L &list, const std::string &name)
+	{
+		typename L::iterator	it;
+
+		for (it = list.begin(); it != list.end(); ++it)
+		{
+			if (it->getUniqueName() == name)
+			{
+				return &(*it);
+				break ;
+			}
+		}
+		return NULL;
+	}
 };
 	
 #endif

@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/04 01:43:08 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/04 05:04:37 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,17 @@
 // -----------------------------------------------------------------------------
 Server::Server(const std::string &port, const std::string &password) : _serverIP("localhost")
 {
+	// Initialize the list of allowed cmds
+	_cmds["NICK"] = &Server::nick;
+    _cmds["USER"] = &Server::user;
+    _cmds["WHOIS"] = &Server::whois;
+    _cmds["PRIVMSG"] = &Server::privmsg;
+    _cmds["JOIN"] = &Server::join;
+    _cmds["INVITE"] = &Server::invite;
+    _cmds["TOPIC"] = &Server::topic;
+    _cmds["MODE"] = &Server::mode;
+    _cmds["KICK"] = &Server::kick;
+    _cmds["PART"] = &Server::part;
 	parseArgs(port, password);
 }
 
@@ -147,13 +158,16 @@ void	Server::goOnline()
             if (fds[i].revents & POLLIN)
 			{
 				cur_client = getClientByFd(fds[i].fd);
+				if (!cur_client)
+					continue ; // should never happen by arcitechture
+					
                 int valread = read(fds[i].fd, buffer, BUFFER_SIZE);
                 if (valread <= 0)
 				{
 					// Some read error happend
 					// The server doesn't bother to much and just deletes this client
-					info("Client" + cur_client->getNickname() + " disconnected", CLR_RED);
-					Logger::log("Client" + cur_client->getNickname() + " disconnected");
+					info("Client" + cur_client->getUniqueName() + " disconnected", CLR_RED);
+					Logger::log("Client" + cur_client->getUniqueName() + " disconnected");
                     close(fds[i].fd);
                     fds.erase(fds.begin() + i);		// erase the client fd from the fd vector
 					removeClient(cur_client);		// erase the client from the client lisr
@@ -175,8 +189,8 @@ void	Server::goOnline()
 					while (!(fullMsg = cur_client->getFullMessage()).empty())
 					{
 						// 3. process the message(s)
-						Logger::log("start processing message from " + cur_client->getNickname() + " -> " + fullMsg);
-						processMessage(cur_client, fullMsg);
+						Logger::log("start processing message from " + cur_client->getUniqueName() + " -> " + fullMsg);
+						processMessage(*cur_client, fullMsg);
 					}
                 }
             }
@@ -236,120 +250,99 @@ void	Server::broadcastMessage(const std::string &message) const
 // -----------------------------------------------------------------------------
 // Processing the Messages
 // -----------------------------------------------------------------------------
-void	Server::processMessage(Client *client, const std::string &ircMessage)
+void	Server::processMessage(Client &sender, const std::string &ircMessage)
 {
-	try 
-	{
-		// Parse the IRC Message
-		Message     msg(client, ircMessage);
-
-		//Execute IRC Message
-		//	1. Check if CLIENT is loggedin
-		if (!isLoggedIn(msg))
-			return ;
-		
-		//	2. Execute normal commands
-		//		3.1. Find the channel if there is  channelname in the msg
-		Channel *channel = getChannelByName(msg.getChannelName());
-		
-		// 		3.2 Process the msg aka call the right function
-		chooseCommand(msg, channel);
-	}
-	catch (MessageException &e)
-	{
-		info(e.what(), CLR_RED);
-		return;
-	}
+	// Parse the IRC Message
+	Message     msg(sender, ircMessage);
+	
+	//Execute IRC Message
+	//	1. Check if CLIENT is loggedin
+	if (!isLoggedIn(msg))
+		return ;
+	
+	//	2. Execute normal commands
+	//		3.1. Find the channel if there is  channelname in the msg
+	msg.setChannel(getChannelByName(msg.getChannelName()));
+	
+	// 		3.2 Process the msg aka call the right function
+	chooseCommand(msg);
 }
 
 bool	Server::isLoggedIn(Message &msg)
 {
 	//	1. Check if NICK is set
-	if (msg.getSender()->getNickname().empty())
+	if (msg.getSender().getUniqueName().empty())
 	{
 		if (msg.getCmd() == "NICK" && !msg.getArg(0).empty())
 		try 
 		{
-			msg.getSender()->setNickname(msg.getArg(0));
+			msg.getSender().setUniqueName(msg.getArg(0));
 		}
 		catch (NickNameException &nne)
 		{
 			info(nne.what(), CLR_RED);
-			msg.getSender()->sendMessage(nne.what());
+			msg.getSender().sendMessage(nne.what());
 			return false;
 		}
 		else
-			msg.getSender()->sendMessage("Select unique nickname first!");
+			msg.getSender().sendMessage("Select unique nickname first!");
 		return false;
 	}
 
 	//	2. Check if USER is set
-	if (msg.getSender()->getUsername().empty())
+	if (msg.getSender().getUsername().empty())
 	{
 		if (msg.getCmd() == "USER" && !msg.getArg(0).empty() && !msg.getArg(1).empty() &&
 			!msg.getArg(2).empty() && !msg.getColon().empty())
 		{
-			msg.getSender()->setUsername(msg.getArg(0));
-			msg.getSender()->setFullname(msg.getColon());
+			msg.getSender().setUsername(msg.getArg(0));
+			msg.getSender().setFullname(msg.getColon());
 		}
 		else
-			msg.getSender()->sendMessage("Select username first!");
+			msg.getSender().sendMessage("Select username first!");
 		return false;
 	}
 	return true;
 }
 
-void	Server::chooseCommand(Message &msg, Channel *cnl)
+void	Server::chooseCommand(Message &msg)
 {
-	switch (msg.getCmd()[0])
+	std::string cmd = msg.getCmd();
+	if (cmd.empty())
+		return ; // this should not happen by design
+
+	for (std::map<std::string, CommandFunction>::iterator it = _cmds.begin(); it != _cmds.end(); ++it)
 	{
-		case 'I':
-			// INVITE <client> #<channel>
-			invite(msg, cnl);
-			break;
-
-		case 'M':
-			// MODE #<cnlName> flag
-			mode(msg, cnl);
-			break;
-
-		case 'K':
-			// KICK #<cnlName> <client>
-			kick(msg, cnl);
-			break;
-
-		case 'J':
-			// JOIN #<cnlName>
-			join(msg, cnl);
-			break;
-			
-		case 'T':
-			// TOPIC #<cnlName> :<topic>
-			topic(msg, cnl);
-			break;
-
-		case 'P':
+		if (cmd == it->first)
 		{
-			if (msg.getCmd()[1] == 'R') // PRIVMSG
-			{
-				// PRIVMSG <recepient> <msg>
-				privmsg(msg);
-			}
-			else // PART
-			{
-				// PART #<cnlName>
-				part(msg, cnl);
-			}
+			(this->*(it->second))(msg);
+			return ;
 		}
-			break;
-
-		default:
-			info("Invalid msg", CLR_RED);
-			// :10.11.3.6 421 anshovah_ PRIMSG :Unknown command TODO:
-			msg.getSender()->sendMessage("421", msg.getCmd() + " :Unknown command");
-			break;
 	}
+	// :10.11.3.6 421 anshovah_ PRIMSG :Unknown command TODO:
+	msg.getSender().sendMessage(ERR_UNKNOWNCOMMAND, msg.getCmd() + " :Unknown command");
+
+	// sender->sendMessage(ERR_NORECIPIENT, ":No recipient given (<command>)");
+	// throw MessageException(ERR_NORECIPIENT);
+    // if (ircMessage.empty())
+	// 	throw MessageException("Empty message");
 }
+
+void	Server::nick	(Message &message)
+{
+(void)message;
+}
+
+void	Server::user	(Message &message)
+{
+(void)message;
+}
+
+void	Server::whois	(Message &message)
+{
+(void)message;
+}
+
 
 /* 
 	receiver not found				ERR_NOSUCHNICK
@@ -358,102 +351,120 @@ void	Server::chooseCommand(Message &msg, Channel *cnl)
  */
 void	Server::privmsg(Message &message)
 {
-	// PRIVMSG <recepient> <message>
-	// 1. need to find the recepient
-	message.setReceiver(getClientByNick(message.getArg(0)));
-	if (!message.getSender() || !message.getReceiver())
+	// NO RECIPIENT
+	std::string receiverNickname = message.getArg(0);
+
+	if (receiverNickname.empty())
 	{
-		info("Sender/Recepient not found", CLR_RED);
-		// TODO: send a message to the sender that the recepient was not found
-		return;
+		message.getSender().sendMessage(ERR_NORECIPIENT, ":No recipient given (PRIVMSG)");
+		return ;
+	}
+	
+	// NO TEXT TO SEND
+	if (message.getColon().empty())
+	{
+		message.getSender().sendMessage(ERR_NOTEXTTOSEND, ":No text to send");
+		return ;
 	}
 
-	// 2. send the message to the recepient
-	std::string ircMessage = 
-		":" + message.getSender()->getNickname() + "!" +
-		message.getSender()->getUsername() +
-		"@HELLOWORLD PRIVMSG " +
-		message.getReceiver()->getNickname() +
-		" :" +
-		message.getArg(1) + "\r\n";
-	// std::cout << "HERE\n" << ircMessage << "\n";
+	// NO SUCH NICK 401
+	// message.setReceiver(getInstanceByName(&_clients, receiverNickname));
+	message.setReceiver(getInstanceByName(_clients, receiverNickname));
+	if (!message.getReceiver())
+
+	{
+		message.getSender().sendMessage(ERR_NOSUCHNICK, receiverNickname + " :No such nick/channel");
+		return ;
+	}
+	
 	// :anshovah_!anshovah@F456A.75198A.60D2B2.ADA236.IP PRIVMSG astein :joao is lazyao
+	std::string ircMessage = 
+		":" + message.getSender().getUniqueName() + "!" +
+		message.getSender().getUsername() +
+		"@localhost PRIVMSG " +
+		receiverNickname +
+		" :" +
+		message.getColon();
 	message.getReceiver()->sendMessage(ircMessage);
 }
 
-
-void	Server::join(Message &message, Channel *channel)
-{
-	if (!channel)
-		channel = createNewChannel(message);
-	if (!channel)
-	{
-		info ("STRANGE CASE: COULD NOT FIND NOR CREATE CHANNEL", CLR_RED);
-		message.getSender()->sendMessage("Could not create channel"); 
-		return ;
-	}
-	message.getSender()->joinChannel(channel);
-	channel->addClient(message.getSender());
-	info(message.getSender()->getNickname() + " JOINED Channel " + channel->getName(), CLR_GRN);
-	//TODO: send messages to the channel that the client has joined
-}
-
-void	Server::invite(Message &message, Channel *channel)
-{
-	// INVITE <client> #<channel>
-	// if (!findInList(message.getArg1(), _clients))
-	// {
-	// 	// info(":No such nick", CLR_RED);
-	// 	// TODO: no suck nick
-	// 	return;
-	// }
-	// if (!findInList(message.getChannelName(), _channels))
-	// {
-	// 	// TODO: no such channel
-	// 	return ;
-	// }
-	message.getReceiver()->getInvited(channel);
-	// TODO: send a message that a client was invited to a channel
-}
-
-void	Server::topic(Message &message,  Channel *channel)
+void	Server::join(Message &message)
 {
 	(void)message;
-	(void)channel;
+	// if (!channel)
+	// 	channel = createNewChannel(message);
+	// if (!channel)
+	// {
+	// 	info ("STRANGE CASE: COULD NOT FIND NOR CREATE CHANNEL", CLR_RED);
+	// 	message.getSender().sendMessage("Could not create channel"); 
+	// 	return ;
+	// }
+	// message.getSender().joinChannel(channel);
+	// channel->addClient(&(message.getSender()));
+	// info(message.getSender().getUniqueName() + " JOINED Channel " + channel->getUniqueName(), CLR_GRN);
+	// //TODO: send messages to the channel that the client has joined
+}
+
+void	Server::invite(Message &message)
+{
+	(void)message;
+
+	// // INVITE <client> #<channel>
+	// // if (!findInList(message.getArg1(), _clients))
+	// // {
+	// // 	// info(":No such nick", CLR_RED);
+	// // 	// TODO: no suck nick
+	// // 	return;
+	// // }
+	// // if (!findInList(message.getChannelName(), _channels))
+	// // {
+	// // 	// TODO: no such channel
+	// // 	return ;
+	// // }
+	// message.getReceiver()->getInvited(channel);
+	// // TODO: send a message that a client was invited to a channel
+}
+
+void	Server::topic(Message &message)
+{
+	(void)message;
 	// TOPIC #<channelName> :<topic>
 	
 }
 
-void	Server::mode(Message &message,  Channel *channel)
+void	Server::mode(Message &message)
 {
 	(void)message;
-	(void)channel;
 	// MODE #<channelName> flag
 }
 
-void	Server::kick(Message &message, Channel *channel)
+void	Server::kick(Message &message)
 {
-	// KICK #<channelName> <client>
-	// if (!findInList(message.getArg1(), _clients))
-	// {
-	// 	// info(":No such nick", CLR_RED);
-	// 	// TODO: no suck nick
-	// 	return;
-	// }
-	// if (!findInList(message.getChannelName(), _channels))
-	// {
-	// 	// TODO: no such channel
-	// 	return ;
-	// }
-	message.getSender()->getKicked(channel);
+	(void)message;
+
+	// // KICK #<channelName> <client>
+	// // if (!findInList(message.getArg1(), _clients))
+	// // {
+	// // 	// info(":No such nick", CLR_RED);
+	// // 	// TODO: no suck nick
+	// // 	return;
+	// // }
+	// // if (!findInList(message.getChannelName(), _channels))
+	// // {
+	// // 	// TODO: no such channel
+	// // 	return ;
+	// // }
+	// message.getSender().getKicked(channel);
 }
 
-void	Server::part(Message &message, Channel *channel)
+void	Server::part(Message &message)
 {
-	message.getSender()->leaveChannel(channel);
-	channel->removeClient(message.getSender());
-	if (!channel->isActive())
-		_channels.remove(*channel);
+	(void)message;
+
+	// message.getSender().leaveChannel(channel);
+	// channel->removeClient(&(message.getSender()));
+	// if (!channel->isActive())
+	// 	_channels.remove(*channel);
 }
 
 // -----------------------------------------------------------------------------
@@ -488,7 +499,7 @@ Client	*Server::getClientByNick(const std::string &nickname)
 {
 	for (std::list<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 	{
-		if (it->getNickname() == nickname)
+		if (it->getUniqueName() == nickname)
 			return &(*it);
 	}
 	return NULL;
@@ -518,7 +529,7 @@ Channel	*Server::getChannelByName(const std::string &channelName)
 	// Try to find the channel
 	for (std::list<Channel>::iterator it = _channels.begin(); it != _channels.end(); ++it)
 	{
-		if (it->getName() == channelName)
+		if (it->getUniqueName() == channelName)
 			return &(*it);
 	}
 	return NULL;
@@ -529,7 +540,7 @@ Channel	*Server::createNewChannel(Message &msg)
 	if (getChannelByName(msg.getChannelName()))
 		return NULL;
 	// Couldn't find the channel -> create it
-	_channels.push_back(Channel(msg.getChannelName(), msg.getSender()));
+	_channels.push_back(Channel(msg.getChannelName(), &(msg.getSender())));
 	return &(_channels.back());
 }
 
