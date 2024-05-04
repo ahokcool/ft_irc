@@ -3,36 +3,26 @@
 /*                                                        :::      ::::::::   */
 /*   Message.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
+/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/02 16:44:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/04 01:34:06 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/04 06:55:02 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Message.hpp"
 #include "utils.hpp"
 
-Message::Message()
+Message::Message(Client &sender, const std::string &ircMessage) : _sender(sender), _receiver(NULL), _channel(NULL)
 {
-    // Nothing to do
-}
-
-Message::Message(Client *sender, const std::string &ircMessage) throw(MessageException) : 
-	_sender(sender), _receiver(NULL)
-{
-	if (!sender)
-		throw MessageException("No sender");
-    if (ircMessage.empty())
-		throw MessageException("Empty message");
-
+	// by architechture IRC message can not be empty
 	parseMessage(ircMessage);
-	Logger::log("Message parsed:\n\tCMD -->\t" + _cmd +
-								"\n\tCHANNEL -->\t" + _channelName +
-								"\n\tARG1 -->\t" + _args[0] + 
-								"\n\tARG2 -->\t" + _args[1] + 
-								"\n\tARG3 -->\t" + _args[2] + 
-								"\n\tCOLON -->\t" + _colon);
+	Logger::log("Message parsed:\n\tCMD -->\t\t\t" 		+ _cmd +
+								"\n\tCHANNEL -->\t" 	+ _channelName +
+								"\n\tARG0 -->\t\t" 		+ _args[0] + 
+								"\n\tARG1 -->\t\t" 		+ _args[1] + 
+								"\n\tARG2 -->\t\t" 		+ _args[2] + 
+								"\n\tCOLON -->\t\t" 	+ _colon);
 }
 
 Message::~Message()
@@ -45,7 +35,12 @@ void Message::setReceiver(Client *receiver)
 	_receiver = receiver;
 }
 
-Client *Message::getSender() const
+void Message::setChannel(Channel *channel)
+{
+	_channel = channel;
+}
+
+Client &Message::getSender() const
 {
 	return _sender;
 }
@@ -53,6 +48,11 @@ Client *Message::getSender() const
 Client *Message::getReceiver() const
 {
 	return _receiver;
+}
+
+Channel *Message::getChannel() const
+{
+	return _channel;
 }
 
 const std::string &Message::getCmd() const
@@ -84,7 +84,7 @@ const std::string &Message::getArg(size_t index) const
 	INVITE jojojo #TEST1
 	TODO: copilot the other cases
 */
-void Message::parseMessage(const std::string &ircMessage) throw(MessageException)
+void Message::parseMessage(const std::string &ircMessage)
 {
 	std::istringstream iss(ircMessage);
     std::string token;
@@ -107,23 +107,4 @@ void Message::parseMessage(const std::string &ircMessage) throw(MessageException
 			break;
 		}
 	}
-    if (_cmd.empty())
-        throw MessageException("Empty IRC command!");
-}
-
-// EXCEPTION CLASS
-// -----------------------------------------------------------------------------
-MessageException::MessageException(const std::string &message) : _message(message)
-{
-    // Nothing to do
-}
-
-MessageException::~MessageException() throw()
-{
-    // Nothing to do
-}
-
-const char	*MessageException::what() const throw()
-{
-    return _message.c_str();
 }
