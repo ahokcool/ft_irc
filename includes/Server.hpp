@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/03 20:24:33 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/03 22:29:01 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,6 +115,7 @@ class Server
 	// Attributes
 	// -------------------------------------------------------------------------
 	private:
+		std::string			_serverIP;
 		struct sockaddr_in	_address;
 		int					_socket;
 		u_int16_t			_port;

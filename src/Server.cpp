@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/03 20:33:17 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/03 23:20:20 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 // -----------------------------------------------------------------------------
 // Construction / Destruction
 // -----------------------------------------------------------------------------
-Server::Server(const std::string &port, const std::string &password)
+Server::Server(const std::string &port, const std::string &password) : _serverIP("localhost")
 {
 	parseArgs(port, password);
 }
@@ -340,25 +340,28 @@ void	Server::chooseCommand(Message &msg, Channel *cnl)
 
 		default:
 			info("Invalid msg", CLR_RED);
-			msg.getSender()->sendMessage("Command is not supported");
+			// :10.11.3.6 421 anshovah_ PRIMSG :Unknown command TODO:
+			msg.getSender()->sendMessage("421", msg.getCmd() + " :Unknown command");
 			break;
 	}
 }
 
+/* 
+	receiver not found				ERR_NOSUCHNICK
+		inform sender about it
+	send message to receiver
+ */
 void	Server::privmsg(Message &message)
 {
 	// PRIVMSG <recepient> <message>
 	// 1. need to find the recepient
 	message.setReceiver(getClientByNick(message.getArg(0)));
-	info("privmsg", CLR_BLU);
-
 	if (!message.getSender() || !message.getReceiver())
 	{
 		info("Sender/Recepient not found", CLR_RED);
 		// TODO: send a message to the sender that the recepient was not found
 		return;
 	}
-	info("privmsg2", CLR_BLU);
 
 	// 2. send the message to the recepient
 	std::string ircMessage = 
@@ -372,6 +375,7 @@ void	Server::privmsg(Message &message)
 	// :anshovah_!anshovah@F456A.75198A.60D2B2.ADA236.IP PRIVMSG astein :joao is lazyao
 	message.getReceiver()->sendMessage(ircMessage);
 }
+
 
 void	Server::join(Message &message, Channel *channel)
 {

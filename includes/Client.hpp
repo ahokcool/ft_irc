@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:33 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/03 17:44:44 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/03 22:03:45 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@ class Client
         ~Client();
 
         void                    sendMessage(const std::string &ircMessage) const;
+        void                    sendMessage(const std::string &code, const std::string &message) const;
 
         void                    joinChannel(Channel *channel);
         void                    leaveChannel(Channel *channel);
