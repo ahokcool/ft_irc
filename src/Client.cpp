@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/04 06:11:36 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/04 06:38:40 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,22 +147,22 @@ int Client::getSocketFd() const
 
 const std::string &Client::getUniqueName() const
 {
-		return _nickname;
+	return _nickname;
 }
 
 const std::string &Client::getUsername() const
 {
-		return _username;
+	return _username;
 }
 
 const std::string &Client::getFullname() const
 {
-		return _fullname;
+	return _fullname;
 }
 
 const std::string &Client::getHostname() const
 {
-		return _hostname;
+	return _hostname;
 }
 
 // Static Function

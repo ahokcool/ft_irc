@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/04 06:10:08 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/04 06:39:35 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -283,14 +283,10 @@ bool	Server::isLoggedIn(Message &msg)
 	//	2. Check if USER is set
 	if (msg.getSender().getUsername().empty())
 	{
-		if (msg.getCmd() == "USER" && !msg.getArg(0).empty() && !msg.getArg(1).empty() &&
-			!msg.getArg(2).empty() && !msg.getColon().empty())
-		{
-			msg.getSender().setUsername(msg.getArg(0));
-			msg.getSender().setFullname(msg.getColon());
-		}
+		if (msg.getCmd() == "USER")
+			user(msg);
 		else
-			msg.getSender().sendMessage("Select username first!");
+			msg.getSender().sendMessage(ERR_NOTREGISTERED, ":You have not registered");
 		return false;
 	}
 	return true;
@@ -317,7 +313,11 @@ void	Server::chooseCommand(Message &msg)
 // /NICK
 void	Server::nick(Message &message)
 {	
+	std::string oldNickname = message.getSender().getUniqueName();
 	std::string newNickname = message.getArg(0);
+
+	if (oldNickname.empty())
+		oldNickname = newNickname;
 
 	if (newNickname.empty())
 		message.getSender().sendMessage(ERR_NONICKNAMEGIVEN, ":No nickname given");
@@ -327,17 +327,26 @@ void	Server::nick(Message &message)
 	{
 		message.getSender().setUniqueName(newNickname);
 		std::string ircMessage = 
-			":" + message.getSender().getUniqueName() + "!" +
+			":" + oldNickname + "!" +
 			message.getSender().getUsername() +
 			"@localhost NICK :" +
 			newNickname;
-		message.getReceiver()->sendMessage(ircMessage);
+		message.getSender().sendMessage(ircMessage);
 	}
 }
 
-void	Server::user	(Message &message)
+void	Server::user(Message &msg)
 {
-(void)message;
+	std::string newUsername = msg.getArg(0);
+	
+	if (!msg.getArg(0).empty() && !msg.getArg(1).empty() &&
+		!msg.getArg(2).empty() && !msg.getColon().empty())
+	{
+		msg.getSender().setUsername(msg.getArg(0));
+		msg.getSender().setFullname(msg.getColon());
+	}
+	else
+		msg.getSender().sendMessage(ERR_NEEDMOREPARAMS, "USER :Not enough parameters");
 }
 
 void	Server::whois	(Message &message)

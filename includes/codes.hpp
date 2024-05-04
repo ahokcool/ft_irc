@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/04 02:01:01 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/04 06:00:09 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/04 06:28:44 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 #define ERR_NONICKNAMEGIVEN     "431"       // ":No nickname given"
 #define ERR_NICKNAMEINUSE       "433"       // "<nick> :Nickname is already in use"
 #define ERR_NOTREGISTERED       "451"       // ":You have not registered"
+#define ERR_NEEDMOREPARAMS      "461"     // "<command> :Not enough parameters"
 
 
 
@@ -34,7 +35,6 @@
 #define ERR_TOOMANYTARGETS      407     // "<target> :Duplicate recipients. No message delivered"
 
 // invite
-#define ERR_NEEDMOREPARAMS      461     // "<command> :Not enough parameters"
 
 #define RPL_INVITING            341     // "<channel> <nick>"
 #define RPL_CHANNELMODEIS       324     // "<channel> <mode> <mode params>"
