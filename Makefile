@@ -22,12 +22,14 @@ CXXINCLUDES    = -I$(INCLUDE_FOLDER)
 
 # Files
 GITPUSH 	= ./git_push.sh
+LOG_FILE	= log.txt
 SRCS 		= $(addprefix $(SRC_FOLDER), \
 				main.cpp 	\
 				Server.cpp 	\
 				Channel.cpp \
 				Client.cpp	\
 				Message.cpp	\
+				Logger.cpp	\
 				utils.cpp)
 
 # Includes
@@ -36,6 +38,7 @@ INC 		= $(addprefix $(INCLUDE_FOLDER), \
 				Channel.hpp	\
 				Client.hpp	\
 				Message.hpp	\
+				Logger.hpp	\
 				utils.hpp)
 
 # Object files
@@ -56,6 +59,7 @@ $(OBJ_FOLDER)%.o: %.cpp
 	@$(CXX) $(CXXFLAGS) $(CXXINCLUDES) -c $< -o $@
 
 clean:
+	@$(RM) $(LOG_FILE)
 	@$(RM) $(OBJ_FOLDER)
 	@echo $(RED) $(NAME) "removed object files" $(RESET)
 

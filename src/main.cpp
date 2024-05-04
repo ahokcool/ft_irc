@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 20:47:42 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/03 16:56:26 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/04 01:28:11 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ int main(int ac, char **av)
         std::cout << "Usage: ./ircserv <port> <pswd>" << std::endl;
         return 1;
     }
+	Logger::init();
 	Server::setupSignalHandling();
     try
     {
@@ -48,6 +49,7 @@ int main(int ac, char **av)
     { //TODO: check if used
 		info ("UNKNOWN EXCEPTION CAUGHT: ", CLR_RED);
     }
+	Logger::close();
 	title("IRC Server stopped!", true, true);
     return 0;
 }

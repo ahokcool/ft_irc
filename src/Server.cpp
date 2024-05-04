@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/03 20:33:17 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/04 01:29:32 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,6 +80,11 @@ void	Server::initNetwork()
 
 	// TODO: SET THE PASSWORD
 
+	// Use fcntl to set the socket to non-blocking
+	// https://pubs.opengroup.org/onlinepubs/009695399/functions/fcntl.html
+	if (fcntl(_socket, F_SETFL, O_NONBLOCK) < 0)
+		throw ServerException("Fcntl failed\n\t" +	std::string(strerror(errno)));
+
 	// Binds the socket to the previously defined address
 	// https://pubs.opengroup.org/onlinepubs/009695399/functions/bind.html
     if (bind(_socket, (struct sockaddr *)&_address, sizeof(_address)) < 0)
@@ -124,55 +129,55 @@ void	Server::goOnline()
 			// https://pubs.opengroup.org/onlinepubs/009695399/functions/accept.html
 			int	addrlen = sizeof(_address);
 			int new_socket = accept(fds[0].fd, (struct sockaddr *)&_address, (socklen_t*)&addrlen);
-
             if (new_socket < 0)
 				throw ServerException("Accept failed\n\t" + std::string(strerror(errno)));
+			// Use fcntl to set the socket to non-blocking
+			// https://pubs.opengroup.org/onlinepubs/009695399/functions/fcntl.html
+			if (fcntl(new_socket, F_SETFL, O_NONBLOCK) < 0)
+				throw ServerException("Fcntl failed\n\t" +	std::string(strerror(errno)));
 			addClient(Client(new_socket));
         }
 
 		// TODO: in client check for to long msgs
 		// Read from clients
-		char buffer[1024];
+		char buffer[BUFFER_SIZE+1];	// +1 for the null terminator
+		Client *cur_client;
 		for (size_t i = 1; i < fds.size(); ++i)
 		{
             if (fds[i].revents & POLLIN)
 			{
+				cur_client = getClientByFd(fds[i].fd);
                 int valread = read(fds[i].fd, buffer, BUFFER_SIZE);
-                if (valread == 0)
+                if (valread <= 0)
 				{
-                    std::cout << "Client disconnected" << std::endl;
+					// Some read error happend
+					// The server doesn't bother to much and just deletes this client
+					info("Client" + cur_client->getNickname() + " disconnected", CLR_RED);
+					Logger::log("Client" + cur_client->getNickname() + " disconnected");
                     close(fds[i].fd);
-                    fds.erase(fds.begin() + i);
+                    fds.erase(fds.begin() + i);		// erase the client fd from the fd vector
+					removeClient(cur_client);		// erase the client from the client lisr
                     --i; // Adjust loop counter since we removed an element
-                } else if (valread < 0)
-				{
-                    perror("read");
-                    exit(EXIT_FAILURE);
-                } else
+                }
+				else
 				{
                     buffer[valread] = '\0';
-					info("1", CLR_BLU);
-					
-					std::string::size_type start = 0;
-					std::string::size_type end;
-					std::string msg(buffer);
-
-					while ((end = msg.find('\n', start)) != std::string::npos) {
-                    std::cout << "Message PART from client: " << msg.substr(start, end - start) << std::endl;
-
-						processMessage(getClientByFd(fds[i].fd), msg.substr(start, end - start));
-						start = end + 1;
+					// Since the buffer could only be a part of a message we
+					// 1. append it to the client buffer
+					if (!cur_client->appendBuffer(buffer))
+					{
+						cur_client->sendMessage("Message was to long and will be deleted");
+						// The message was to long
+						// The full messages will be deleted and the client will be informed
 					}
-
-					if (start < msg.size()) {
-                    std::cout << "Message PART from client: " << msg.substr(start) << std::endl;
-
-						processMessage(getClientByFd(fds[i].fd), msg.substr(start));
-
-    }
-					// if (buffer[0] == '.')
-					// 	send(fds[i].fd, ".", 1, 0);
-					// processMessage(getClientByFd(fds[i].fd), buffer);
+					// 2. get the full message(s) from the client buffer
+					std::string fullMsg;
+					while (!(fullMsg = cur_client->getFullMessage()).empty())
+					{
+						// 3. process the message(s)
+						Logger::log("start processing message from " + cur_client->getNickname() + " -> " + fullMsg);
+						processMessage(cur_client, fullMsg);
+					}
                 }
             }
 		}
@@ -455,11 +460,14 @@ void	Server::addClient(Client client)
 	_clients.push_back(client);
 }
 
-void	Channel::removeClient(Client *client)
+void	Server::removeClient(Client *client)
 {
-    // TODO: test check if one op can kick another op
-    _clients.remove(client);
-    _operators.remove(client); // TODO: test if this fails if the client isnt in the list
+	if (!client)
+		return;
+	_clients.remove(*client);
+	// TODO: CHECK if this calls the client destructor
+	// There also the username should be freed again!
+	// Print an info that the user was deleted!
 }
 
 Client	*Server::getClientByFd(int fd)
