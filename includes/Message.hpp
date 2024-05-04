@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Message.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/02 16:37:13 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/03 17:41:32 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/04 01:30:28 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include <string>
 #include <sstream>
 #include "Client.hpp"
+#include "Logger.hpp"
 
 // Standart exception class for Message
 class MessageException : public std::exception

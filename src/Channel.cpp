@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/03 20:27:38 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/03 23:32:02 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,13 @@ void Channel::addOperator(Client *client)
 	_operators.push_back(client);
 }
 
-
+void	Channel::removeClient(Client *client)
+{
+    // TODO: test check if one op can kick another op
+    _clients.remove(client);
+    _operators.remove(client); // TODO: test if this fails if the client isnt in the list
+	// TODO: send a message to the channel?
+}
 
 const std::string &Channel::getName() const
 {

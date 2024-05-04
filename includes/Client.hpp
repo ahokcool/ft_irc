@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:33 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/03 22:03:45 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/04 01:41:06 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,11 @@ class Client
         Client(const int socketFd);
         ~Client();
 
+		bool					appendBuffer(const char *buffer);
+		std::string				getFullMessage();
+
+		bool					operator==(const Client &other) const;
+
         void                    sendMessage(const std::string &ircMessage) const;
         void                    sendMessage(const std::string &code, const std::string &message) const;
 
@@ -60,13 +65,14 @@ class Client
 
     private:
         Client();
-        int               		_socketFd;
-        std::string			       		_nickname;
-        std::string             		_username;
-        std::string                     _fullname;
-        std::string             		_hostname;
-        std::list<Channel *>    		_channels;
-        std::list<Channel *>            _invitations;
+		std::string				_inputBuffer;
+        int						_socketFd;
+        std::string			   	_nickname;
+        std::string         	_username;
+        std::string				_fullname;
+        std::string         	_hostname;
+        std::list<Channel *>	_channels;
+        std::list<Channel *>	_invitations;
 
 		// List of all nicknames that are already in use
         static std::set<std::string> 	_nicknames;
