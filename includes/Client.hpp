@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:33 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/03 17:44:44 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/04 01:16:38 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,11 @@ class Client
         Client(const int socketFd);
         ~Client();
 
+		bool					appendBuffer(const char *buffer);
+		std::string				getFullMessage();
+
+		bool					operator==(const Client &other) const;
+
         void                    sendMessage(const std::string &ircMessage) const;
 
         void                    joinChannel(Channel *channel);
@@ -59,13 +64,14 @@ class Client
 
     private:
         Client();
-        int               		_socketFd;
-        std::string			       		_nickname;
-        std::string             		_username;
-        std::string                     _fullname;
-        std::string             		_hostname;
-        std::list<Channel *>    		_channels;
-        std::list<Channel *>            _invitations;
+		std::string				_inputBuffer;
+        int						_socketFd;
+        std::string			   	_nickname;
+        std::string         	_username;
+        std::string				_fullname;
+        std::string         	_hostname;
+        std::list<Channel *>	_channels;
+        std::list<Channel *>	_invitations;
 
 		// List of all nicknames that are already in use
         static std::set<std::string> 	_nicknames;

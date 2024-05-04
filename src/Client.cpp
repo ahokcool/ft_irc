@@ -3,14 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/03 19:45:40 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/04 01:21:15 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Client.hpp"
+#include "Server.hpp"
 #include "utils.hpp"
 
 std::set<std::string> Client::_nicknames;
@@ -32,6 +33,39 @@ Client::~Client()
     _channels.clear();
 	Client::_nicknames.erase(_nickname);
 }
+
+bool	Client::appendBuffer(const char *buffer)
+{
+	_inputBuffer += std::string(buffer);
+	if (_inputBuffer.size() > BUFFER_SIZE && _inputBuffer.find("\r\n") == std::string::npos)
+	{
+		_inputBuffer.clear();
+		return false;
+	}
+	return true;
+}
+
+std::string	Client::getFullMessage()
+{
+	size_t pos = _inputBuffer.find("\r\n");
+	if(pos != std::string::npos)
+	{
+		std::string _fullMsg;
+		_fullMsg = _inputBuffer.substr(0, pos);
+		_inputBuffer = _inputBuffer.substr(pos + 2);
+		return _fullMsg;
+	}
+	return std::string("");
+}
+
+bool	Client::operator==(const Client &other) const
+{
+	return _socketFd == other._socketFd;
+}
+
+
+
+
 
  #include <string.h>
  #include <errno.h>

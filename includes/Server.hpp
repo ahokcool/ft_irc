@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/03 20:24:33 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/04 01:29:01 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,12 +33,13 @@
 #include <errno.h>
 #include <poll.h>
 
-#include "utils.hpp"
 #include "Client.hpp"
 #include "Channel.hpp"
 #include "Message.hpp"
+#include "utils.hpp"
+#include "Logger.hpp"
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 512	// IRC message buffer size
 
 // -------------------------------------------------------------------------
 // Standard exception class for server
