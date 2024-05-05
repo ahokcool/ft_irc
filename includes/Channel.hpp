@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/05 02:02:43 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/05 05:33:05 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ class Channel
         void                    removeClient	(Client &client);
         void                    removeOperator	(Client &client);
 
-
+		void					topicManager	(Message &msg);
 		
 		
         void                    sendMessageToClients(const std::string &ircMessage) const;
@@ -67,6 +67,7 @@ class Channel
         Channel();
         const std::string       _name;
         std::string             _topic;
+        std::string             _topicChange;
         std::string             _key; // empty string means no password
         size_t                  _limit; // 0 means unset
         bool                    _inviteOnly;

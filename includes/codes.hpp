@@ -6,27 +6,40 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/04 02:01:01 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/05 00:38:12 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/05 06:00:24 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+// TODO:
+// IF WE SEND A MESSAGE WE CONSTRUCTED WE HAVE TO MAKE SURE; THATT IT IS NOT TO LONG! AKA 512 CHARS
 
 #ifndef CODES_HPP
 #define CODES_HPP
 
-#define ERR_UNKNOWNCOMMAND      "421"       // "<command> :Unknown command"
-#define ERR_NORECIPIENT         "411"       // ":No recipient given (<command>)"
-#define ERR_NOTEXTTOSEND        "412"       // ":No text to send"
-#define ERR_NOSUCHNICK          "401"       // "<nickname>	:No such nick/channel"
-#define ERR_NONICKNAMEGIVEN     "431"       // ":No nickname given"
-#define ERR_NICKNAMEINUSE       "433"       // "<nick> :Nickname is already in use"
-#define ERR_NOTREGISTERED       "451"       // ":You have not registered"
-#define ERR_NEEDMOREPARAMS      "461"    	// "<command> :Not enough parameters"
-#define ERR_NOSUCHCHANNEL       "403"	    // "<channel name> :No such channel"
-#define ERR_USERONCHANNEL       "443"	    // "<user> <channel> :is already on channel"
-#define ERR_BADCHANNELKEY       "475"   	// "<channel>	:Cannot join channel (+k)"
-#define ERR_INVITEONLYCHAN      "473"   	// "<channel>	:Cannot join channel (+i)"
-#define ERR_CHANNELISFULL       "471"   	// "<channel>	:Cannot join channel (+l)"
+// REPLY CODES
+#define RPL_WHOISUSER			"311"	// "<nick> <user> <host> * :<real name>"
+#define RPL_WHOISCHANNELS		"319"	// "<nick> :{[@|+]<channel><space>}"
+#define RPL_ENDOFWHOIS			"318"	// "<nick> :End of /WHOIS list"
+#define RPL_NOTOPIC				"331"	// "<channel> :No topic is set"
+#define RPL_TOPIC				"332"	// "<channel> :<topic>"
+#define RPL_TOPICADDITIONAL		"333"	// "<channel> astein!alex@F456A.75198A.60D2B2.ADA236.IP 1714884181"
+#define ERR_NOTOPIC		"442"	// 
 
+
+// ERROR CODES
+#define ERR_UNKNOWNCOMMAND		"421"	// "<command> :Unknown command"
+#define ERR_NORECIPIENT			"411"	// ":No recipient given (<command>)"
+#define ERR_NOTEXTTOSEND		"412"	// ":No text to send"
+#define ERR_NOSUCHNICK			"401"	// "<nickname>	:No such nick/channel"
+#define ERR_NONICKNAMEGIVEN		"431"	// ":No nickname given"
+#define ERR_NICKNAMEINUSE		"433"	// "<nick> :Nickname is already in use"
+#define ERR_NOTREGISTERED		"451"	// ":You have not registered"
+#define ERR_NEEDMOREPARAMS		"461"	// "<command> :Not enough parameters"
+#define ERR_NOSUCHCHANNEL		"403"	// "<channel name> :No such channel"
+#define ERR_USERONCHANNEL		"443"	// "<user> <channel> :is already on channel"
+#define ERR_BADCHANNELKEY		"475"	// "<channel>	:Cannot join channel (+k)"
+#define ERR_INVITEONLYCHAN		"473"	// "<channel>	:Cannot join channel (+i)"
+#define ERR_CHANNELISFULL		"471"	// "<channel>	:Cannot join channel (+l)"
 
 
 
@@ -39,14 +52,13 @@
 // privmsg
 
 
-#define ERR_TOOMANYTARGETS      407     // "<target> :Duplicate recipients. No message delivered"
+#define ERR_TOOMANYTARGETS		407     // "<target> :Duplicate recipients. No message delivered"
 
 // invite
 
 #define RPL_INVITING            341     // "<channel> <nick>"
 #define RPL_CHANNELMODEIS       324     // "<channel> <mode> <mode params>"
 #define ERR_CANNOTSENDTOCHAN    404     // "<channel name> :Cannot send to channel"
-#define RPL_TOPIC               332		// "<channel>	:<topic>"
 
 
 
@@ -61,7 +73,7 @@
 #define ERR_KEYSET              467		// "<channel>	:Channel key already set"
 #define ERR_NOTONCHANNEL        442		// "<channel> 	:You're not on that channel"
 #define ERR_CHANOPRIVSNEEDED    482     // "<channel> 	:You're not channel operator"
-#define RPL_NOTOPIC             331  	//"<channel>	:No topic is set"
+
 
 // composeChnlMsg(int number, msg)
 
@@ -70,13 +82,8 @@
 #define ERR_NOSUCHSERVER        402      // "<server name> :No such server"
 
 // whois
-#define RPL_AWAY                301     // "<nick> 		:<away message>"
-#define RPL_WHOISCHANNELS       319     // "<nick> 		:{[@|+]<channel><space>}"
-#define RPL_ENDOFWHOIS          318     // "<nick> 		:End of /WHOIS list"
-#define RPL_WHOISOPERATOR       313     // "<nick> 		:is an IRC operator"
 
 
-#define RPL_WHOISUSER           311		// "<nick> <user> <host> * :<real name>"
 #define RPL_WHOISIDLE           317     // "<nick> <integer> :seconds idle"
 #define RPL_WHOISSERVER         312     // "<nick> <server> :<server info>"
 

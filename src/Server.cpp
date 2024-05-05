@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/05 02:13:38 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/05 05:33:48 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -270,26 +270,17 @@ void	Server::processMessage(Client &sender, const std::string &ircMessage)
 
 bool	Server::isLoggedIn(Message &msg)
 {
-	//	1. Check if NICK is set
-	if (msg.getSender().getUniqueName().empty())
-	{
-		if (msg.getCmd() == "NICK")
-			nick(msg);
-		else
-			msg.getSender().sendMessage(ERR_NOTREGISTERED, ":You have not registered");
-		return false;
-	}
+	if (!msg.getSender().getUniqueName().empty() && !msg.getSender().getUsername().empty())
+		return true;
 
-	//	2. Check if USER is set
-	if (msg.getSender().getUsername().empty())
-	{
-		if (msg.getCmd() == "USER")
-			user(msg);
-		else
-			msg.getSender().sendMessage(ERR_NOTREGISTERED, ":You have not registered");
-		return false;
-	}
-	return true;
+	//	1. Check if NICK is set
+	if (msg.getCmd() == "NICK")
+		nick(msg);
+	else if (msg.getCmd() == "USER")
+		user(msg);
+	else
+		msg.getSender().sendMessage(ERR_NOTREGISTERED, ":You have not registered");
+	return false;
 }
 
 void	Server::chooseCommand(Message &msg)
@@ -349,11 +340,22 @@ void	Server::user(Message &msg)
 		msg.getSender().sendMessage(ERR_NEEDMOREPARAMS, "USER :Not enough parameters");
 }
 
-void	Server::whois	(Message &message)
+void	Server::whois	(Message &msg)
 {
-(void)message;
-}
+	if (msg.getArg(0).empty())
+	{
+		msg.getSender().sendMessage(ERR_NONICKNAMEGIVEN, ":No nickname given");
+		return ;
+	}
+	Client *whoIsClient = getClientByNick(msg.getArg(0));
+	if (!whoIsClient)
+	{
+		msg.getSender().sendMessage(ERR_NOSUCHNICK, msg.getArg(0) + " :No such nick/channel");
+		return ;
+	}
 
+	whoIsClient->sendWhoIsMsg(msg.getSender());
+}
 
 /* 
 	receiver not found				ERR_NOSUCHNICK
@@ -447,9 +449,11 @@ void	Server::invite(Message &message)
 
 void	Server::topic(Message &message)
 {
-	(void)message;
 	// TOPIC #<channelName> :<topic>
-	
+	// TOPIC #<channelName>
+	if (!message.getChannel())
+		message.getSender().sendMessage(ERR_NOSUCHCHANNEL, message.getChannelName() + " :No such channel");
+	message.getChannel()->topicManager(message);
 }
 
 void	Server::mode(Message &message)

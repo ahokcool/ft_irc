@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/05 01:55:10 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/05 04:10:21 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,6 +83,37 @@ void Client::sendMessage(const std::string &ircMessage) const
 		Logger::log("\t ERROR -->\n\t" + std::string(strerror(errno)));
 }
 
+void Client::sendWhoIsMsg(Client &reciever) const
+{
+	// localhost 311 <nick> <user> <host> * :<real name>
+	reciever.sendMessage(
+		":localhost " + std::string(RPL_WHOISUSER) + " " +
+		_nickname + " " +
+		_username + " " +
+		_hostname + " * :" +
+		_fullname);
+
+	// localhost 319 <nick> :{[@|+]<channel><space>}
+	std::string channels;
+	
+	std::cout << "Channels List size: " << _channels.size() << std::endl;
+
+	
+	Logger::log("Channels of: " + _nickname + " :" + channels);
+	for (std::list<Channel *>::const_iterator it = _channels.begin(); it != _channels.end(); ++it)
+		channels += "@" + (*it)->getUniqueName() + " ";
+	if(!channels.empty())
+		reciever.sendMessage(
+			":localhost " + std::string(RPL_WHOISCHANNELS) + " " +
+			_nickname + " :" +
+			channels);
+
+	// localhost 318 <nick> :End of /WHOIS list.
+	reciever.sendMessage(
+		":localhost " + std::string(RPL_ENDOFWHOIS) + " " +
+		_nickname + " :End of /WHOIS list.");
+}
+
 void	Client::sendMessage(const std::string &code, const std::string &message) const
 {
 	std::string ircMessage = 
@@ -94,6 +125,7 @@ void	Client::sendMessage(const std::string &code, const std::string &message) co
 void Client::addChannel(Channel *channel)
 {
 	_channels.push_back(channel);
+	Logger::log("Channel " + channel->getUniqueName() + " added to " + _nickname + "'s channel list!");
 }
 
 void Client::removeChannel(Channel *channel)

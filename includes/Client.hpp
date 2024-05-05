@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:33 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/05 01:02:05 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/05 03:45:54 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,9 @@ class Client
 
         void                    sendMessage(const std::string &ircMessage) const;
         void                    sendMessage(const std::string &code, const std::string &message) const;
+        void 					sendWhoIsMsg(Client &reciever) const;
+
+
 
         void                    addChannel(Channel *channel);
         void                    removeChannel(Channel *channel);
