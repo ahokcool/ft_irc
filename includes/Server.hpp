@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/04 23:38:49 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/05 02:00:26 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -144,6 +144,11 @@ class Server
 	{
 		typename L::iterator it;
 
+		if (name.empty())
+			return false;
+		if (list.empty())
+			return true;
+
 		for (it = list.begin(); it != list.end(); ++it)
 		{
 			if (it->getUniqueName() == name)
@@ -157,7 +162,7 @@ class Server
 	{
 		typename L::iterator	it;
 
-		if (name.empty())
+		if (name.empty() || list.empty())
 			return NULL;
 		for (it = list.begin(); it != list.end(); ++it)
 		{

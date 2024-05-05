@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/05 01:02:15 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/05 01:55:10 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,14 +21,14 @@ Client::Client(const int socketFd) : _socketFd(socketFd)
 
 Client::~Client()
 {
-		std::list<Channel *>::iterator it = _channels.begin();
+	std::list<Channel *>::iterator it = _channels.begin();
 
-		while (it != _channels.end())
-		{
-				(*it)->removeClient(this);
-				it++;
-		}
-		_channels.clear();
+	while (it != _channels.end())
+	{
+		(*it)->removeClient(*this);
+		it++;
+	}
+	_channels.clear();
 	// Client::_nicknames.erase(_nickname);
 }
 

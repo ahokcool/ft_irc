@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/05 01:02:21 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/05 02:13:38 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -242,7 +242,7 @@ void	Server::broadcastMessage(const std::string &message) const
 	// Send it to all channels
 	for (std::list<Channel>::const_iterator it = _channels.begin(); it != _channels.end(); ++it)
 	{
-		it->sendMessage(ircMessage);
+		it->sendMessageToClients(ircMessage);
 	}
 	info("[>DONE] Broadcast message", CLR_GRN);
 }
@@ -418,57 +418,11 @@ void	Server::join(Message &message)
 	{
 		if(!createNewChannel(message))
 			return ; //Smth wrong we could find the channel but we also could create it
-	}
-		
-	// THE CHANNEL ALREADY EXISTED
-		// IF ALREADY IN CHANNEL
-	if (message.getChannel()->isClientInChannel(message.getSender()))
-	{
-		// SEND MESSAGE ALREADY IN CHANNEL |
-		message.getSender().sendMessage(ERR_USERONCHANNEL,
-			message.getSender().getUniqueName() + " " +  message.getChannelName() + " :is already on channel");
 		return ;
 	}
 	
-	// IS K FLAG?
-	if (!message.getChannel()->getKey().empty())
-	{
-		// CHECK IF PASWD IS PROVIDED AND CORRECT
-		if (message.getChannel()->getKey() != message.getArg(0))
-		{
-			// 475
-			message.getSender().sendMessage(ERR_BADCHANNELKEY, message.getChannelName() + " :Cannot join channel (+k)");
-			return ;
-		}
-	}
-	// IF I FLAG
-	if (!message.getChannel()->getInviteOnly())
-	{
-		// CHECK IF INVITED
-		// TODO: check if this sender is invited
-		message.getSender().sendMessage(ERR_INVITEONLYCHAN, message.getChannelName() + " :Cannot join channel (+i)");
-		return ;
-	}
-
-	// IF L FLAG
-	if (message.getChannel()->getUserLimit() != 0)
-	{
-		// TODO: check if this channel is full
-		// CHECK IF CHANNEL IS FULL
-		message.getSender().sendMessage(ERR_CHANNELISFULL, message.getChannelName() + " :Cannot join channel (+l)");
-		return ;
-	}
-
-	// IF WE GOT HERE
-	// JOIN CHANNEL
-	message.getChannel()->addClient(&message.getSender());
-	message.getSender().addChannel(message.getChannel());
-	
-	//  Now talking on #newwww
-		//  astein (alex@F456A.75198A.60D2B2.ADA236.IP) has joined
-		// info() TODO:
-
-	// //TODO: send messages to the channel that the client has joined
+	// LET THE CHANNEL DESIDE IF THE CLIENT CAN JOIN
+	message.getChannel()->addClient(message);
 }
 
 void	Server::invite(Message &message)
@@ -592,7 +546,7 @@ Channel	*Server::createNewChannel(Message &msg)
 {
 	if (isNameAvailable(_channels, msg.getChannelName()))
 	{
-		addChannel(Channel(msg.getChannelName(), &(msg.getSender())));
+		addChannel(Channel(msg.getChannelName(), msg.getSender()));
 		return &(_channels.back());
 	}
 	return NULL;

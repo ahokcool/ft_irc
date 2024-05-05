@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Message.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/02 16:37:13 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/04 03:40:26 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/05 01:49:08 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,9 @@
 #include "Client.hpp"
 #include "Channel.hpp"
 #include "Logger.hpp"
+
+class Client;
+class Channel;
 
 class Message
 {

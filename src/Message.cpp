@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Message.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/02 16:44:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/04 06:55:02 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/05 02:08:50 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,12 +17,12 @@ Message::Message(Client &sender, const std::string &ircMessage) : _sender(sender
 {
 	// by architechture IRC message can not be empty
 	parseMessage(ircMessage);
-	Logger::log("Message parsed:\n\tCMD -->\t\t\t" 		+ _cmd +
+	Logger::log("Message parsed:\n\tCMD -->\t\t" 		+ _cmd +
 								"\n\tCHANNEL -->\t" 	+ _channelName +
-								"\n\tARG0 -->\t\t" 		+ _args[0] + 
-								"\n\tARG1 -->\t\t" 		+ _args[1] + 
-								"\n\tARG2 -->\t\t" 		+ _args[2] + 
-								"\n\tCOLON -->\t\t" 	+ _colon);
+								"\n\tARG0 -->\t" 		+ _args[0] + 
+								"\n\tARG1 -->\t" 		+ _args[1] + 
+								"\n\tARG2 -->\t" 		+ _args[2] + 
+								"\n\tCOLON -->\t" 		+ _colon);
 }
 
 Message::~Message()
