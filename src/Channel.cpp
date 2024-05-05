@@ -3,19 +3,19 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/04 04:18:02 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/05 01:11:21 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Channel.hpp"
 
 // Constructor
-Channel::Channel(const std::string &name, Client *client) : _name(name)
+Channel::Channel(const std::string &name, Client *client) : _name(name), _clients()
 {
-    client->joinChannel(this);
+    client->addChannel(this);
     this->addClient(client);
     this->addOperator(client);
     info("NEW CHANNEL " + name + " CREATED", CLR_GRN);
@@ -28,7 +28,7 @@ Channel::~Channel()
 
     while (it != _clients.end())
     {
-        (*it)->leaveChannel(this);
+        (*it)->removeChannel(this);
         it++;
     }
     _clients.clear();
@@ -63,6 +63,59 @@ void Channel::addOperator(Client *client)
 	_operators.push_back(client);
 }
 
+// SETTERS
+void	Channel::setTopic(const std::string &param)
+{
+	_topic = param;
+}
+
+void	Channel::setKey(const std::string &param)
+{
+	_key = param;
+}
+
+void	Channel::setUserLimit(const size_t param)
+{
+	_limit = param;
+}
+
+void	Channel::setInviteOnly(const bool param)
+{
+	_inviteOnly = param;
+}
+
+void	Channel::setTopicProtected(const bool param)
+{
+	_topicProtected = param;
+}
+
+// GETTERS
+const std::string		&Channel::getTopic() const
+{
+	return _topic;
+}
+
+const std::string		&Channel::getKey() const
+{
+	return _key;
+}
+
+size_t 			Channel::getUserLimit() const
+{
+	return _limit;
+}
+
+bool 				Channel::getInviteOnly() const
+{
+	return _inviteOnly;
+}
+
+bool 				Channel::getTopicProtected() const
+{
+	return _topicProtected;
+}
+
+
 void	Channel::removeClient(Client *client)
 {
     // TODO: test check if one op can kick another op
@@ -76,7 +129,19 @@ const std::string &Channel::getUniqueName() const
     return _name;
 }
 
-bool					Channel::isActive() const
+bool	Channel::isClientInChannel(const Client &client) const
+{
+	std::list<Client *>::const_iterator it;
+
+	for (it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		if (&client == *it)
+			return true;
+	}
+	return false;
+}
+
+bool	Channel::isActive() const
 {
 	if(_operators.size() == 0)
 		return false;

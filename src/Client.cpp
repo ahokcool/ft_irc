@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/04 06:38:40 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/05 01:02:15 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,15 +91,12 @@ void	Client::sendMessage(const std::string &code, const std::string &message) co
 }
 
 
-void Client::joinChannel(Channel *channel)
+void Client::addChannel(Channel *channel)
 {
-		_channels.push_back(channel);
-		//  Now talking on #newwww
-		//  astein (alex@F456A.75198A.60D2B2.ADA236.IP) has joined
-		// info() TODO:
+	_channels.push_back(channel);
 }
 
-void Client::leaveChannel(Channel *channel)
+void Client::removeChannel(Channel *channel)
 {
 		_channels.remove(channel);
 }

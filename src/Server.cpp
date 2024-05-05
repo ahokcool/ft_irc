@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/04 06:39:35 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/05 01:02:21 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -262,7 +262,7 @@ void	Server::processMessage(Client &sender, const std::string &ircMessage)
 	
 	//	2. Execute normal commands
 	//		3.1. Find the channel if there is  channelname in the msg
-	msg.setChannel(getChannelByName(msg.getChannelName()));
+	msg.setChannel(getInstanceByName(_channels, msg.getChannelName()));
 	
 	// 		3.2 Process the msg aka call the right function
 	chooseCommand(msg);
@@ -399,18 +399,75 @@ void	Server::privmsg(Message &message)
 
 void	Server::join(Message &message)
 {
-	(void)message;
-	// if (!channel)
-	// 	channel = createNewChannel(message);
-	// if (!channel)
-	// {
-	// 	info ("STRANGE CASE: COULD NOT FIND NOR CREATE CHANNEL", CLR_RED);
-	// 	message.getSender().sendMessage("Could not create channel"); 
-	// 	return ;
-	// }
-	// message.getSender().joinChannel(channel);
-	// channel->addClient(&(message.getSender()));
-	// info(message.getSender().getUniqueName() + " JOINED Channel " + channel->getUniqueName(), CLR_GRN);
+	std::string channelName = message.getChannelName();
+	// JOIN #<channel>
+	
+	// WITHOUT ARGS
+	if (channelName.empty())
+	{
+		// NO HASHTAG
+		if (!message.getArg(0).empty())
+			message.getSender().sendMessage(ERR_NOSUCHCHANNEL, "JOIN :Channel name has to start with '#'");
+		else
+			message.getSender().sendMessage(ERR_NEEDMOREPARAMS, "JOIN :Not enough parameter");
+		return ;
+	}
+	
+	// CHECK IF CHANNEL EXISTS
+	if(!message.getChannel())
+	{
+		if(!createNewChannel(message))
+			return ; //Smth wrong we could find the channel but we also could create it
+	}
+		
+	// THE CHANNEL ALREADY EXISTED
+		// IF ALREADY IN CHANNEL
+	if (message.getChannel()->isClientInChannel(message.getSender()))
+	{
+		// SEND MESSAGE ALREADY IN CHANNEL |
+		message.getSender().sendMessage(ERR_USERONCHANNEL,
+			message.getSender().getUniqueName() + " " +  message.getChannelName() + " :is already on channel");
+		return ;
+	}
+	
+	// IS K FLAG?
+	if (!message.getChannel()->getKey().empty())
+	{
+		// CHECK IF PASWD IS PROVIDED AND CORRECT
+		if (message.getChannel()->getKey() != message.getArg(0))
+		{
+			// 475
+			message.getSender().sendMessage(ERR_BADCHANNELKEY, message.getChannelName() + " :Cannot join channel (+k)");
+			return ;
+		}
+	}
+	// IF I FLAG
+	if (!message.getChannel()->getInviteOnly())
+	{
+		// CHECK IF INVITED
+		// TODO: check if this sender is invited
+		message.getSender().sendMessage(ERR_INVITEONLYCHAN, message.getChannelName() + " :Cannot join channel (+i)");
+		return ;
+	}
+
+	// IF L FLAG
+	if (message.getChannel()->getUserLimit() != 0)
+	{
+		// TODO: check if this channel is full
+		// CHECK IF CHANNEL IS FULL
+		message.getSender().sendMessage(ERR_CHANNELISFULL, message.getChannelName() + " :Cannot join channel (+l)");
+		return ;
+	}
+
+	// IF WE GOT HERE
+	// JOIN CHANNEL
+	message.getChannel()->addClient(&message.getSender());
+	message.getSender().addChannel(message.getChannel());
+	
+	//  Now talking on #newwww
+		//  astein (alex@F456A.75198A.60D2B2.ADA236.IP) has joined
+		// info() TODO:
+
 	// //TODO: send messages to the channel that the client has joined
 }
 
@@ -470,7 +527,7 @@ void	Server::part(Message &message)
 {
 	(void)message;
 
-	// message.getSender().leaveChannel(channel);
+	// message.getSender().removeChannel(channel);
 	// channel->removeClient(&(message.getSender()));
 	// if (!channel->isActive())
 	// 	_channels.remove(*channel);
@@ -517,40 +574,28 @@ Client	*Server::getClientByNick(const std::string &nickname)
 // -----------------------------------------------------------------------------
 // Channel Methods
 // -----------------------------------------------------------------------------
-void	Server::addChannel(Channel &channel)
+void	Server::addChannel(Channel channel)
 {
-	(void)channel;
-	//TODO:
+	_channels.push_back(channel);
 }
 
 void	Server::removeChannel(Channel *channel)
 {
-	(void)channel;
-	//TODO:
+	if (!channel)
+		return;
+	_channels.remove(*channel);
 }
 
-Channel	*Server::getChannelByName(const std::string &channelName)
-{
-	if (channelName.empty())
-		return NULL;
-
-	// If we have a channel name find
-	// Try to find the channel
-	for (std::list<Channel>::iterator it = _channels.begin(); it != _channels.end(); ++it)
-	{
-		if (it->getUniqueName() == channelName)
-			return &(*it);
-	}
-	return NULL;
-}
-
+// If there is no channel this function
+// create it and returns a pointer to the new channel
 Channel	*Server::createNewChannel(Message &msg)
 {
-	if (getChannelByName(msg.getChannelName()))
-		return NULL;
-	// Couldn't find the channel -> create it
-	_channels.push_back(Channel(msg.getChannelName(), &(msg.getSender())));
-	return &(_channels.back());
+	if (isNameAvailable(_channels, msg.getChannelName()))
+	{
+		addChannel(Channel(msg.getChannelName(), &(msg.getSender())));
+		return &(_channels.back());
+	}
+	return NULL;
 }
 
 // -----------------------------------------------------------------------------

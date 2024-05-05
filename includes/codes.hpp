@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   codes.hpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/04 02:01:01 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/04 06:28:44 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/05 00:38:12 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,14 @@
 #define ERR_NONICKNAMEGIVEN     "431"       // ":No nickname given"
 #define ERR_NICKNAMEINUSE       "433"       // "<nick> :Nickname is already in use"
 #define ERR_NOTREGISTERED       "451"       // ":You have not registered"
-#define ERR_NEEDMOREPARAMS      "461"     // "<command> :Not enough parameters"
+#define ERR_NEEDMOREPARAMS      "461"    	// "<command> :Not enough parameters"
+#define ERR_NOSUCHCHANNEL       "403"	    // "<channel name> :No such channel"
+#define ERR_USERONCHANNEL       "443"	    // "<user> <channel> :is already on channel"
+#define ERR_BADCHANNELKEY       "475"   	// "<channel>	:Cannot join channel (+k)"
+#define ERR_INVITEONLYCHAN      "473"   	// "<channel>	:Cannot join channel (+i)"
+#define ERR_CHANNELISFULL       "471"   	// "<channel>	:Cannot join channel (+l)"
+
+
 
 
 
@@ -40,11 +47,9 @@
 #define RPL_CHANNELMODEIS       324     // "<channel> <mode> <mode params>"
 #define ERR_CANNOTSENDTOCHAN    404     // "<channel name> :Cannot send to channel"
 #define RPL_TOPIC               332		// "<channel>	:<topic>"
-#define ERR_NOSUCHCHANNEL       403     // "<channel name> :No such channel"
 
 
 
-#define ERR_USERONCHANNEL       443     // "<user> <channel> :is already on channel"
 
 // mode
 #define ERR_UNKNOWNMODE         472     // "<char> :is unknown mode char to me"
@@ -53,11 +58,6 @@
 #define RPL_UMODEIS             221     // "<user mode string>"
 
 // kick N join 
-#define ERR_BADCHANMASK         476   	// "<channel>	:Bad Channel Mask"
-#define ERR_INVITEONLYCHAN      473   	// "<channel>	:Cannot join channel (+i)"
-#define ERR_CHANNELISFULL       471   	// "<channel>	:Cannot join channel (+l)"
-#define ERR_BANNEDFROMCHAN      474   	// "<channel>	:Cannot join channel (+b)"
-#define ERR_BADCHANNELKEY       475   	// "<channel>	:Cannot join channel (+k)"
 #define ERR_KEYSET              467		// "<channel>	:Channel key already set"
 #define ERR_NOTONCHANNEL        442		// "<channel> 	:You're not on that channel"
 #define ERR_CHANOPRIVSNEEDED    482     // "<channel> 	:You're not channel operator"

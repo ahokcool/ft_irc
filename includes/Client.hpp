@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:33 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/04 04:22:21 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/05 01:02:05 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,8 +49,8 @@ class Client
         void                    sendMessage(const std::string &ircMessage) const;
         void                    sendMessage(const std::string &code, const std::string &message) const;
 
-        void                    joinChannel(Channel *channel);
-        void                    leaveChannel(Channel *channel);
+        void                    addChannel(Channel *channel);
+        void                    removeChannel(Channel *channel);
         void                    getInvited(Channel *channel);
         void                    getKicked(Channel *channel);
         

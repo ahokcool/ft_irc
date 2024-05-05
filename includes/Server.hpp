@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/04 05:01:47 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/04 23:38:49 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,9 +112,8 @@ class Server
 	// Channel Methods
 	// -------------------------------------------------------------------------
 	private:
-		void	addChannel(Channel &channel);
+		void	addChannel(Channel channel);
 		void	removeChannel(Channel *channel);
-		Channel	*getChannelByName(const std::string &channelName);
 		Channel	*createNewChannel(Message &msg);
 
 	// -------------------------------------------------------------------------
@@ -158,6 +157,8 @@ class Server
 	{
 		typename L::iterator	it;
 
+		if (name.empty())
+			return NULL;
 		for (it = list.begin(); it != list.end(); ++it)
 		{
 			if (it->getUniqueName() == name)
