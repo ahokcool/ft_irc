@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/05 05:33:48 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/06 19:23:52 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -362,41 +362,66 @@ void	Server::whois	(Message &msg)
 		inform sender about it
 	send message to receiver
  */
-void	Server::privmsg(Message &message)
+void	Server::privmsg(Message &msg)
 {
-	// NO RECIPIENT
-	std::string receiverNickname = message.getArg(0);
+	std::string recipientNick 	= msg.getArg(0);
+	std::string channelName 	= msg.getChannelName();
 
-	if (receiverNickname.empty())
+	// IF CHANNEL AND RECEIPENT BOTH ARE GIVEN DON'T DO SHIT
+	if (!channelName.empty() && !recipientNick.empty())
+		return ;
+
+	// IF CHANNEL AND RECEIPENT BOTH ARE NOT GIVEN
+	if (channelName.empty() && recipientNick.empty())
 	{
-		message.getSender().sendMessage(ERR_NORECIPIENT, ":No recipient given (PRIVMSG)");
+		msg.getSender().sendMessage(ERR_NOTEXTTOSEND, ":No text to send");
 		return ;
 	}
-	
+
 	// NO TEXT TO SEND
-	if (message.getColon().empty())
+	if (msg.getColon().empty())
 	{
-		message.getSender().sendMessage(ERR_NOTEXTTOSEND, ":No text to send");
+		msg.getSender().sendMessage(ERR_NOTEXTTOSEND, ":No text to send");
 		return ;
 	}
 
-	// NO SUCH NICK 401
-	message.setReceiver(getInstanceByName(_clients, receiverNickname));
-	if (!message.getReceiver())
+	// CASE RECIPIENT
+	if (!recipientNick.empty())
 	{
-		message.getSender().sendMessage(ERR_NOSUCHNICK, receiverNickname + " :No such nick/channel");
+		msg.setReceiver(getInstanceByName(_clients, recipientNick));
+		if (!msg.getReceiver())
+		{
+			msg.getSender().sendMessage(ERR_NOSUCHNICK, recipientNick + " :No such nick");
+			return ;
+		}
+		std::string ircMessage = 
+			":" + msg.getSender().getUniqueName() + "!" +
+			msg.getSender().getUsername() +
+			"@localhost PRIVMSG " +
+			recipientNick +
+			" :" +
+			msg.getColon();
+		msg.getReceiver()->sendMessage(ircMessage);
 		return ;
 	}
-	
-	// :anshovah_!anshovah@F456A.75198A.60D2B2.ADA236.IP PRIVMSG astein :joao is lazyao
-	std::string ircMessage = 
-		":" + message.getSender().getUniqueName() + "!" +
-		message.getSender().getUsername() +
-		"@localhost PRIVMSG " +
-		receiverNickname +
-		" :" +
-		message.getColon();
-	message.getReceiver()->sendMessage(ircMessage);
+
+	// CASE CHANNEl
+	if (!channelName.empty())
+	{
+		if (!msg.getChannel())
+		{
+			msg.getSender().sendMessage(ERR_NOSUCHCHANNEL, channelName + " :No such channel");
+			return ;
+		}
+		std::string ircMessage = 
+			":" + msg.getSender().getUniqueName() + "!" +
+			msg.getSender().getUsername() +
+			"@localhost PRIVMSG " +
+			channelName +
+			" :" +
+			msg.getColon();
+		msg.getChannel()->sendMessageToClients(ircMessage, &msg.getSender());
+	}
 }
 
 void	Server::join(Message &message)
@@ -427,24 +452,40 @@ void	Server::join(Message &message)
 	message.getChannel()->addClient(message);
 }
 
-void	Server::invite(Message &message)
+void	Server::invite(Message &msg)
 {
-	(void)message;
+	// INVITE <nick> <channel>
+	std::string guestNick 		= msg.getArg(0);
+	std::string channelName 	= msg.getChannelName();
 
-	// // INVITE <client> #<channel>
-	// // if (!findInList(message.getArg1(), _clients))
-	// // {
-	// // 	// info(":No such nick", CLR_RED);
-	// // 	// TODO: no suck nick
-	// // 	return;
-	// // }
-	// // if (!findInList(message.getChannelName(), _channels))
-	// // {
-	// // 	// TODO: no such channel
-	// // 	return ;
-	// // }
-	// message.getReceiver()->getInvited(channel);
-	// // TODO: send a message that a client was invited to a channel
+	// IF GUESTNICK IS NOT GIVEN DON'T DO SHIT
+	if (!guestNick.empty())
+		return ;
+
+	// IF THE GUEST IS NOT ON THE SERVER
+	msg.setReceiver(getInstanceByName(_clients, guestNick));
+	if (!msg.getReceiver())
+	{
+		msg.getSender().sendMessage(ERR_NOSUCHNICK, guestNick + " :No such nick");
+		return ;
+	}
+
+	// IF CHANNEL NAME IS NOT PROVIDED 
+	if (!channelName.empty())
+	{
+		msg.getSender().sendMessage(ERR_NOSUCHCHANNEL, guestNick + " :No such channel");
+		return ;
+	}
+
+	// IF CHANNEL DOES NOT EXIST
+	if (!msg.getChannel())
+	{
+		msg.getSender().sendMessage(ERR_NOSUCHCHANNEL, channelName + " :No such channel");
+		return ;
+	}
+	
+	// CALL THE CHANNEL FUNCTION invite() AND LET IT DECIDE WHAT TO DO
+	msg.getChannel()->inviteClient(msg.getSender(), *msg.getReceiver());
 }
 
 void	Server::topic(Message &message)

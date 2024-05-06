@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/04 02:01:01 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/05 06:00:24 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/06 19:26:58 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,8 +23,8 @@
 #define RPL_NOTOPIC				"331"	// "<channel> :No topic is set"
 #define RPL_TOPIC				"332"	// "<channel> :<topic>"
 #define RPL_TOPICADDITIONAL		"333"	// "<channel> astein!alex@F456A.75198A.60D2B2.ADA236.IP 1714884181"
-#define ERR_NOTOPIC		"442"	// 
-
+#define RPL_INVITING            "341"   // "<channel> <nick>"
+#define RPL_NOTOPIC             "331"   //"<channel> :No topic is set"
 
 // ERROR CODES
 #define ERR_UNKNOWNCOMMAND		"421"	// "<command> :Unknown command"
@@ -40,6 +40,10 @@
 #define ERR_BADCHANNELKEY		"475"	// "<channel>	:Cannot join channel (+k)"
 #define ERR_INVITEONLYCHAN		"473"	// "<channel>	:Cannot join channel (+i)"
 #define ERR_CHANNELISFULL		"471"	// "<channel>	:Cannot join channel (+l)"
+#define ERR_NOTONCHANNEL        "442"	// "<channel> 	:You're not on that channel"
+#define ERR_CHANOPRIVSNEEDED    "482"   // "<channel> 	:You're not channel operator"
+
+
 
 
 
@@ -56,7 +60,6 @@
 
 // invite
 
-#define RPL_INVITING            341     // "<channel> <nick>"
 #define RPL_CHANNELMODEIS       324     // "<channel> <mode> <mode params>"
 #define ERR_CANNOTSENDTOCHAN    404     // "<channel name> :Cannot send to channel"
 
@@ -71,8 +74,6 @@
 
 // kick N join 
 #define ERR_KEYSET              467		// "<channel>	:Channel key already set"
-#define ERR_NOTONCHANNEL        442		// "<channel> 	:You're not on that channel"
-#define ERR_CHANOPRIVSNEEDED    482     // "<channel> 	:You're not channel operator"
 
 
 // composeChnlMsg(int number, msg)
@@ -131,7 +132,6 @@
 // #define ERR_TOOMANYCHANNELS     405      // "<channel name> :You have joined too many channels"
 
 // // topic
-// #define RPL_NOTOPIC             331      //"<channel> :No topic is set"
 
 // // whois
 // #define ERR_NOSUCHSERVER        402      // "<server name> :No such server"

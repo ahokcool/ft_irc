@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/05 05:33:05 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/06 19:12:05 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,8 @@ class Channel
 		void					topicManager	(Message &msg);
 		
 		
-        void                    sendMessageToClients(const std::string &ircMessage) const;
+		// TODO: check if the equal is allowed
+        void                    sendMessageToClients(const std::string &ircMessage, Client *sender = NULL) const;
 
 		// Setters
 		void					setTopic(const std::string &param);
@@ -57,11 +58,14 @@ class Channel
 		bool 					getTopicProtected() const;
 		
         const std::string       &getUniqueName() const;
+		
+		void 					inviteClient(Client &host, Client &guest);
     
 	//TODO: if all the ops left the channel, kick all the clients and delete the channel
 		bool					isActive() const;
     private:
 		bool					isClientInChannel(const Client &client) const;
+		bool					isClientOperator(const Client &client) const;
 
 	
         Channel();

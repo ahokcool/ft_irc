@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/05 06:02:23 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/06 19:27:04 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,15 +46,15 @@ bool Channel::operator==(const Channel &other) const
 	return this->_name == other._name;
 }
 
-void Channel::sendMessageToClients(const std::string &ircMessage) const
+void Channel::sendMessageToClients(const std::string &ircMessage, Client *sender) const
 {
     std::list<Client *>::const_iterator it = _clients.begin();
 
+	//TODO: change this to a for loop
     while (it != _clients.end())
     {
-        // if ((*it)->getUniqueName() != ircMessage.substr(1, ircMessage.find(' ', 1) - 1))
-        //TODO: not send a message to itself
-        (*it)->sendMessage(ircMessage);
+		if (*it != sender)
+        	(*it)->sendMessage(ircMessage);
         it++;
     }
 }
@@ -128,6 +128,42 @@ void Channel::addOperator(Message &msg)
 {
 	(void)msg;
 	// _operators.push_back(client);
+}
+
+void	Channel::inviteClient(Client &host, Client &guest)
+{
+	// IF HOST IS NOT IN CHANNEL
+	if (!isClientInChannel(host))
+	{
+		host.sendMessage(ERR_NOTONCHANNEL, _name + " :You're not on that channel");
+		return ;
+	}
+
+	// IF GUEST ALREADY IN CHANNEL
+	if (isClientInChannel(guest))
+	{
+		host.sendMessage(ERR_USERONCHANNEL, guest.getUniqueName() + " " +  _name + " :is already on channel");
+		return ;
+	}
+	
+	// IF INVITE ONLY (I FLAG)
+	if (_inviteOnly)
+	{
+		if (!isClientOperator(host))
+		{
+			host.sendMessage(ERR_CHANOPRIVSNEEDED, _name + " :You're not channel operator");
+			return ;
+		}		
+	}
+	
+	// SEND INVITE
+	// host :Aurora.AfterNET.Org 341 astein astein__ #test3
+	host.sendMessage(RPL_INVITING, host.getUniqueName() + " " +
+		guest.getUniqueName() + " " + _name);
+	
+	// guest :astein!alex@F456A.75198A.60D2B2.ADA236.IP INVITE astein__ #test3
+	guest.sendMessage(":" + host.getUniqueName() + "!" + host.getUsername() +
+		"@localhost" + " INVITE " + guest.getUniqueName() + " " + _name);
 }
 
 // // SETTERS
@@ -239,7 +275,7 @@ void Channel::topicManager(Message &msg)
 		{
 			// TODO:
 			// 442
-			msg.getSender().sendMessage(std::string(ERR_NOTOPIC), " " + _name + " :No topic is set");
+			msg.getSender().sendMessage(std::string(RPL_NOTOPIC), " " + _name + " :No topic is set");
 			return ;
 		}
 		
@@ -272,6 +308,21 @@ bool	Channel::isClientInChannel(const Client &client) const
 	std::list<Client *>::const_iterator it;
 
 	for (it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		if (&client == *it)
+			return true;
+	}
+	return false;
+}
+
+//TODO: template this
+bool	Channel::isClientOperator(const Client &client) const
+{
+	if (_operators.empty())
+		return false;
+	std::list<Client *>::const_iterator it;
+
+	for (it = _operators.begin(); it != _operators.end(); ++it)
 	{
 		if (&client == *it)
 			return true;
