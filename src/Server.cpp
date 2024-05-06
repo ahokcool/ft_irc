@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/06 19:23:52 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/06 20:19:32 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -488,13 +488,14 @@ void	Server::invite(Message &msg)
 	msg.getChannel()->inviteClient(msg.getSender(), *msg.getReceiver());
 }
 
-void	Server::topic(Message &message)
+void	Server::topic(Message &msg)
 {
 	// TOPIC #<channelName> :<topic>
 	// TOPIC #<channelName>
-	if (!message.getChannel())
-		message.getSender().sendMessage(ERR_NOSUCHCHANNEL, message.getChannelName() + " :No such channel");
-	message.getChannel()->topicManager(message);
+	
+	if (!msg.getChannel())
+		msg.getSender().sendMessage(ERR_NOSUCHCHANNEL, msg.getChannelName() + " :No such channel");
+	msg.getChannel()->topicManager(msg.getSender(), msg.getColon());
 }
 
 void	Server::mode(Message &message)

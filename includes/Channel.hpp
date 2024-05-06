@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/06 19:12:05 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/06 20:18:40 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,6 @@ class Channel
         void                    removeClient	(Client &client);
         void                    removeOperator	(Client &client);
 
-		void					topicManager	(Message &msg);
 		
 		
 		// TODO: check if the equal is allowed
@@ -60,6 +59,8 @@ class Channel
         const std::string       &getUniqueName() const;
 		
 		void 					inviteClient(Client &host, Client &guest);
+		void					topicManager(Client &sender, const std::string &topic);
+
     
 	//TODO: if all the ops left the channel, kick all the clients and delete the channel
 		bool					isActive() const;

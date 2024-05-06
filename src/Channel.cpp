@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/06 19:27:04 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/06 20:39:12 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -166,6 +166,42 @@ void	Channel::inviteClient(Client &host, Client &guest)
 		"@localhost" + " INVITE " + guest.getUniqueName() + " " + _name);
 }
 
+void Channel::topicManager(Client &sender, const std::string &topic)
+{
+	// IF SENDER IS NOT IN CHANNEL
+	if (!isClientInChannel(sender))
+	{
+		sender.sendMessage(ERR_NOTONCHANNEL, _name + " :You're not on that channel");
+		return ;
+	}
+	
+	// IF NO TOPIC IS PROVIDED
+	if (topic.empty())
+	{
+		sender.sendMessage(
+			":localhost " + std::string(RPL_TOPIC) +
+			" " + sender.getUniqueName() +
+			" " + _name + " :" + _topic);
+		sender.sendMessage(
+			":localhost " + std::string(RPL_TOPICADDITIONAL) +
+			" " + sender.getUniqueName() +
+			" " + _topicChange);
+		return ;
+	}
+	
+	// IF TOPIC IS PROTECTED (FLAG T)
+	if (_topicProtected)
+	{
+		if (!isClientOperator(sender))
+		{
+			sender.sendMessage(ERR_CHANOPRIVSNEEDED, _name + " :You're not channel operator");
+			return ;
+		}
+	}
+	// CHANGE TOPIC
+	_topic = topic;
+}
+
 // // SETTERS
 // void	Channel::setTopic(const std::string &param)
 // {
@@ -245,59 +281,7 @@ bool	Channel::isActive() const
 }
 
 
-void Channel::topicManager(Message &msg)
-{
-	// TOPIC #<channelName> :<topic>
-	// TOPIC #<channelName>
-	if (msg.getColon().empty())
-	{
-		// SEND TOPIC
-		if (_topic.empty())
-			msg.getSender().sendMessage(
-				":localhost " + std::string(RPL_NOTOPIC) +
-				 msg.getSender().getUniqueName() +
-				" " + _name + " :No topic is set");
-		else
-		{
-			msg.getSender().sendMessage(
-				":localhost " + std::string(RPL_TOPIC) +
-				" " + msg.getSender().getUniqueName() +
-				" " + _name + " :" + _topic);
-			msg.getSender().sendMessage(
-				":localhost " + std::string(RPL_TOPICADDITIONAL) +
-				" " + msg.getSender().getUniqueName() +
-				" " + _topicChange);
-		}
-	}
-	else
-	{
-		if (_topicProtected)
-		{
-			// TODO:
-			// 442
-			msg.getSender().sendMessage(std::string(RPL_NOTOPIC), " " + _name + " :No topic is set");
-			return ;
-		}
-		
-		// SET TOPIC
-		_topic = msg.getColon();
-		std::time_t currentTime = std::time(0);
-    	// Convert time_t to string using stringstream unix timestamp
-    	std::stringstream ss;
-    	ss << currentTime;
-		_topicChange = msg.getSender().getUniqueName() + "!" + 
-			msg.getSender().getUsername() + "@localhost" +
-			" " + ss.str();
-		// SEND TOPIC MESSAGE
-		std::string confirmMsg =
-			msg.getSender().getUniqueName() + "!" +
-			msg.getSender().getUsername() + "@localhost" +
-			" TOPIC " + _name + " :" + _topic;
 
-		sendMessageToClients(confirmMsg);
-		msg.getSender().sendMessage(confirmMsg);
-	}
-}
 
 // PRIVATE METHODS
 // -----------------------------------------------------------------------------
