@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/05 02:00:26 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 00:06:03 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,10 +167,7 @@ class Server
 		for (it = list.begin(); it != list.end(); ++it)
 		{
 			if (it->getUniqueName() == name)
-			{
 				return &(*it);
-				break ;
-			}
 		}
 		return NULL;
 	}

@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/06 21:21:37 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 00:12:52 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -424,32 +424,32 @@ void	Server::privmsg(Message &msg)
 	}
 }
 
-void	Server::join(Message &message)
+void	Server::join(Message &msg)
 {
-	std::string channelName = message.getChannelName();
+	std::string channelName = msg.getChannelName();
 	// JOIN #<channel>
 	
 	// WITHOUT ARGS
 	if (channelName.empty())
 	{
 		// NO HASHTAG
-		if (!message.getArg(0).empty())
-			message.getSender().sendMessage(ERR_NOSUCHCHANNEL, "JOIN :Channel name has to start with '#'");
+		if (!msg.getArg(0).empty())
+			msg.getSender().sendMessage(ERR_NOSUCHCHANNEL, "JOIN :Channel name has to start with '#'");
 		else
-			message.getSender().sendMessage(ERR_NEEDMOREPARAMS, "JOIN :Not enough parameter");
+			msg.getSender().sendMessage(ERR_NEEDMOREPARAMS, "JOIN :Not enough parameter");
 		return ;
 	}
 	
 	// CHECK IF CHANNEL EXISTS
-	if(!message.getChannel())
+	if(!msg.getChannel())
 	{
-		if(!createNewChannel(message))
+		if(!createNewChannel(msg))
 			return ; //Smth wrong we could find the channel but we also could create it
 		return ;
 	}
 	
 	// LET THE CHANNEL DESIDE IF THE CLIENT CAN JOIN
-	message.getChannel()->addClient(message);
+	msg.getChannel()->joinChannel(msg.getSender(), msg.getArg(0));
 }
 
 void	Server::invite(Message &msg)
@@ -485,7 +485,7 @@ void	Server::invite(Message &msg)
 	}
 		
 	// CALL THE CHANNEL FUNCTION invite() AND LET IT DECIDE WHAT TO DO
-	msg.getChannel()->inviteClient(msg.getSender(), *msg.getReceiver());
+	msg.getChannel()->inviteToChannel(msg.getSender(), *msg.getReceiver());
 }
 
 void	Server::topic(Message &msg)
@@ -495,13 +495,15 @@ void	Server::topic(Message &msg)
 	
 	if (!msg.getChannel())
 		msg.getSender().sendMessage(ERR_NOSUCHCHANNEL, msg.getChannelName() + " :No such channel");
-	msg.getChannel()->topicManager(msg.getSender(), msg.getColon());
+	msg.getChannel()->topicOfChannel(msg.getSender(), msg.getColon());
 }
 
 void	Server::mode(Message &message)
 {
 	(void)message;
 	// MODE #<channelName> flag
+	// CALL THIS FUNCTION!
+	// channel.modeOfChannel()
 }
 
 void	Server::kick(Message &msg)
@@ -535,17 +537,25 @@ void	Server::kick(Message &msg)
 	}
 
 	// KICK THE CLIENT
-	msg.getChannel()->removeClient(msg.getSender(), *msg.getReceiver());
+	msg.getChannel()->kickFromChannel(msg.getSender(), *msg.getReceiver());
 }
 
-void	Server::part(Message &message)
+void	Server::part(Message &msg)
 {
-	(void)message;
+	// IF CHANNEL NAME IS NOT PROVIDED
+	if (msg.getChannelName().empty())
+	{
+		msg.getSender().sendMessage(ERR_NOSUCHCHANNEL, msg.getChannelName() + " :No such channel");
+		return ;
+	}
+	msg.getChannel()->partChannel(msg.getSender());
 
-	// message.getSender().removeChannel(channel);
-	// channel->removeClient(&(message.getSender()));
-	// if (!channel->isActive())
-	// 	_channels.remove(*channel);
+	// IF NO CLIENTS OR OPERATORS LEFT IN CHANNEL -> DELETE CHANNEL
+	if (!msg.getChannel()->isActive())
+	{
+		// DELETE CHANNEL. NO MESSAGE NEEDED
+		removeChannel(msg.getChannel());
+	}	
 }
 
 // -----------------------------------------------------------------------------

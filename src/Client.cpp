@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/06 21:37:11 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 00:18:21 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ Client::~Client()
 
 	while (it != _channels.end())
 	{
-		(*it)->removeClient(*this, *this); // TODO: this is fucked up
+		(*it)->kickFromChannel(*this, *this); // TODO: this is fucked up
 		it++;
 	}
 	_channels.clear();
@@ -76,7 +76,7 @@ void Client::sendMessage(const std::string &ircMessage) const
 		return ;
 	std::string msg = ircMessage;
 	if(msg[msg.size() - 1] != '\n')
-		msg += "\n";
+		msg += "\r\n";
 	ssize_t bytesSent = send(_socketFd, msg.c_str(), msg.length(), 0);
 	Logger::log("Message send:\n\tMSG -->\t\t" 		+ msg);
 	if (bytesSent == -1)
@@ -131,21 +131,6 @@ void Client::addChannel(Channel *channel)
 void Client::removeChannel(Channel *channel) // TODO: delete this
 {
 	_channels.remove(channel);
-}
-
-void Client::getInvited(Channel *channel)
-{
-		_invitations.push_back(channel);
-}
-
-void Client::getKicked(Channel *channel)
-{
-		for (std::list<Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
-		{
-				//TODO: find a channel if user's channels and delete it from list
-		}
-		(void)channel;  
-		//TODO: send the message to the client that ha was kicked. also send it to the channel
 }
 
 void    Client::setUniqueName(const std::string &nickname)

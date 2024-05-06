@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:33 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/05 03:45:54 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 00:18:16 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,8 +54,6 @@ class Client
 
         void                    addChannel(Channel *channel);
         void                    removeChannel(Channel *channel);
-        void                    getInvited(Channel *channel);
-        void                    getKicked(Channel *channel);
         
         void					setUniqueName(const std::string &nickname);
         void					setUsername(const std::string &username);
@@ -76,7 +74,6 @@ class Client
         std::string				_fullname;
         std::string         	_hostname;
         std::list<Channel *>	_channels;
-        std::list<Channel *>	_invitations;
 };
 
 #endif

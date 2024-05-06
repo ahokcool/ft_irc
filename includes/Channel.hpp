@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/06 21:20:05 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 00:10:50 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 #include <list>
 #include "Client.hpp"
 #include "utils.hpp"
-#include "Message.hpp"
+#include "Message.hpp"	//SHOULD BE REMOVED
 
 class Client;
 class Message;
@@ -26,59 +26,56 @@ class Message;
 class Channel
 {
     public:
+		// Constructor and Destructor
         Channel(const std::string &name, Client &client);
         ~Channel();
 
-		// Equal Overload for list remove
-		bool					operator==(const Channel& other) const;
-    
-		// Client Management
-        void                    addClient		(Message &msg);
-        void                    addOperator		(Message &msg);
-        void                    removeClient	(Client &kicker, Client &kicked);
-        void                    removeOperator	(Client &client);
+		// Equal Overload (for list remove)
+		bool	operator==(const Channel& other) const;
 
-		
-		
-		// TODO: check if the equal is allowed
-        void                    sendMessageToClients(const std::string &ircMessage, Client *sender = NULL) const;
+		// So the Server can check if the Channel still has an operator
+		bool	isActive() const;
 
-		// Setters
-		void					setTopic(const std::string &param);
-		void					setKey(const std::string &param);
-		void					setUserLimit(const size_t param);
-		void					setInviteOnly(const bool param);
-		void					setTopicProtected(const bool param);
+		// Members & Operators funtionality
+		void	joinChannel 	(Client &client, const std::string &pswd);
+		void	inviteToChannel	(Client &host, Client &guest);
+		void	kickFromChannel	(Client &kicker, Client &kicked);		
+		void	partChannel		(Client &client);
 
-		const std::string		&getTopic() const;
-		const std::string		&getKey() const;
-		size_t 					getUserLimit() const;
-		bool 					getInviteOnly() const;
-		bool 					getTopicProtected() const;
+		// Modes & Topic funtionality
+		void	topicOfChannel(Client &sender, const std::string &topic);
+		void	modeOfChannel(/* TODO: */);
 		
-        const std::string       &getUniqueName() const;
-		
-		void 					inviteClient(Client &host, Client &guest);
-		void					topicManager(Client &sender, const std::string &topic);
+		// Simple List Management
+		void	addClient		(Client &client);
+		void	removeClient	(Client &client);
+		void	addOperator		(Client &client);
+        void	removeOperator	(Client &client);
+		void	addInvitation	(Client &client);
+		void	removeInvitation(Client &client);
 
-    
-	//TODO: if all the ops left the channel, kick all the clients and delete the channel
-		bool					isActive() const;
+		// Channel Broadcast Message
+        void	sendMessageToClients(const std::string &ircMessage, Client *sender = NULL) const;
+
+		// Getters and Setters
+		const std::string	&getUniqueName() const;
+
     private:
-		bool					isClientInChannel(const Client &client) const;
-		bool					isClientOperator(const Client &client) const;
+		// For the basic channel functionality
+		bool					isClientIsInList(std::list<Client *> list, const Client &client) const;
 
-	
-        Channel();
-        const std::string       _name;
-        std::string             _topic;
-        std::string             _topicChange;
-        std::string             _key; // empty string means no password
-        size_t                  _limit; // 0 means unset
-        bool                    _inviteOnly;
-        bool                    _topicProtected;
-        std::list<Client *>     _clients;
-        std::list<Client *>     _operators;
+        Channel();									// Default Constructor shouldn't be used
+        const std::string		_name;
+        std::string				_topic;
+        std::string				_topicChange;
+        std::string				_key;				// empty string means no password
+        size_t					_limit; 			// 0 means unset
+        bool					_inviteOnly;
+        bool					_topicProtected;
+        std::list<Client *>		_clients;
+        std::list<Client *>		_operators;
+        std::list<Client *>		_invitations;
+
 };
 
 #endif
