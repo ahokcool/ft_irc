@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/04 02:01:01 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/06 19:26:58 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/06 21:03:59 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@
 #define ERR_CHANNELISFULL		"471"	// "<channel>	:Cannot join channel (+l)"
 #define ERR_NOTONCHANNEL        "442"	// "<channel> 	:You're not on that channel"
 #define ERR_CHANOPRIVSNEEDED    "482"   // "<channel> 	:You're not channel operator"
-
+#define ERR_USERNOTINCHANNEL	"441"	// "<nick> <channel> :They aren't on that channel
 
 
 

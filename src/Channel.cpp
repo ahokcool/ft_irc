@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/06 20:39:12 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/06 21:42:29 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -255,13 +255,40 @@ void Channel::topicManager(Client &sender, const std::string &topic)
 // }
 
 
-void	Channel::removeClient(Client &client)
+void	Channel::removeClient(Client &kicker, Client &kicked)
 {
-	(void)client;
-    // TODO: test check if one op can kick another op
-    // _clients.remove(client);
-    // _operators.remove(client); // TODO: test if this fails if the client isnt in the list
-	// TODO: send a message to the channel?
+	// IF CLIENT IS NOT IN CHANNEL
+	if (!isClientInChannel(kicked))
+	{
+		kicked.sendMessage(ERR_USERNOTINCHANNEL, kicked.getUniqueName() + " " + _name + " :They aren't on that channel");
+		return ;
+	}
+	
+	// IF CLIENT IS NOT OPERATOR
+	if (!isClientOperator(kicked))
+	{
+		kicked.sendMessage(ERR_CHANOPRIVSNEEDED, _name + " :You're not channel operator");
+		return ;
+	}
+
+    _clients.remove(&kicked);
+    _operators.remove(&kicked); // TODO: test if this fails if the client isnt in the list
+	kicked.removeChannel(this);
+	
+	// MESSAGE TO KICKED CLIENT
+	// :astein!alex@F456A.75198A.60D2B2.ADA236.IP KICK #test3 astein__ :astein
+	kicked.sendMessage(":" + kicker.getUniqueName() + "!" + kicker.getUsername() + "@localhost" +
+		" KICK " + _name + " " + kicked.getUniqueName() + " :" + kicker.getUniqueName());
+	// MESSAGE TO KICKER
+	kicker.sendMessage(":" + kicker.getUniqueName() + "!" + kicker.getUsername() + "@localhost" +
+		" KICK " + _name + " " + kicked.getUniqueName() + " :" + kicker.getUniqueName());
+
+	// IF NO CLIENTS OR OPERATORS LEFT
+	if (_operators.size() == 0 || _clients.size() == 0)
+	{
+		// DELETE CHANNEL. NO MESSAGE NEEDED
+		kicked.removeChannel(this);	// TODO: why do we have a function for this?
+	}
 }
 
 const std::string &Channel::getUniqueName() const

@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/06 20:19:32 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/06 21:21:37 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -483,7 +483,7 @@ void	Server::invite(Message &msg)
 		msg.getSender().sendMessage(ERR_NOSUCHCHANNEL, channelName + " :No such channel");
 		return ;
 	}
-	
+		
 	// CALL THE CHANNEL FUNCTION invite() AND LET IT DECIDE WHAT TO DO
 	msg.getChannel()->inviteClient(msg.getSender(), *msg.getReceiver());
 }
@@ -504,23 +504,38 @@ void	Server::mode(Message &message)
 	// MODE #<channelName> flag
 }
 
-void	Server::kick(Message &message)
+void	Server::kick(Message &msg)
 {
-	(void)message;
+	// IF CHANNEL NAME IS NOT PROVIDED
+	if (msg.getChannelName().empty())
+	{
+		msg.getSender().sendMessage(ERR_NOSUCHCHANNEL, msg.getChannelName() + " :No such channel");
+		return ;
+	}
 
-	// // KICK #<channelName> <client>
-	// // if (!findInList(message.getArg1(), _clients))
-	// // {
-	// // 	// info(":No such nick", CLR_RED);
-	// // 	// TODO: no suck nick
-	// // 	return;
-	// // }
-	// // if (!findInList(message.getChannelName(), _channels))
-	// // {
-	// // 	// TODO: no such channel
-	// // 	return ;
-	// // }
-	// message.getSender().getKicked(channel);
+	// IF CHANNEL DOES NOT EXIST
+	if (!msg.getChannel())
+	{
+		msg.getSender().sendMessage(ERR_NOSUCHCHANNEL, msg.getChannelName() + " :No such channel");
+		return ;
+	}
+	
+	// IF NO CLIENT NAME IS PROVIDED
+	if (!msg.getArg(0).empty())
+	{
+		msg.getSender().sendMessage(ERR_NOSUCHCHANNEL, msg.getChannelName() + " :No such channel");
+		return ;
+	}
+	
+	// IF TO BE KICKED CLIENT IS NOT ON THE SERVER
+	if (!msg.getReceiver())
+	{
+		msg.getSender().sendMessage(ERR_NOSUCHNICK, msg.getArg(0) + " :No such nick");
+		return ;
+	}
+
+	// KICK THE CLIENT
+	msg.getChannel()->removeClient(msg.getSender(), *msg.getReceiver());
 }
 
 void	Server::part(Message &message)
@@ -541,7 +556,7 @@ void	Server::addClient(Client client)
 	_clients.push_back(client);
 }
 
-void	Server::removeClient(Client *client)
+void	Server::removeClient(Client *client) // TODO: Whyt do we have this here?
 {
 	if (!client)
 		return;

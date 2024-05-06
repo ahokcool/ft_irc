@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/06 20:18:40 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/06 21:20:05 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ class Channel
 		// Client Management
         void                    addClient		(Message &msg);
         void                    addOperator		(Message &msg);
-        void                    removeClient	(Client &client);
+        void                    removeClient	(Client &kicker, Client &kicked);
         void                    removeOperator	(Client &client);
 
 		

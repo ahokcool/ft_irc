@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/05 04:10:21 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/06 21:37:11 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ Client::~Client()
 
 	while (it != _channels.end())
 	{
-		(*it)->removeClient(*this);
+		(*it)->removeClient(*this, *this); // TODO: this is fucked up
 		it++;
 	}
 	_channels.clear();
@@ -128,9 +128,9 @@ void Client::addChannel(Channel *channel)
 	Logger::log("Channel " + channel->getUniqueName() + " added to " + _nickname + "'s channel list!");
 }
 
-void Client::removeChannel(Channel *channel)
+void Client::removeChannel(Channel *channel) // TODO: delete this
 {
-		_channels.remove(channel);
+	_channels.remove(channel);
 }
 
 void Client::getInvited(Channel *channel)
