@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/02 16:37:13 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/05 01:49:08 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 16:35:48 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ class Message
 
         void setReceiver(Client *receiver);
         void setChannel(Channel *channel);
-        Client &getSender() const;
+        Client *getSender() const;
         Client *getReceiver() const;
         Channel *getChannel() const;
         const std::string &getCmd() const;
@@ -43,8 +43,8 @@ class Message
     private:
         Message();
 
-        Client          &_sender;
-        Client          *_receiver; //TODO: do we  need this?
+        Client		    *_sender;
+        Client          *_receiver;
         Channel         *_channel;
         std::string     _cmd;
         std::string     _channelName;

@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/07 01:06:49 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 16:43:40 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -176,20 +176,20 @@ void	Server::goOnline()
 				else
 				{
                     buffer[valread] = '\0';
-					// Since the buffer could only be a part of a message we
+					// Since the buffer could only be a part of a msg we
 					// 1. append it to the client buffer
 					if (!cur_client->appendBuffer(buffer))
 					{
 						cur_client->sendMessage("Message was to long and will be deleted");
-						// The message was to long
+						// The msg was to long
 						// The full messages will be deleted and the client will be informed
 					}
-					// 2. get the full message(s) from the client buffer
+					// 2. get the full msg(s) from the client buffer
 					std::string fullMsg;
 					while (!(fullMsg = cur_client->getFullMessage()).empty())
 					{
-						// 3. process the message(s)
-						Logger::log("start processing message from " + cur_client->getUniqueName() + " -> " + fullMsg);
+						// 3. process the msg(s)
+						Logger::log("start processing msg from " + cur_client->getUniqueName() + " -> " + fullMsg);
 						processMessage(*cur_client, fullMsg);
 					}
                 }
@@ -227,10 +227,10 @@ std::vector<pollfd>	Server::getFdsAsVector() const
 	return fds;
 }
 
-void	Server::broadcastMessage(const std::string &message) const
+void	Server::broadcastMessage(const std::string &msg) const
 {
-	info("[START] Broadcast message", CLR_YLW);
-	std::string ircMessage = "TODO:!" + message + "TODO:!";
+	info("[START] Broadcast msg", CLR_YLW);
+	std::string ircMessage = "TODO:!" + msg + "TODO:!";
 	
 	// Send it to all clients
 	for (std::list<Client>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
@@ -244,7 +244,7 @@ void	Server::broadcastMessage(const std::string &message) const
 	{
 		it->sendMessageToClients(ircMessage);
 	}
-	info("[>DONE] Broadcast message", CLR_GRN);
+	info("[>DONE] Broadcast msg", CLR_GRN);
 }
 
 // -----------------------------------------------------------------------------
@@ -270,7 +270,7 @@ void	Server::processMessage(Client &sender, const std::string &ircMessage)
 
 bool	Server::isLoggedIn(Message &msg)
 {
-	if (!msg.getSender().getUniqueName().empty() && !msg.getSender().getUsername().empty())
+	if (!msg.getSender()->getUniqueName().empty() && !msg.getSender()->getUsername().empty())
 		return true;
 
 	//	1. Check if NICK is set
@@ -279,7 +279,7 @@ bool	Server::isLoggedIn(Message &msg)
 	else if (msg.getCmd() == "USER")
 		user(msg);
 	else
-		msg.getSender().sendMessage(ERR_NOTREGISTERED, ":You have not registered");
+		msg.getSender()->sendMessage(ERR_NOTREGISTERED, ":You have not registered");
 	return false;
 }
 
@@ -298,69 +298,83 @@ void	Server::chooseCommand(Message &msg)
 		}
 	}
 	// :10.11.3.6 421 anshovah_ PRIMSG :Unknown command
-	msg.getSender().sendMessage(ERR_UNKNOWNCOMMAND, msg.getCmd() + " :Unknown command");
+	msg.getSender()->sendMessage(ERR_UNKNOWNCOMMAND, msg.getCmd() + " :Unknown command");
 }
 
 // /NICK
-void	Server::nick(Message &message)
+void	Server::nick(Message &msg)
 {	
-	std::string oldNickname = message.getSender().getUniqueName();
-	std::string newNickname = message.getArg(0);
+	std::string oldNickname = msg.getSender()->getUniqueName();
+	std::string newNickname = msg.getArg(0);
 
 	if (oldNickname.empty())
 		oldNickname = newNickname;
 
 	if (newNickname.empty())
-		message.getSender().sendMessage(ERR_NONICKNAMEGIVEN, ":No nickname given");
+		msg.getSender()->sendMessage(ERR_NONICKNAMEGIVEN, ":No nickname given");
 	else if (!isNameAvailable(_clients, newNickname))
-		message.getSender().sendMessage(ERR_NICKNAMEINUSE, newNickname + " :Nickname is already in use");
+		msg.getSender()->sendMessage(ERR_NICKNAMEINUSE, newNickname + " :Nickname is already in use");
 	else
 	{
-		message.getSender().setUniqueName(newNickname);
+		msg.getSender()->setUniqueName(newNickname);
 		std::string ircMessage = 
 			":" + oldNickname + "!" +
-			message.getSender().getUsername() +
+			msg.getSender()->getUsername() +
 			"@localhost NICK :" +
 			newNickname;
-		message.getSender().sendMessage(ircMessage);
+		msg.getSender()->sendMessage(ircMessage);
+
+		// CHECK IF NEED tO SEND A WELCOME MSG NOW
+		if (oldNickname.empty() && !msg.getSender()->getUsername().empty())
+		{
+			//:luna.AfterNET.Org 001 ash_ :Welcome to the FINISHERS' IRC Network, ash_
+			msg.getSender()->sendMessage(RPL_WELCOME, msg.getSender()->getUniqueName() + " :Welcome to FINISHERS' IRC Network, " + msg.getSender()->getUniqueName());
+		}
 	}
 }
 
 void	Server::user(Message &msg)
 {
+	std::string oldUsername = msg.getSender()->getUsername();
 	std::string newUsername = msg.getArg(0);
 	
 	if (!msg.getArg(0).empty() && !msg.getArg(1).empty() &&
 		!msg.getArg(2).empty() && !msg.getColon().empty())
 	{
-		msg.getSender().setUsername(msg.getArg(0));
-		msg.getSender().setFullname(msg.getColon());
+		msg.getSender()->setUsername(msg.getArg(0));
+		msg.getSender()->setFullname(msg.getColon());
+		// CHECK IF NEED tO SEND A WELCOME MSG NOW
+		if (oldUsername.empty() && !msg.getSender()->getUniqueName().empty())
+		{
+			//:luna.AfterNET.Org 001 ash_ :Welcome to the FINISHERS' IRC Network, ash_
+			msg.getSender()->sendMessage(RPL_WELCOME, msg.getSender()->getUniqueName() + " :Welcome to FINISHERS' IRC Network, " + msg.getSender()->getUniqueName());
+		}
 	}
 	else
-		msg.getSender().sendMessage(ERR_NEEDMOREPARAMS, "USER :Not enough parameters");
+		msg.getSender()->sendMessage(ERR_NEEDMOREPARAMS, "USER :Not enough parameters");
 }
 
 void	Server::whois	(Message &msg)
 {
 	if (msg.getArg(0).empty())
 	{
-		msg.getSender().sendMessage(ERR_NONICKNAMEGIVEN, ":No nickname given");
+		msg.getSender()->sendMessage(ERR_NONICKNAMEGIVEN, ":No nickname given");
 		return ;
 	}
 	Client *whoIsClient = getClientByNick(msg.getArg(0));
 	if (!whoIsClient)
 	{
-		msg.getSender().sendMessage(ERR_NOSUCHNICK, msg.getArg(0) + " :No such nick/channel");
+		msg.getSender()->sendMessage(ERR_NOSUCHNICK, msg.getArg(0) + " :No such nick/channel");
 		return ;
 	}
 
-	whoIsClient->sendWhoIsMsg(msg.getSender());
+	whoIsClient->sendWhoIsMsg(*msg.getSender());
 }
 
 /* 
 	receiver not found				ERR_NOSUCHNICK
 		inform sender about it
-	send message to receiver
+	send msg to receiver
  */
 void	Server::privmsg(Message &msg)
 {
@@ -374,14 +388,14 @@ void	Server::privmsg(Message &msg)
 	// IF CHANNEL AND RECEIPENT BOTH ARE NOT GIVEN
 	if (channelName.empty() && recipientNick.empty())
 	{
-		msg.getSender().sendMessage(ERR_NOTEXTTOSEND, ":No text to send");
+		msg.getSender()->sendMessage(ERR_NOTEXTTOSEND, ":No text to send");
 		return ;
 	}
 
 	// NO TEXT TO SEND
 	if (msg.getColon().empty())
 	{
-		msg.getSender().sendMessage(ERR_NOTEXTTOSEND, ":No text to send");
+		msg.getSender()->sendMessage(ERR_NOTEXTTOSEND, ":No text to send");
 		return ;
 	}
 
@@ -391,12 +405,12 @@ void	Server::privmsg(Message &msg)
 		msg.setReceiver(getInstanceByName(_clients, recipientNick));
 		if (!msg.getReceiver())
 		{
-			msg.getSender().sendMessage(ERR_NOSUCHNICK, recipientNick + " :No such nick");
+			msg.getSender()->sendMessage(ERR_NOSUCHNICK, recipientNick + " :No such nick");
 			return ;
 		}
 		std::string ircMessage = 
-			":" + msg.getSender().getUniqueName() + "!" +
-			msg.getSender().getUsername() +
+			":" + msg.getSender()->getUniqueName() + "!" +
+			msg.getSender()->getUsername() +
 			"@localhost PRIVMSG " +
 			recipientNick +
 			" :" +
@@ -410,17 +424,17 @@ void	Server::privmsg(Message &msg)
 	{
 		if (!msg.getChannel())
 		{
-			msg.getSender().sendMessage(ERR_NOSUCHCHANNEL, channelName + " :No such channel");
+			msg.getSender()->sendMessage(ERR_NOSUCHCHANNEL, channelName + " :No such channel");
 			return ;
 		}
 		std::string ircMessage = 
-			":" + msg.getSender().getUniqueName() + "!" +
-			msg.getSender().getUsername() +
+			":" + msg.getSender()->getUniqueName() + "!" +
+			msg.getSender()->getUsername() +
 			"@localhost PRIVMSG " +
 			channelName +
 			" :" +
 			msg.getColon();
-		msg.getChannel()->sendMessageToClients(ircMessage, &msg.getSender());
+		msg.getChannel()->sendMessageToClients(ircMessage, msg.getSender());
 	}
 }
 
@@ -434,9 +448,9 @@ void	Server::join(Message &msg)
 	{
 		// NO HASHTAG
 		if (!msg.getArg(0).empty())
-			msg.getSender().sendMessage(ERR_NOSUCHCHANNEL, "JOIN :Channel name has to start with '#'");
+			msg.getSender()->sendMessage(ERR_NOSUCHCHANNEL, "JOIN :Channel name has to start with '#'");
 		else
-			msg.getSender().sendMessage(ERR_NEEDMOREPARAMS, "JOIN :Not enough parameter");
+			msg.getSender()->sendMessage(ERR_NEEDMOREPARAMS, "JOIN :Not enough parameter");
 		return ;
 	}
 	
@@ -449,7 +463,7 @@ void	Server::join(Message &msg)
 	}
 	
 	// LET THE CHANNEL DESIDE IF THE CLIENT CAN JOIN
-	msg.getChannel()->joinChannel(msg.getSender(), msg.getArg(0));
+	msg.getChannel()->joinChannel(*msg.getSender(), msg.getArg(0));
 }
 
 void	Server::invite(Message &msg)
@@ -466,26 +480,26 @@ void	Server::invite(Message &msg)
 	msg.setReceiver(getInstanceByName(_clients, guestNick));
 	if (!msg.getReceiver())
 	{
-		msg.getSender().sendMessage(ERR_NOSUCHNICK, guestNick + " :No such nick");
+		msg.getSender()->sendMessage(ERR_NOSUCHNICK, guestNick + " :No such nick");
 		return ;
 	}
 
 	// IF CHANNEL NAME IS NOT PROVIDED 
 	if (!channelName.empty())
 	{
-		msg.getSender().sendMessage(ERR_NOSUCHCHANNEL, guestNick + " :No such channel");
+		msg.getSender()->sendMessage(ERR_NOSUCHCHANNEL, guestNick + " :No such channel");
 		return ;
 	}
 
 	// IF CHANNEL DOES NOT EXIST
 	if (!msg.getChannel())
 	{
-		msg.getSender().sendMessage(ERR_NOSUCHCHANNEL, channelName + " :No such channel");
+		msg.getSender()->sendMessage(ERR_NOSUCHCHANNEL, channelName + " :No such channel");
 		return ;
 	}
 		
 	// CALL THE CHANNEL FUNCTION invite() AND LET IT DECIDE WHAT TO DO
-	msg.getChannel()->inviteToChannel(msg.getSender(), *msg.getReceiver());
+	msg.getChannel()->inviteToChannel(*msg.getSender(), *msg.getReceiver());
 }
 
 void	Server::topic(Message &msg)
@@ -494,13 +508,13 @@ void	Server::topic(Message &msg)
 	// TOPIC #<channelName>
 	
 	if (!msg.getChannel())
-		msg.getSender().sendMessage(ERR_NOSUCHCHANNEL, msg.getChannelName() + " :No such channel");
-	msg.getChannel()->topicOfChannel(msg.getSender(), msg.getColon());
+		msg.getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg.getChannelName() + " :No such channel");
+	msg.getChannel()->topicOfChannel(*msg.getSender(), msg.getColon());
 }
 
-void	Server::mode(Message &message)
+void	Server::mode(Message &msg)
 {
-	(void)message;
+	(void)msg;
 	// MODE #<channelName> flag
 	// CALL THIS FUNCTION!
 	// channel.modeOfChannel()
@@ -511,33 +525,33 @@ void	Server::kick(Message &msg)
 	// IF CHANNEL NAME IS NOT PROVIDED
 	if (msg.getChannelName().empty())
 	{
-		msg.getSender().sendMessage(ERR_NOSUCHCHANNEL, msg.getChannelName() + " :No such channel");
+		msg.getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg.getChannelName() + " :No such channel");
 		return ;
 	}
 
 	// IF CHANNEL DOES NOT EXIST
 	if (!msg.getChannel())
 	{
-		msg.getSender().sendMessage(ERR_NOSUCHCHANNEL, msg.getChannelName() + " :No such channel");
+		msg.getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg.getChannelName() + " :No such channel");
 		return ;
 	}
 	
 	// IF NO CLIENT NAME IS PROVIDED
 	if (!msg.getArg(0).empty())
 	{
-		msg.getSender().sendMessage(ERR_NOSUCHCHANNEL, msg.getChannelName() + " :No such channel");
+		msg.getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg.getChannelName() + " :No such channel");
 		return ;
 	}
 	
 	// IF TO BE KICKED CLIENT IS NOT ON THE SERVER
 	if (!msg.getReceiver())
 	{
-		msg.getSender().sendMessage(ERR_NOSUCHNICK, msg.getArg(0) + " :No such nick");
+		msg.getSender()->sendMessage(ERR_NOSUCHNICK, msg.getArg(0) + " :No such nick");
 		return ;
 	}
 
 	// KICK THE CLIENT
-	msg.getChannel()->kickFromChannel(msg.getSender(), *msg.getReceiver());
+	msg.getChannel()->kickFromChannel(*msg.getSender(), *msg.getReceiver());
 }
 
 void	Server::part(Message &msg)
@@ -545,10 +559,10 @@ void	Server::part(Message &msg)
 	// IF CHANNEL NAME IS NOT PROVIDED
 	if (msg.getChannelName().empty())
 	{
-		msg.getSender().sendMessage(ERR_NOSUCHCHANNEL, msg.getChannelName() + " :No such channel");
+		msg.getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg.getChannelName() + " :No such channel");
 		return ;
 	}
-	msg.getChannel()->partChannel(msg.getSender());
+	msg.getChannel()->partChannel(*msg.getSender());
 
 	// IF NO CLIENTS OR OPERATORS LEFT IN CHANNEL -> DELETE CHANNEL
 	if (!msg.getChannel()->isActive())
@@ -561,9 +575,10 @@ void	Server::part(Message &msg)
 // -----------------------------------------------------------------------------
 // Client Methods
 // -----------------------------------------------------------------------------
-void	Server::addClient(Client client)
+void	Server::addClient(const Client &client)
 {
 	_clients.push_back(client);
+	std::cout << "Now we have " << _clients.size() << " clients" << std::endl;
 }
 
 void	Server::removeClient(Client *client) // TODO: Whyt do we have this here?
@@ -599,7 +614,7 @@ Client	*Server::getClientByNick(const std::string &nickname)
 // -----------------------------------------------------------------------------
 // Channel Methods
 // -----------------------------------------------------------------------------
-void	Server::addChannel(Channel &channel)
+void	Server::addChannel(const Channel &channel)
 {
 	_channels.push_back(channel);
 }
@@ -615,7 +630,7 @@ Channel	*Server::createNewChannel(Message &msg)
 {
 	if (isNameAvailable(_channels, msg.getChannelName()))
 	{
-		_channels.push_back(Channel(msg.getChannelName(), msg.getSender()));
+		_channels.push_back(Channel(msg.getChannelName(), *msg.getSender()));
 		return &(_channels.back());
 	}
 	return NULL;
@@ -642,7 +657,7 @@ void	Server::sigIntHandler(int sig)
 // -----------------------------------------------------------------------------
 // Standard exception class for server
 // -----------------------------------------------------------------------------
-ServerException::ServerException(const std::string &message) : _message(message)
+ServerException::ServerException(const std::string &msg) : _msg(msg)
 {
 	// Nothing to do
 }
@@ -654,5 +669,5 @@ ServerException::~ServerException() throw()
 
 const char *ServerException::what(void) const throw()
 {
-    return (_message.c_str());
+    return (_msg.c_str());
 }

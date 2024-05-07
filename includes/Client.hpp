@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:33 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/07 00:56:11 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 14:08:09 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,7 @@ class Client
     public:
 
         Client(const int socketFd);
+		Client(const Client &other);
         ~Client();
 
 		// Simple List Management

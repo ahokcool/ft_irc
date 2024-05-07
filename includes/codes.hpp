@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/04 02:01:01 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/06 21:03:59 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 14:54:44 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #define CODES_HPP
 
 // REPLY CODES
+#define RPL_WELCOME				"001"	// "<nick> :Welcome to the FINISHERS' IRC Network, <nick>
 #define RPL_WHOISUSER			"311"	// "<nick> <user> <host> * :<real name>"
 #define RPL_WHOISCHANNELS		"319"	// "<nick> :{[@|+]<channel><space>}"
 #define RPL_ENDOFWHOIS			"318"	// "<nick> :End of /WHOIS list"

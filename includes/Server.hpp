@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/07 00:58:31 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 16:34:45 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,12 +48,12 @@
 class ServerException : public std::exception
 {
 	public:
-		ServerException(const std::string &message);
+		ServerException(const std::string &msg);
 		~ServerException() 			throw();
 		const char	*what() const	throw();
 		
 	private:
-		std::string _message;
+		std::string _msg;
 };
 
 class Server
@@ -77,7 +77,7 @@ class Server
 		void				shutDown();
 	private:
 		std::vector<pollfd>	getFdsAsVector() const;
-		void				broadcastMessage(const std::string &message) const;
+		void				broadcastMessage(const std::string &msg) const;
 
 	// -------------------------------------------------------------------------
 	// Processing the Messages
@@ -88,22 +88,22 @@ class Server
 		void	chooseCommand(Message &msg);
 
 		typedef void	(Server::*CommandFunction)(Message&);
-		void	nick	(Message &message);
-		void	user	(Message &message);
-		void	whois	(Message &message);
-		void	privmsg	(Message &message);
-		void	join	(Message &message);
-		void	invite	(Message &message);
-		void	topic	(Message &message);
-		void	mode	(Message &message);
-		void	kick	(Message &message);
-		void	part	(Message &message);
+		void	nick	(Message &msg);
+		void	user	(Message &msg);
+		void	whois	(Message &msg);
+		void	privmsg	(Message &msg);
+		void	join	(Message &msg);
+		void	invite	(Message &msg);
+		void	topic	(Message &msg);
+		void	mode	(Message &msg);
+		void	kick	(Message &msg);
+		void	part	(Message &msg);
 
 	// -------------------------------------------------------------------------
 	// Client Methods
 	// -------------------------------------------------------------------------
 	private:
-		void	addClient(Client client);//TODO: why copy
+		void	addClient(const Client &client);
 		void	removeClient(Client *client);
 		Client	*getClientByFd(int fd);
 		Client	*getClientByNick(const std::string &nickname);	
@@ -112,7 +112,7 @@ class Server
 	// Channel Methods
 	// -------------------------------------------------------------------------
 	private:
-		void	addChannel(Channel &channel);
+		void	addChannel(const Channel &channel);
 		void	removeChannel(Channel &channel);
 		Channel	*createNewChannel(Message &msg);
 

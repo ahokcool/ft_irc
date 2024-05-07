@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/07 00:56:17 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 16:57:07 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,19 @@
 Client::Client(const int socketFd) : _socketFd(socketFd)
 {
 	info ("Created Client Inctance", CLR_BLU);
+}
+
+Client::Client(const Client &other) : 
+	_inputBuffer(other._inputBuffer),
+	_socketFd(other._socketFd),
+	_nickname(other._nickname),
+	_username(other._username),
+	_fullname(other._fullname),
+	_hostname(other._hostname)
+{
+	info ("COPY CONSTRUCTOR!!!", CLR_BLU);
+	for(std::list<Channel *>::const_iterator it = other._channels.begin(); it != other._channels.end(); ++it)
+		_channels.push_back(*it);
 }
 
 Client::~Client()
@@ -30,6 +43,7 @@ Client::~Client()
 	}
 	_channels.clear();
 	// Client::_nicknames.erase(_nickname);
+	info("Client destroyed", CLR_RED);
 }
 
 bool	Client::appendBuffer(const char *buffer)
@@ -78,7 +92,10 @@ void Client::sendMessage(const std::string &ircMessage) const
 	if(msg[msg.size() - 1] != '\n')
 		msg += "\r\n";
 	ssize_t bytesSent = send(_socketFd, msg.c_str(), msg.length(), 0);
-	Logger::log("Message send:\n\tMSG -->\t\t" 		+ msg);
+	// LOGGER
+	if (!msg.empty() && msg[msg.length() - 1] == '\n')
+		msg.erase(msg.length() - 1);
+	Logger::log("Message sent:\tMSG -->\t\t" 		+ msg);
 	if (bytesSent == -1)
 		Logger::log("\t ERROR -->\n\t" + std::string(strerror(errno)));
 }
@@ -137,12 +154,13 @@ void Client::removeChannel(Channel &channel)
 
 void    Client::setUniqueName(const std::string &nickname)
 {
+	info("set nickname " + nickname, CLR_GRN);
 	_nickname = nickname;
 }
 
 void Client::setUsername(const std::string &username)
 {
-	info("Set username " + username, CLR_GRN);
+	info("set username " + username, CLR_GRN);
 	_username = username;
 }
 

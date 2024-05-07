@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/03 23:48:47 by astein            #+#    #+#             */
-/*   Updated: 2024/05/04 01:35:53 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 16:51:16 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include <string>
 #include <iostream>
 #include <ctime>
+#include <iomanip>
 
 class Logger
 {

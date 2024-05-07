@@ -6,11 +6,12 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/07 01:02:36 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 14:28:51 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Channel.hpp"
+#include "Client.hpp"
 
 // Constructor
 // -----------------------------------------------------------------------------
@@ -29,6 +30,25 @@ Channel::Channel(const std::string &name, Client &client) :
 	info ("Channel created: " + _name + " by " + client.getUniqueName(), CLR_GRN);
 }
 
+// Copy Constructor
+// -----------------------------------------------------------------------------
+Channel::Channel(const Channel &other) : 
+	_name(other._name),
+	_topic(other._topic),
+	_topicChange(other._topicChange),
+	_key(other._key),
+	_limit(other._limit),
+	_inviteOnly(other._inviteOnly),
+	_topicProtected(other._topicProtected)
+{
+	Logger::log("Channel created: " + _name);
+	for(std::list<Client *>::const_iterator it = other._clients.begin(); it != other._clients.end(); ++it)
+		_clients.push_back(*it);
+	for(std::list<Client *>::const_iterator it = other._operators.begin(); it != other._operators.end(); ++it)
+		_operators.push_back(*it);
+	for(std::list<Client *>::const_iterator it = other._invitations.begin(); it != other._invitations.end(); ++it)
+		_invitations.push_back(*it);
+}
 // Destructor
 // -----------------------------------------------------------------------------
 Channel::~Channel()
