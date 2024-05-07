@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/07 00:18:21 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 00:56:17 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,16 +121,18 @@ void	Client::sendMessage(const std::string &code, const std::string &message) co
 	sendMessage(ircMessage);
 }
 
-
 void Client::addChannel(Channel *channel)
 {
+	if(!channel)
+		return;
 	_channels.push_back(channel);
-	Logger::log("Channel " + channel->getUniqueName() + " added to " + _nickname + "'s channel list!");
+	info("INSIDE CLIENT: Added Channel: " + channel->getUniqueName(), CLR_GRN);
+	std::cout << "INSIDE CLIENT: Channel List Size: "<<  _channels.size() << std::endl;
 }
 
-void Client::removeChannel(Channel *channel) // TODO: delete this
+void Client::removeChannel(Channel &channel)
 {
-	_channels.remove(channel);
+	_channels.remove(&channel);
 }
 
 void    Client::setUniqueName(const std::string &nickname)

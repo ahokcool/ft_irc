@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/07 00:17:23 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 01:02:36 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,8 +19,8 @@ Channel::Channel(const std::string &name, Client &client) :
 {
     Logger::log("Channel created: " + _name);
     client.addChannel(this);
-    _clients.push_back(&client);
-	_operators.push_back(&client);
+    this->addClient(client);
+	this->addOperator(client);
 
 	// SEND JOIN MESSAGE FOR THE CLIENT THAT CREATED THE CHANNEL
 	client.sendMessage(":" + client.getUniqueName() + 
@@ -33,11 +33,12 @@ Channel::Channel(const std::string &name, Client &client) :
 // -----------------------------------------------------------------------------
 Channel::~Channel()
 {
+	info("CHANNEL DESTROYED: " + _name, CLR_RED);
     std::list<Client *>::iterator it = _clients.begin();
 
     while (it != _clients.end())
     {
-        (*it)->removeChannel(this);
+        (*it)->removeChannel(*this);
         it++;
     }
     _clients.clear();
@@ -111,8 +112,8 @@ void	Channel::joinChannel(Client &client, const std::string &pswd)
 
 	// IF WE GOT HERE
 	// JOIN CHANNEL
-    _clients.push_back(&client);
 	client.addChannel(this);
+	this->addClient(client);
 
 	// CREATE MSG
 	std::string msgToSend =
@@ -191,9 +192,9 @@ void	Channel::kickFromChannel(Client &kicker, Client &kicked)
 		" KICK " + _name + " " + kicked.getUniqueName() + " :" + kicker.getUniqueName();
 	this->sendMessageToClients(msg);
 
-    _clients.remove(&kicked);
-    _operators.remove(&kicked); // TODO: test if this fails if the client isnt in the list
-	kicked.removeChannel(this);	
+	this->removeOperator(kicked);
+	this->removeClient(kicked);
+	kicked.removeChannel(*this);	
 	info ("Client " + kicked.getUniqueName() + " kicked from " + _name + " by " + kicker.getUniqueName(), CLR_RED);
 }
 
@@ -213,9 +214,9 @@ void	Channel::partChannel(Client &client)
 	std::string msg = ":" + client.getUniqueName() + "!" + client.getUsername() + "@localhost" +
 		" PART " + _name + " :Leaving";
 	this->sendMessageToClients(msg);
-	_clients.remove(&client);
-    _operators.remove(&client); // TODO: test if this fails if the client isnt in the list
-	client.removeChannel(this);
+	this->removeOperator(client);
+	this->removeClient(client);
+	client.removeChannel(*this);	
 	info ("Client " + client.getUniqueName() + " left " + _name, CLR_ORN);
 }
 
@@ -287,6 +288,7 @@ void	Channel::modeOfChannel(/* TODO: */)
 void	Channel::addClient		(Client &client)
 {
 	_clients.push_back(&client);
+	removeInvitation(client);
 }
 
 void	Channel::removeClient	(Client &client)
@@ -301,7 +303,7 @@ void	Channel::addOperator	(Client &client)
 
 void	Channel::removeOperator	(Client &client)
 {
-	_clients.remove(&client);
+	_operators.remove(&client);
 }		
 
 void	Channel::addInvitation	(Client &client)

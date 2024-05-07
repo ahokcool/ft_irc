@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/07 00:06:03 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 00:58:31 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,7 +103,7 @@ class Server
 	// Client Methods
 	// -------------------------------------------------------------------------
 	private:
-		void	addClient(Client client);
+		void	addClient(Client client);//TODO: why copy
 		void	removeClient(Client *client);
 		Client	*getClientByFd(int fd);
 		Client	*getClientByNick(const std::string &nickname);	
@@ -112,8 +112,8 @@ class Server
 	// Channel Methods
 	// -------------------------------------------------------------------------
 	private:
-		void	addChannel(Channel channel);
-		void	removeChannel(Channel *channel);
+		void	addChannel(Channel &channel);
+		void	removeChannel(Channel &channel);
 		Channel	*createNewChannel(Message &msg);
 
 	// -------------------------------------------------------------------------

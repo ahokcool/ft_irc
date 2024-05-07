@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/07 00:12:52 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 01:06:49 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -554,7 +554,7 @@ void	Server::part(Message &msg)
 	if (!msg.getChannel()->isActive())
 	{
 		// DELETE CHANNEL. NO MESSAGE NEEDED
-		removeChannel(msg.getChannel());
+		removeChannel(*msg.getChannel());
 	}	
 }
 
@@ -599,16 +599,14 @@ Client	*Server::getClientByNick(const std::string &nickname)
 // -----------------------------------------------------------------------------
 // Channel Methods
 // -----------------------------------------------------------------------------
-void	Server::addChannel(Channel channel)
+void	Server::addChannel(Channel &channel)
 {
 	_channels.push_back(channel);
 }
 
-void	Server::removeChannel(Channel *channel)
+void	Server::removeChannel(Channel &channel)
 {
-	if (!channel)
-		return;
-	_channels.remove(*channel);
+	_channels.remove(channel);
 }
 
 // If there is no channel this function
@@ -617,7 +615,7 @@ Channel	*Server::createNewChannel(Message &msg)
 {
 	if (isNameAvailable(_channels, msg.getChannelName()))
 	{
-		addChannel(Channel(msg.getChannelName(), msg.getSender()));
+		_channels.push_back(Channel(msg.getChannelName(), msg.getSender()));
 		return &(_channels.back());
 	}
 	return NULL;

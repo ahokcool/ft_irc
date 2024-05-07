@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:33 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/07 00:18:16 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 00:56:11 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,8 +38,19 @@ class NickNameException : public std::exception
 class Client
 {   
     public:
+
         Client(const int socketFd);
         ~Client();
+
+		// Simple List Management
+		void                    addChannel(Channel *channel);
+        void                    removeChannel(Channel &channel);		
+
+
+
+
+
+
 
 		bool					appendBuffer(const char *buffer);
 		std::string				getFullMessage();
@@ -52,8 +63,7 @@ class Client
 
 
 
-        void                    addChannel(Channel *channel);
-        void                    removeChannel(Channel *channel);
+        
         
         void					setUniqueName(const std::string &nickname);
         void					setUsername(const std::string &username);
