@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/02 16:37:13 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/07 17:25:38 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 18:21:13 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ class Message
 {
     public:
 		// Constructors and Destructor
-        Message(Client &sender, const std::string &ircMessage);
+        Message(Client *sender, const std::string &ircMessage);
         void parseMessage(const std::string &ircMessage);
         ~Message();
 
@@ -44,6 +44,8 @@ class Message
         void				setReceiver(Client *receiver);
         void				setChannel(Channel *channel);
 
+		// LOG
+		void				logMessage() const;
     private:
         Message();
 

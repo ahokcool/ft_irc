@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:19:23 by astein            #+#    #+#             */
-/*   Updated: 2024/05/01 23:20:20 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 17:51:21 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 # define UTILS_HPP
 
 # include <iostream>
+# include <sstream>
 
 // COLORS
 # define CLR_RED "\033[31m"
@@ -27,5 +28,13 @@
 // Helper functions for printing
 void	title(std::string str, bool newline_before, bool newline_after);
 void	info(std::string str, std::string clr);
+
+template <typename T>
+std::string to_string(const T& value)
+{
+    std::ostringstream oss;
+    oss << value;
+    return oss.str();
+}
 
 #endif

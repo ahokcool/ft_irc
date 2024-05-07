@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/07 17:21:05 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 19:57:05 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,8 @@
 // -----------------------------------------------------------------------------
 Client::Client(const int socketFd) : _socketFd(socketFd)
 {
-	info ("Created Client Inctance", CLR_BLU);
+	Logger::log("CREATED Client Instance with fd: " + to_string(socketFd));
+	logClient();
 }
 
 // Copy Constructor
@@ -30,7 +31,8 @@ Client::Client(const Client &other) :
 	_fullname(other._fullname),
 	_hostname(other._hostname)
 {
-	info ("COPY CONSTRUCTOR!!!", CLR_BLU);
+	Logger::log("COPIED Client Instance with fd: " + to_string(_socketFd));
+	logClient();
 	for(std::list<Channel *>::const_iterator it = other._channels.begin(); it != other._channels.end(); ++it)
 		_channels.push_back(*it);
 }
@@ -42,12 +44,12 @@ Client::~Client()
 
 	while (it != _channels.end())
 	{
-		(*it)->kickFromChannel(*this, *this); // TODO: this is fucked up
+		(*it)->kickFromChannel(this, this); // TODO: this is fucked up
 		it++;
 	}
 	_channels.clear();
-	// Client::_nicknames.erase(_nickname);
-	info("Client destroyed", CLR_RED);
+	Logger::log("DESTRUCTED Client Instance with fd: " + to_string(_socketFd));
+	logClient();
 }
 
 // Equal Overload (for list remove)
@@ -64,9 +66,9 @@ void Client::addChannel(Channel *channel)
 	if(!channel)
 		return;
 	_channels.push_back(channel);
-	info("INSIDE CLIENT: Added Channel: " + channel->getUniqueName(), CLR_GRN);
-	std::cout << "INSIDE CLIENT: Channel List Size: "<< _channels.size() << std::endl;
-}
+	Logger::log("Client " + _nickname + " joined channel: " + channel->getUniqueName() + "\n");
+	logClient();
+}	
 
 void Client::removeChannel(Channel *channel)
 {
@@ -128,10 +130,10 @@ void	Client::sendMessage(const std::string &code, const std::string &message) co
 	sendMessage(ircMessage);
 }
 
-void Client::sendWhoIsMsg(Client &reciever) const
+void Client::sendWhoIsMsg(Client *reciever) const
 {
 	// localhost 311 <nick> <user> <host> * :<real name>
-	reciever.sendMessage(
+	reciever->sendMessage(
 		":localhost " + std::string(RPL_WHOISUSER) + " " +
 		_nickname + " " +
 		_username + " " +
@@ -139,24 +141,19 @@ void Client::sendWhoIsMsg(Client &reciever) const
 		_fullname);
 
 	// localhost 319 <nick> :{[@|+]<channel><space>}
-	std::string channels;
-	
-	std::cout << "Channels List size: " << _channels.size() << std::endl;
-
-	
-	Logger::log("Channels of: " + _nickname + " :" + channels);
-	for (std::list<Channel *>::const_iterator it = _channels.begin(); it != _channels.end(); ++it)
-		channels += "@" + (*it)->getUniqueName() + " ";
+	std::string channels = getChannelList();	
 	if(!channels.empty())
-		reciever.sendMessage(
+		reciever->sendMessage(
 			":localhost " + std::string(RPL_WHOISCHANNELS) + " " +
 			_nickname + " :" +
 			channels);
 
 	// localhost 318 <nick> :End of /WHOIS list.
-	reciever.sendMessage(
+	reciever->sendMessage(
 		":localhost " + std::string(RPL_ENDOFWHOIS) + " " +
-		_nickname + " :End of /WHOIS list.");
+		_nickname + " :End of /WHOIS list.");	
+
+	logClient();
 }
 
 // Setters
@@ -208,6 +205,51 @@ const std::string &Client::getFullname() const
 const std::string &Client::getHostname() const
 {
 	return _hostname;
+}
+
+const std::string Client::getChannelList() const
+{
+	std::string channels = "";
+
+	for (std::list<Channel *>::const_iterator it = _channels.begin(); it != _channels.end(); ++it)
+		channels += "@" + (*it)->getUniqueName() + " ";
+
+	return channels;
+}
+
+// LOG
+// -----------------------------------------------------------------------------
+void Client::logClient() const
+{
+	std::ostringstream header, values;
+
+	// Constructing headers
+	header << std::setw(15) << std::left << "INPUT BUFFER"
+			<< "| " << std::setw(15) << "SOCKET FD"
+			<< "| " << std::setw(15) << "NICKNAME"
+			<< "| " << std::setw(15) << "USERNAME"
+			<< "| " << std::setw(15) << "FULLNAME"
+			<< "| " << std::setw(15) << "HOSTNAME"
+			<< "| " << std::setw(15) << "CHANNELS";
+
+	// Constructing values under headers
+	values << std::setw(15) << std::left << (_inputBuffer.length() > 14 ? _inputBuffer.substr(0, 14) + "." : _inputBuffer.empty() ? "(NULL)" : _inputBuffer)
+			<< "| " << std::setw(15) << _socketFd
+			<< "| " << std::setw(15) << (_nickname.length() > 14 ? _nickname.substr(0, 14) + "." : _nickname.empty() ? "(NULL)" : _nickname)
+			<< "| " << std::setw(15) << (_username.length() > 14 ? _username.substr(0, 14) + "." : _username.empty() ? "(NULL)" : _username)
+			<< "| " << std::setw(15) << (_fullname.length() > 14 ? _fullname.substr(0, 14) + "." : _fullname.empty() ? "(NULL)" : _fullname)
+			<< "| " << std::setw(15) << (_hostname.length() > 14 ? _hostname.substr(0, 14) + "." : _hostname.empty() ? "(NULL)" : _hostname)
+			<< "| " << getChannelList() << std::endl;
+
+	// Combining headers and values into one log entry
+	std::ostringstream logEntry;
+	logEntry << header.str() << "\n" << values.str();
+
+	// Logging the constructed message
+	Logger::log("==== START CLIENT ====");
+	Logger::log(header.str());
+	Logger::log(values.str());
+	Logger::log("==== END CLIENT ====");
 }
 
 // Exception

@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/07 14:28:51 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 20:10:15 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,19 +15,20 @@
 
 // Constructor
 // -----------------------------------------------------------------------------
-Channel::Channel(const std::string &name, Client &client) : 
+Channel::Channel(const std::string &name, Client *client) : 
 	_name(name), _topic(""), _key(""), _limit(0), _inviteOnly(false), _topicProtected(false)
 {
-    Logger::log("Channel created: " + _name);
-    client.addChannel(this);
+    Logger::log("Channel CREATED: " + _name);
+    client->addChannel(this);
     this->addClient(client);
 	this->addOperator(client);
 
 	// SEND JOIN MESSAGE FOR THE CLIENT THAT CREATED THE CHANNEL
-	client.sendMessage(":" + client.getUniqueName() + 
-		"!" + client.getUsername() + "@localhost" + // + msg.getSender().getHost()
+	client->sendMessage(":" + client->getUniqueName() + 
+		"!" + client->getUsername() + "@localhost" + // + msg.getSender().getHost()
 		" JOIN " + _name + " * :realname");
-	info ("Channel created: " + _name + " by " + client.getUniqueName(), CLR_GRN);
+	info ("Channel created: " + _name + " by " + client->getUniqueName(), CLR_GRN);
+	logChanel();
 }
 
 // Copy Constructor
@@ -41,7 +42,7 @@ Channel::Channel(const Channel &other) :
 	_inviteOnly(other._inviteOnly),
 	_topicProtected(other._topicProtected)
 {
-	Logger::log("Channel created: " + _name);
+	Logger::log("Channel COPIED: " + _name);
 	for(std::list<Client *>::const_iterator it = other._clients.begin(); it != other._clients.end(); ++it)
 		_clients.push_back(*it);
 	for(std::list<Client *>::const_iterator it = other._operators.begin(); it != other._operators.end(); ++it)
@@ -53,12 +54,12 @@ Channel::Channel(const Channel &other) :
 // -----------------------------------------------------------------------------
 Channel::~Channel()
 {
-	info("CHANNEL DESTROYED: " + _name, CLR_RED);
+	info("Channel DESTROYED: " + _name, CLR_RED);
     std::list<Client *>::iterator it = _clients.begin();
 
     while (it != _clients.end())
     {
-        (*it)->removeChannel(*this);
+        (*it)->removeChannel(this);
         it++;
     }
     _clients.clear();
@@ -92,14 +93,17 @@ bool	Channel::isActive() const
 	Checks if the channel accepst the client
 		Checks flags and stuff
 */
-void	Channel::joinChannel(Client &client, const std::string &pswd)
+void	Channel::joinChannel(Client *client, const std::string &pswd)
 {
+	if (!client)
+		return ;
+
 	// IF ALREADY IN CHANNEL
 	if (isClientIsInList(_clients, client))
 	{
 		// SEND MESSAGE ALREADY IN CHANNEL |
-		client.sendMessage(ERR_USERONCHANNEL,
-			client.getUniqueName() + " " +  _name + " :is already on channel");
+		client->sendMessage(ERR_USERONCHANNEL,
+			client->getUniqueName() + " " +  _name + " :is already on channel");
 		return ;
 	}
 	
@@ -110,7 +114,7 @@ void	Channel::joinChannel(Client &client, const std::string &pswd)
 		if (_key != pswd)
 		{
 			// 475
-			return client.sendMessage(ERR_BADCHANNELKEY, _name + " :Cannot join channel (+k)");
+			return client->sendMessage(ERR_BADCHANNELKEY, _name + " :Cannot join channel (+k)");
 		}
 	}
 	// IF I FLAG
@@ -118,7 +122,7 @@ void	Channel::joinChannel(Client &client, const std::string &pswd)
 	{
 		// CHECK IF INVITED
 		// TODO: check if this sender is invited
-		client.sendMessage(ERR_INVITEONLYCHAN, _name + " :Cannot join channel (+i)");
+		client->sendMessage(ERR_INVITEONLYCHAN, _name + " :Cannot join channel (+i)");
 		return ;
 	}
 
@@ -127,39 +131,39 @@ void	Channel::joinChannel(Client &client, const std::string &pswd)
 	{
 		// CHECK IF CHANNEL IS FULL
 		if (_clients.size() != 0 && _clients.size() >= _limit)
-			return client.sendMessage(ERR_CHANNELISFULL, _name + " :Cannot join channel (+l)");
+			return client->sendMessage(ERR_CHANNELISFULL, _name + " :Cannot join channel (+l)");
 	}
 
 	// IF WE GOT HERE
 	// JOIN CHANNEL
-	client.addChannel(this);
+	client->addChannel(this);
 	this->addClient(client);
 
 	// CREATE MSG
 	std::string msgToSend =
-		":" + client.getUniqueName() + 
-		"!" + client.getUsername() + "@*" + // + client.getHost()
+		":" + client->getUniqueName() + 
+		"!" + client->getUsername() + "@*" + // + client->getHost()
 		" JOIN " + _name + " * :realname";
 
 	// INFORM ALL CHANNEL MEMBERS
 	// >> :ash222!anshovah@F456A.75198A.60D2B2.ADA236.IP JOIN #qweqwe * :realname
 	this->sendMessageToClients(msgToSend);	
-	info ("Client " + client.getUniqueName() + " joined " + _name, CLR_GRN);
+	info ("Client " + client->getUniqueName() + " joined " + _name, CLR_GRN);
 }
 
-void	Channel::inviteToChannel(Client &host, Client &guest)
+void	Channel::inviteToChannel(Client *host, Client *guest)
 {
 	// IF HOST IS NOT IN CHANNEL
 	if (!isClientIsInList(_clients, host))
 	{
-		host.sendMessage(ERR_NOTONCHANNEL, _name + " :You're not on that channel");
+		host->sendMessage(ERR_NOTONCHANNEL, _name + " :You're not on that channel");
 		return ;
 	}
 
 	// IF GUEST ALREADY IN CHANNEL
 	if (isClientIsInList(_clients, guest))
 	{
-		host.sendMessage(ERR_USERONCHANNEL, guest.getUniqueName() + " " +  _name + " :is already on channel");
+		host->sendMessage(ERR_USERONCHANNEL, guest->getUniqueName() + " " +  _name + " :is already on channel");
 		return ;
 	}
 	
@@ -168,7 +172,7 @@ void	Channel::inviteToChannel(Client &host, Client &guest)
 	{
 		if (!isClientIsInList(_operators, host))
 		{
-			host.sendMessage(ERR_CHANOPRIVSNEEDED, _name + " :You're not channel operator");
+			host->sendMessage(ERR_CHANOPRIVSNEEDED, _name + " :You're not channel operator");
 			return ;
 		}
 	}
@@ -178,29 +182,29 @@ void	Channel::inviteToChannel(Client &host, Client &guest)
 
 	// SEND INVITE
 	// host :Aurora.AfterNET.Org 341 astein astein__ #test3
-	host.sendMessage(RPL_INVITING, host.getUniqueName() + " " +
-		guest.getUniqueName() + " " + _name);
+	host->sendMessage(RPL_INVITING, host->getUniqueName() + " " +
+		guest->getUniqueName() + " " + _name);
 	
 	// guest :astein!alex@F456A.75198A.60D2B2.ADA236.IP INVITE astein__ #test3
-	guest.sendMessage(":" + host.getUniqueName() + "!" + host.getUsername() +
-		"@localhost" + " INVITE " + guest.getUniqueName() + " " + _name);
+	guest->sendMessage(":" + host->getUniqueName() + "!" + host->getUsername() +
+		"@localhost" + " INVITE " + guest->getUniqueName() + " " + _name);
 
-	info ("Invite sent to " + guest.getUniqueName() + " by " + host.getUniqueName(), CLR_GRN);
+	info ("Invite sent to " + guest->getUniqueName() + " by " + host->getUniqueName(), CLR_GRN);
 }
 
-void	Channel::kickFromChannel(Client &kicker, Client &kicked)
+void	Channel::kickFromChannel(Client *kicker, Client *kicked)
 {
 	// IF CLIENT IS NOT IN CHANNEL
 	if (!isClientIsInList(_clients, kicked))
 	{
-		kicked.sendMessage(ERR_USERNOTINCHANNEL, kicked.getUniqueName() + " " + _name + " :They aren't on that channel");
+		kicked->sendMessage(ERR_USERNOTINCHANNEL, kicked->getUniqueName() + " " + _name + " :They aren't on that channel");
 		return ;
 	}
 	
 	// IF CLIENT IS NOT OPERATOR
 	if (!isClientIsInList(_operators, kicked))
 	{
-		kicked.sendMessage(ERR_CHANOPRIVSNEEDED, _name + " :You're not channel operator");
+		kicked->sendMessage(ERR_CHANOPRIVSNEEDED, _name + " :You're not channel operator");
 		return ;
 	}
 
@@ -208,22 +212,22 @@ void	Channel::kickFromChannel(Client &kicker, Client &kicked)
 	// sendMessageToClients() will INLUDE THE KICKED GUY
 	// MSG:
 	// :astein!alex@F456A.75198A.60D2B2.ADA236.IP KICK #test3 astein__ :astein
-	std::string msg = ":" + kicker.getUniqueName() + "!" + kicker.getUsername() + "@localhost" +
-		" KICK " + _name + " " + kicked.getUniqueName() + " :" + kicker.getUniqueName();
+	std::string msg = ":" + kicker->getUniqueName() + "!" + kicker->getUsername() + "@localhost" +
+		" KICK " + _name + " " + kicked->getUniqueName() + " :" + kicker->getUniqueName();
 	this->sendMessageToClients(msg);
 
 	this->removeOperator(kicked);
 	this->removeClient(kicked);
-	kicked.removeChannel(*this);	
-	info ("Client " + kicked.getUniqueName() + " kicked from " + _name + " by " + kicker.getUniqueName(), CLR_RED);
+	kicked->removeChannel(this);
+	info ("Client " + kicked->getUniqueName() + " kicked from " + _name + " by " + kicker->getUniqueName(), CLR_RED);
 }
 
-void	Channel::partChannel(Client &client)
+void	Channel::partChannel(Client *client)
 {
 	// IF CLIENT IS NOT IN CHANNEL
 	if (!isClientIsInList(_clients, client))
 	{
-		client.sendMessage(ERR_NOTONCHANNEL, _name + " :You're not on that channel");
+		client->sendMessage(ERR_NOTONCHANNEL, _name + " :You're not on that channel");
 		return ;
 	}
 
@@ -231,36 +235,36 @@ void	Channel::partChannel(Client &client)
 	// sendMessageToClients() will INLUDE THE LEAVING GUY
 	// MSG:
 	// :astein_!alex@F456A.75198A.60D2B2.ADA236.IP PART #test :Leaving
-	std::string msg = ":" + client.getUniqueName() + "!" + client.getUsername() + "@localhost" +
+	std::string msg = ":" + client->getUniqueName() + "!" + client->getUsername() + "@localhost" +
 		" PART " + _name + " :Leaving";
 	this->sendMessageToClients(msg);
 	this->removeOperator(client);
 	this->removeClient(client);
-	client.removeChannel(*this);	
-	info ("Client " + client.getUniqueName() + " left " + _name, CLR_ORN);
+	client->removeChannel(this);
+	info ("Client " + client->getUniqueName() + " left " + _name, CLR_ORN);
 }
 
 // Modes & Topic funtionality
 // -----------------------------------------------------------------------------
-void	Channel::topicOfChannel(Client &sender, const std::string &topic)
+void	Channel::topicOfChannel(Client *sender, const std::string &topic)
 {
 	// IF SENDER IS NOT IN CHANNEL
 	if (!isClientIsInList(_clients, sender))
 	{
-		sender.sendMessage(ERR_NOTONCHANNEL, _name + " :You're not on that channel");
+		sender->sendMessage(ERR_NOTONCHANNEL, _name + " :You're not on that channel");
 		return ;
 	}
 	
 	// IF NO TOPIC IS PROVIDED
 	if (topic.empty())
 	{
-		sender.sendMessage(
+		sender->sendMessage(
 			":localhost " + std::string(RPL_TOPIC) +
-			" " + sender.getUniqueName() +
+			" " + sender->getUniqueName() +
 			" " + _name + " :" + _topic);
-		sender.sendMessage(
+		sender->sendMessage(
 			":localhost " + std::string(RPL_TOPICADDITIONAL) +
-			" " + sender.getUniqueName() +
+			" " + sender->getUniqueName() +
 			" " + _topicChange);
 		return ;
 	}
@@ -270,7 +274,7 @@ void	Channel::topicOfChannel(Client &sender, const std::string &topic)
 	{
 		if (!isClientIsInList(_operators, sender))
 		{
-			sender.sendMessage(ERR_CHANOPRIVSNEEDED, _name + " :You're not channel operator");
+			sender->sendMessage(ERR_CHANOPRIVSNEEDED, _name + " :You're not channel operator");
 			return ;
 		}
 	}
@@ -282,19 +286,19 @@ void	Channel::topicOfChannel(Client &sender, const std::string &topic)
 	// Convert time_t to string using stringstream unix timestamp
 	std::stringstream ss;
 	ss << currentTime;
-	_topicChange = sender.getUniqueName() + "!" + 
-			sender.getUsername() + "@localhost" +
+	_topicChange = sender->getUniqueName() + "!" + 
+			sender->getUsername() + "@localhost" +
 			" " + ss.str();
 	// SEND TOPIC MESSAGE
 	std::string confirmMsg =
-		sender.getUniqueName() + "!" +
-		sender.getUsername() + "@localhost" +
+		sender->getUniqueName() + "!" +
+		sender->getUsername() + "@localhost" +
 		" TOPIC " + _name + " :" + _topic;
 
 	sendMessageToClients(confirmMsg);
-	sender.sendMessage(confirmMsg);
+	sender->sendMessage(confirmMsg);
 
-	info ("Topic changed to: " + _topic + " by " + sender.getUniqueName(), CLR_GRN);
+	info ("Topic changed to: " + _topic + " by " + sender->getUniqueName(), CLR_GRN);
 	info ("Topic change message: " + _topicChange, CLR_GRN);
 }
 
@@ -305,35 +309,35 @@ void	Channel::modeOfChannel(/* TODO: */)
 
 // Simple List Management
 // -----------------------------------------------------------------------------
-void	Channel::addClient		(Client &client)
+void	Channel::addClient		(Client *client)
 {
-	_clients.push_back(&client);
+	_clients.push_back(client);
 	removeInvitation(client);
 }
 
-void	Channel::removeClient	(Client &client)
+void	Channel::removeClient	(Client *client)
 {
-	_clients.remove(&client);
+	_clients.remove(client);
 }
 
-void	Channel::addOperator	(Client &client)
+void	Channel::addOperator	(Client *client)
 {
-	_operators.push_back(&client);
+	_operators.push_back(client);
 }
 
-void	Channel::removeOperator	(Client &client)
+void	Channel::removeOperator	(Client *client)
 {
-	_operators.remove(&client);
+	_operators.remove(client);
 }		
 
-void	Channel::addInvitation	(Client &client)
+void	Channel::addInvitation	(Client *client)
 {
-	_invitations.push_back(&client);
+	_invitations.push_back(client);
 }
 
-void	Channel::removeInvitation(Client &client)
+void	Channel::removeInvitation(Client *client)
 {
-	_invitations.remove(&client);
+	_invitations.remove(client);
 }
 
 // Channel Broadcast Message
@@ -359,9 +363,53 @@ const std::string	&Channel::getUniqueName() const
     return _name;
 }
 
+const std::string Channel::getClientList() const
+{
+	std::string clients = "";
+
+	for (std::list<Client *>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
+		clients += "@" + (*it)->getUniqueName() + " ";
+
+	return clients;
+}
+
+// LOG
+// -----------------------------------------------------------------------------
+void Channel::logChanel() const
+{
+	std::ostringstream header, values;
+	
+	// Log headers
+	header << std::setw(15) << std::left << "NAME"
+			<< "| " << std::setw(15) << "TOPIC"
+			<< "| " << std::setw(15) << "TOPIC CHANGE"
+			<< "| " << std::setw(15) << "KEY"
+			<< "| " << std::setw(15) << "LIMIT"
+			<< "| " << std::setw(15) << "INVITE ONLY"
+			<< "| " << std::setw(15) << "TOPIC PROTECTED" << "\n"
+			<< "| " << std::setw(15) << "CLIENTS" << "\n";
+
+	// Log values
+	values << std::setw(15) << std::left << (_name.length() > 14 ? _name.substr(0, 14) + "." : _name.empty() ? "(NULL)" : _name)
+			<< "| " << std::setw(15) << (_topic.length() > 14 ? _topic.substr(0, 14) + "." : _topic.empty() ? "(NULL)" : _topic)
+			<< "| " << std::setw(15) << (_topicChange.length() > 14 ? _topicChange.substr(0, 14) + "." : _topicChange.empty() ? "(NULL)" : _topicChange)
+			<< "| " << std::setw(15) << (_key.length() > 14 ? _key.substr(0, 14) + "." : _key.empty() ? "(NULL)" : _key)
+			<< "| " << std::setw(15) << (_limit == 0 ? "(unset)" : to_string(_limit))
+			<< "| " << std::setw(15) << (_inviteOnly ? "Yes" : "No")
+			<< "| " << std::setw(15) << (_topicProtected ? "Yes" : "No")
+			<< "| " << getClientList() << std::endl;
+
+
+        // Simulate logging (You can replace this with actual log calls)
+	Logger::log("==== START CHANNEL ====");
+    Logger::log(header.str());
+    Logger::log(values.str());
+	Logger::log("==== END CHANNEL ====");
+}
+
 // Private Methods
 // -----------------------------------------------------------------------------
-bool	Channel::isClientIsInList(std::list<Client *> list, const Client &client) const
+bool	Channel::isClientIsInList(std::list<Client *> list, const Client *client) const
 {
 	if (list.empty())
 		return false;
@@ -369,7 +417,7 @@ bool	Channel::isClientIsInList(std::list<Client *> list, const Client &client) c
 
 	for (it = list.begin(); it != list.end(); ++it)
 	{
-		if (&client == *it)
+		if (*client == **it)
 			return true;
 	}
 	return false;

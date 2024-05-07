@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:33 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/07 17:23:40 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 18:22:38 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,7 @@ class Client
 		// Send message to client
         void                    sendMessage(const std::string &ircMessage) const;
         void                    sendMessage(const std::string &code, const std::string &message) const;
-        void 					sendWhoIsMsg(Client &reciever) const;
+        void 					sendWhoIsMsg(Client *reciever) const;
 		
 		// Setters
         void					setUniqueName(const std::string &nickname);
@@ -73,6 +73,10 @@ class Client
         const std::string		&getUsername()		const;
         const std::string		&getFullname()		const;
         const std::string		&getHostname()		const;
+		const std::string		getChannelList()	const;
+
+		// LOG
+		void					logClient() const;
 
     private:
         Client();

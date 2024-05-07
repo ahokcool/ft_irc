@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/07 16:34:45 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 18:28:41 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,28 +83,26 @@ class Server
 	// Processing the Messages
 	// -------------------------------------------------------------------------
 	private:
-		void	processMessage(Client &sender, const std::string &ircMessage);
-		bool	isLoggedIn(Message &msg);
-		void	chooseCommand(Message &msg);
+		void	processMessage(Client *sender, const std::string &ircMessage);
+		bool	isLoggedIn(Message *msg);
+		void	chooseCommand(Message *msg);
 
-		typedef void	(Server::*CommandFunction)(Message&);
-		void	nick	(Message &msg);
-		void	user	(Message &msg);
-		void	whois	(Message &msg);
-		void	privmsg	(Message &msg);
-		void	join	(Message &msg);
-		void	invite	(Message &msg);
-		void	topic	(Message &msg);
-		void	mode	(Message &msg);
-		void	kick	(Message &msg);
-		void	part	(Message &msg);
+		typedef void	(Server::*CommandFunction)(Message*);
+		void	nick	(Message *msg);
+		void	user	(Message *msg);
+		void	whois	(Message *msg);
+		void	privmsg	(Message *msg);
+		void	join	(Message *msg);
+		void	invite	(Message *msg);
+		void	topic	(Message *msg);
+		void	mode	(Message *msg);
+		void	kick	(Message *msg);
+		void	part	(Message *msg);
 
 	// -------------------------------------------------------------------------
 	// Client Methods
 	// -------------------------------------------------------------------------
 	private:
-		void	addClient(const Client &client);
-		void	removeClient(Client *client);
 		Client	*getClientByFd(int fd);
 		Client	*getClientByNick(const std::string &nickname);	
 	
@@ -112,9 +110,9 @@ class Server
 	// Channel Methods
 	// -------------------------------------------------------------------------
 	private:
-		void	addChannel(const Channel &channel);
-		void	removeChannel(Channel &channel);
-		Channel	*createNewChannel(Message &msg);
+		void	addChannel(const Channel *channel);
+		void	removeChannel(Channel *channel);
+		Channel	*createNewChannel(Message *msg);
 
 	// -------------------------------------------------------------------------
 	// Attributes

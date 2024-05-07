@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/07 16:43:40 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 18:40:34 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -146,7 +146,7 @@ void	Server::goOnline()
 			// https://pubs.opengroup.org/onlinepubs/009695399/functions/fcntl.html
 			if (fcntl(new_socket, F_SETFL, O_NONBLOCK) < 0)
 				throw ServerException("Fcntl failed\n\t" +	std::string(strerror(errno)));
-			addClient(Client(new_socket));
+			_clients.push_back(Client(new_socket));
         }
 
 		// TODO: in client check for to long msgs
@@ -170,7 +170,7 @@ void	Server::goOnline()
 					Logger::log("Client" + cur_client->getUniqueName() + " disconnected");
                     close(fds[i].fd);
                     fds.erase(fds.begin() + i);		// erase the client fd from the fd vector
-					removeClient(cur_client);		// erase the client from the client lisr
+					_clients.remove(*cur_client);	// erase the client from the client list
                     --i; // Adjust loop counter since we removed an element
                 }
 				else
@@ -190,7 +190,7 @@ void	Server::goOnline()
 					{
 						// 3. process the msg(s)
 						Logger::log("start processing msg from " + cur_client->getUniqueName() + " -> " + fullMsg);
-						processMessage(*cur_client, fullMsg);
+						processMessage(cur_client, fullMsg);
 					}
                 }
             }
@@ -250,14 +250,14 @@ void	Server::broadcastMessage(const std::string &msg) const
 // -----------------------------------------------------------------------------
 // Processing the Messages
 // -----------------------------------------------------------------------------
-void	Server::processMessage(Client &sender, const std::string &ircMessage)
+void	Server::processMessage(Client *sender, const std::string &ircMessage)
 {
 	// Parse the IRC Message
 	Message     msg(sender, ircMessage);
 	
 	//Execute IRC Message
 	//	1. Check if CLIENT is loggedin
-	if (!isLoggedIn(msg))
+	if (!isLoggedIn(&msg))
 		return ;
 	
 	//	2. Execute normal commands
@@ -265,27 +265,27 @@ void	Server::processMessage(Client &sender, const std::string &ircMessage)
 	msg.setChannel(getInstanceByName(_channels, msg.getChannelName()));
 	
 	// 		3.2 Process the msg aka call the right function
-	chooseCommand(msg);
+	chooseCommand(&msg);
 }
 
-bool	Server::isLoggedIn(Message &msg)
+bool	Server::isLoggedIn(Message *msg)
 {
-	if (!msg.getSender()->getUniqueName().empty() && !msg.getSender()->getUsername().empty())
+	if (!msg->getSender()->getUniqueName().empty() && !msg->getSender()->getUsername().empty())
 		return true;
 
 	//	1. Check if NICK is set
-	if (msg.getCmd() == "NICK")
+	if (msg->getCmd() == "NICK")
 		nick(msg);
-	else if (msg.getCmd() == "USER")
+	else if (msg->getCmd() == "USER")
 		user(msg);
 	else
-		msg.getSender()->sendMessage(ERR_NOTREGISTERED, ":You have not registered");
+		msg->getSender()->sendMessage(ERR_NOTREGISTERED, ":You have not registered");
 	return false;
 }
 
-void	Server::chooseCommand(Message &msg)
+void	Server::chooseCommand(Message *msg)
 {
-	std::string cmd = msg.getCmd();
+	std::string cmd = msg->getCmd();
 	if (cmd.empty())
 		return ; // this should not happen by design
 
@@ -298,77 +298,77 @@ void	Server::chooseCommand(Message &msg)
 		}
 	}
 	// :10.11.3.6 421 anshovah_ PRIMSG :Unknown command
-	msg.getSender()->sendMessage(ERR_UNKNOWNCOMMAND, msg.getCmd() + " :Unknown command");
+	msg->getSender()->sendMessage(ERR_UNKNOWNCOMMAND, msg->getCmd() + " :Unknown command");
 }
 
 // /NICK
-void	Server::nick(Message &msg)
+void	Server::nick(Message *msg)
 {	
-	std::string oldNickname = msg.getSender()->getUniqueName();
-	std::string newNickname = msg.getArg(0);
+	std::string oldNickname = msg->getSender()->getUniqueName();
+	std::string newNickname = msg->getArg(0);
 
 	if (oldNickname.empty())
 		oldNickname = newNickname;
 
 	if (newNickname.empty())
-		msg.getSender()->sendMessage(ERR_NONICKNAMEGIVEN, ":No nickname given");
+		msg->getSender()->sendMessage(ERR_NONICKNAMEGIVEN, ":No nickname given");
 	else if (!isNameAvailable(_clients, newNickname))
-		msg.getSender()->sendMessage(ERR_NICKNAMEINUSE, newNickname + " :Nickname is already in use");
+		msg->getSender()->sendMessage(ERR_NICKNAMEINUSE, newNickname + " :Nickname is already in use");
 	else
 	{
-		msg.getSender()->setUniqueName(newNickname);
+		msg->getSender()->setUniqueName(newNickname);
 		std::string ircMessage = 
 			":" + oldNickname + "!" +
-			msg.getSender()->getUsername() +
+			msg->getSender()->getUsername() +
 			"@localhost NICK :" +
 			newNickname;
-		msg.getSender()->sendMessage(ircMessage);
+		msg->getSender()->sendMessage(ircMessage);
 
 		// CHECK IF NEED tO SEND A WELCOME MSG NOW
-		if (oldNickname.empty() && !msg.getSender()->getUsername().empty())
+		if (oldNickname.empty() && !msg->getSender()->getUsername().empty())
 		{
 			//:luna.AfterNET.Org 001 ash_ :Welcome to the FINISHERS' IRC Network, ash_
-			msg.getSender()->sendMessage(RPL_WELCOME, msg.getSender()->getUniqueName() + " :Welcome to FINISHERS' IRC Network, " + msg.getSender()->getUniqueName());
+			msg->getSender()->sendMessage(RPL_WELCOME, msg->getSender()->getUniqueName() + " :Welcome to FINISHERS' IRC Network, " + msg->getSender()->getUniqueName());
 		}
 	}
 }
 
-void	Server::user(Message &msg)
+void	Server::user(Message *msg)
 {
-	std::string oldUsername = msg.getSender()->getUsername();
-	std::string newUsername = msg.getArg(0);
+	std::string oldUsername = msg->getSender()->getUsername();
+	std::string newUsername = msg->getArg(0);
 	
-	if (!msg.getArg(0).empty() && !msg.getArg(1).empty() &&
-		!msg.getArg(2).empty() && !msg.getColon().empty())
+	if (!msg->getArg(0).empty() && !msg->getArg(1).empty() &&
+		!msg->getArg(2).empty() && !msg->getColon().empty())
 	{
-		msg.getSender()->setUsername(msg.getArg(0));
-		msg.getSender()->setFullname(msg.getColon());
+		msg->getSender()->setUsername(msg->getArg(0));
+		msg->getSender()->setFullname(msg->getColon());
 		// CHECK IF NEED tO SEND A WELCOME MSG NOW
-		if (oldUsername.empty() && !msg.getSender()->getUniqueName().empty())
+		if (oldUsername.empty() && !msg->getSender()->getUniqueName().empty())
 		{
 			//:luna.AfterNET.Org 001 ash_ :Welcome to the FINISHERS' IRC Network, ash_
-			msg.getSender()->sendMessage(RPL_WELCOME, msg.getSender()->getUniqueName() + " :Welcome to FINISHERS' IRC Network, " + msg.getSender()->getUniqueName());
+			msg->getSender()->sendMessage(RPL_WELCOME, msg->getSender()->getUniqueName() + " :Welcome to FINISHERS' IRC Network, " + msg->getSender()->getUniqueName());
 		}
 	}
 	else
-		msg.getSender()->sendMessage(ERR_NEEDMOREPARAMS, "USER :Not enough parameters");
+		msg->getSender()->sendMessage(ERR_NEEDMOREPARAMS, "USER :Not enough parameters");
 }
 
-void	Server::whois	(Message &msg)
+void	Server::whois	(Message *msg)
 {
-	if (msg.getArg(0).empty())
+	if (msg->getArg(0).empty())
 	{
-		msg.getSender()->sendMessage(ERR_NONICKNAMEGIVEN, ":No nickname given");
+		msg->getSender()->sendMessage(ERR_NONICKNAMEGIVEN, ":No nickname given");
 		return ;
 	}
-	Client *whoIsClient = getClientByNick(msg.getArg(0));
+	Client *whoIsClient = getClientByNick(msg->getArg(0));
 	if (!whoIsClient)
 	{
-		msg.getSender()->sendMessage(ERR_NOSUCHNICK, msg.getArg(0) + " :No such nick/channel");
+		msg->getSender()->sendMessage(ERR_NOSUCHNICK, msg->getArg(0) + " :No such nick/channel");
 		return ;
 	}
 
-	whoIsClient->sendWhoIsMsg(*msg.getSender());
+	whoIsClient->sendWhoIsMsg(msg->getSender());
 }
 
 /* 
@@ -376,10 +376,10 @@ void	Server::whois	(Message &msg)
 		inform sender about it
 	send msg to receiver
  */
-void	Server::privmsg(Message &msg)
+void	Server::privmsg(Message *msg)
 {
-	std::string recipientNick 	= msg.getArg(0);
-	std::string channelName 	= msg.getChannelName();
+	std::string recipientNick 	= msg->getArg(0);
+	std::string channelName 	= msg->getChannelName();
 
 	// IF CHANNEL AND RECEIPENT BOTH ARE GIVEN DON'T DO SHIT
 	if (!channelName.empty() && !recipientNick.empty())
@@ -388,74 +388,74 @@ void	Server::privmsg(Message &msg)
 	// IF CHANNEL AND RECEIPENT BOTH ARE NOT GIVEN
 	if (channelName.empty() && recipientNick.empty())
 	{
-		msg.getSender()->sendMessage(ERR_NOTEXTTOSEND, ":No text to send");
+		msg->getSender()->sendMessage(ERR_NOTEXTTOSEND, ":No text to send");
 		return ;
 	}
 
 	// NO TEXT TO SEND
-	if (msg.getColon().empty())
+	if (msg->getColon().empty())
 	{
-		msg.getSender()->sendMessage(ERR_NOTEXTTOSEND, ":No text to send");
+		msg->getSender()->sendMessage(ERR_NOTEXTTOSEND, ":No text to send");
 		return ;
 	}
 
 	// CASE RECIPIENT
 	if (!recipientNick.empty())
 	{
-		msg.setReceiver(getInstanceByName(_clients, recipientNick));
-		if (!msg.getReceiver())
+		msg->setReceiver(getInstanceByName(_clients, recipientNick));
+		if (!msg->getReceiver())
 		{
-			msg.getSender()->sendMessage(ERR_NOSUCHNICK, recipientNick + " :No such nick");
+			msg->getSender()->sendMessage(ERR_NOSUCHNICK, recipientNick + " :No such nick");
 			return ;
 		}
 		std::string ircMessage = 
-			":" + msg.getSender()->getUniqueName() + "!" +
-			msg.getSender()->getUsername() +
+			":" + msg->getSender()->getUniqueName() + "!" +
+			msg->getSender()->getUsername() +
 			"@localhost PRIVMSG " +
 			recipientNick +
 			" :" +
-			msg.getColon();
-		msg.getReceiver()->sendMessage(ircMessage);
+			msg->getColon();
+		msg->getReceiver()->sendMessage(ircMessage);
 		return ;
 	}
 
 	// CASE CHANNEl
 	if (!channelName.empty())
 	{
-		if (!msg.getChannel())
+		if (!msg->getChannel())
 		{
-			msg.getSender()->sendMessage(ERR_NOSUCHCHANNEL, channelName + " :No such channel");
+			msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, channelName + " :No such channel");
 			return ;
 		}
 		std::string ircMessage = 
-			":" + msg.getSender()->getUniqueName() + "!" +
-			msg.getSender()->getUsername() +
+			":" + msg->getSender()->getUniqueName() + "!" +
+			msg->getSender()->getUsername() +
 			"@localhost PRIVMSG " +
 			channelName +
 			" :" +
-			msg.getColon();
-		msg.getChannel()->sendMessageToClients(ircMessage, msg.getSender());
+			msg->getColon();
+		msg->getChannel()->sendMessageToClients(ircMessage, msg->getSender());
 	}
 }
 
-void	Server::join(Message &msg)
+void	Server::join(Message *msg)
 {
-	std::string channelName = msg.getChannelName();
+	std::string channelName = msg->getChannelName();
 	// JOIN #<channel>
 	
 	// WITHOUT ARGS
 	if (channelName.empty())
 	{
 		// NO HASHTAG
-		if (!msg.getArg(0).empty())
-			msg.getSender()->sendMessage(ERR_NOSUCHCHANNEL, "JOIN :Channel name has to start with '#'");
+		if (!msg->getArg(0).empty())
+			msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, "JOIN :Channel name has to start with '#'");
 		else
-			msg.getSender()->sendMessage(ERR_NEEDMOREPARAMS, "JOIN :Not enough parameter");
+			msg->getSender()->sendMessage(ERR_NEEDMOREPARAMS, "JOIN :Not enough parameter");
 		return ;
 	}
 	
 	// CHECK IF CHANNEL EXISTS
-	if(!msg.getChannel())
+	if(!msg->getChannel())
 	{
 		if(!createNewChannel(msg))
 			return ; //Smth wrong we could find the channel but we also could create it
@@ -463,56 +463,56 @@ void	Server::join(Message &msg)
 	}
 	
 	// LET THE CHANNEL DESIDE IF THE CLIENT CAN JOIN
-	msg.getChannel()->joinChannel(*msg.getSender(), msg.getArg(0));
+	msg->getChannel()->joinChannel(msg->getSender(), msg->getArg(0));
 }
 
-void	Server::invite(Message &msg)
+void	Server::invite(Message *msg)
 {
 	// INVITE <nick> <channel>
-	std::string guestNick 		= msg.getArg(0);
-	std::string channelName 	= msg.getChannelName();
+	std::string guestNick 		= msg->getArg(0);
+	std::string channelName 	= msg->getChannelName();
 
 	// IF GUESTNICK IS NOT GIVEN DON'T DO SHIT
 	if (!guestNick.empty())
 		return ;
 
 	// IF THE GUEST IS NOT ON THE SERVER
-	msg.setReceiver(getInstanceByName(_clients, guestNick));
-	if (!msg.getReceiver())
+	msg->setReceiver(getInstanceByName(_clients, guestNick));
+	if (!msg->getReceiver())
 	{
-		msg.getSender()->sendMessage(ERR_NOSUCHNICK, guestNick + " :No such nick");
+		msg->getSender()->sendMessage(ERR_NOSUCHNICK, guestNick + " :No such nick");
 		return ;
 	}
 
 	// IF CHANNEL NAME IS NOT PROVIDED 
 	if (!channelName.empty())
 	{
-		msg.getSender()->sendMessage(ERR_NOSUCHCHANNEL, guestNick + " :No such channel");
+		msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, guestNick + " :No such channel");
 		return ;
 	}
 
 	// IF CHANNEL DOES NOT EXIST
-	if (!msg.getChannel())
+	if (!msg->getChannel())
 	{
-		msg.getSender()->sendMessage(ERR_NOSUCHCHANNEL, channelName + " :No such channel");
+		msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, channelName + " :No such channel");
 		return ;
 	}
 		
 	// CALL THE CHANNEL FUNCTION invite() AND LET IT DECIDE WHAT TO DO
-	msg.getChannel()->inviteToChannel(*msg.getSender(), *msg.getReceiver());
+	msg->getChannel()->inviteToChannel(msg->getSender(), msg->getReceiver());
 }
 
-void	Server::topic(Message &msg)
+void	Server::topic(Message *msg)
 {
 	// TOPIC #<channelName> :<topic>
 	// TOPIC #<channelName>
 	
-	if (!msg.getChannel())
-		msg.getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg.getChannelName() + " :No such channel");
-	msg.getChannel()->topicOfChannel(*msg.getSender(), msg.getColon());
+	if (!msg->getChannel())
+		msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg->getChannelName() + " :No such channel");
+	msg->getChannel()->topicOfChannel(msg->getSender(), msg->getColon());
 }
 
-void	Server::mode(Message &msg)
+void	Server::mode(Message *msg)
 {
 	(void)msg;
 	// MODE #<channelName> flag
@@ -520,77 +520,61 @@ void	Server::mode(Message &msg)
 	// channel.modeOfChannel()
 }
 
-void	Server::kick(Message &msg)
+void	Server::kick(Message *msg)
 {
 	// IF CHANNEL NAME IS NOT PROVIDED
-	if (msg.getChannelName().empty())
+	if (msg->getChannelName().empty())
 	{
-		msg.getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg.getChannelName() + " :No such channel");
+		msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg->getChannelName() + " :No such channel");
 		return ;
 	}
 
 	// IF CHANNEL DOES NOT EXIST
-	if (!msg.getChannel())
+	if (!msg->getChannel())
 	{
-		msg.getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg.getChannelName() + " :No such channel");
+		msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg->getChannelName() + " :No such channel");
 		return ;
 	}
 	
 	// IF NO CLIENT NAME IS PROVIDED
-	if (!msg.getArg(0).empty())
+	if (!msg->getArg(0).empty())
 	{
-		msg.getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg.getChannelName() + " :No such channel");
+		msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg->getChannelName() + " :No such channel");
 		return ;
 	}
 	
 	// IF TO BE KICKED CLIENT IS NOT ON THE SERVER
-	if (!msg.getReceiver())
+	if (!msg->getReceiver())
 	{
-		msg.getSender()->sendMessage(ERR_NOSUCHNICK, msg.getArg(0) + " :No such nick");
+		msg->getSender()->sendMessage(ERR_NOSUCHNICK, msg->getArg(0) + " :No such nick");
 		return ;
 	}
 
 	// KICK THE CLIENT
-	msg.getChannel()->kickFromChannel(*msg.getSender(), *msg.getReceiver());
+	msg->getChannel()->kickFromChannel(msg->getSender(), msg->getReceiver());
 }
 
-void	Server::part(Message &msg)
+void	Server::part(Message *msg)
 {
 	// IF CHANNEL NAME IS NOT PROVIDED
-	if (msg.getChannelName().empty())
+	if (msg->getChannelName().empty())
 	{
-		msg.getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg.getChannelName() + " :No such channel");
+		msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg->getChannelName() + " :No such channel");
 		return ;
 	}
-	msg.getChannel()->partChannel(*msg.getSender());
+	msg->getChannel()->partChannel(msg->getSender());
 
 	// IF NO CLIENTS OR OPERATORS LEFT IN CHANNEL -> DELETE CHANNEL
-	if (!msg.getChannel()->isActive())
+	if (!msg->getChannel()->isActive())
 	{
 		// DELETE CHANNEL. NO MESSAGE NEEDED
-		removeChannel(*msg.getChannel());
+		_channels.remove(*msg->getChannel());
 	}	
 }
 
 // -----------------------------------------------------------------------------
 // Client Methods
 // -----------------------------------------------------------------------------
-void	Server::addClient(const Client &client)
-{
-	_clients.push_back(client);
-	std::cout << "Now we have " << _clients.size() << " clients" << std::endl;
-}
-
-void	Server::removeClient(Client *client) // TODO: Whyt do we have this here?
-{
-	if (!client)
-		return;
-	_clients.remove(*client);
-	// TODO: CHECK if this calls the client destructor
-	// There also the username should be freed again!
-	// Print an info that the user was deleted!
-}
-
 Client	*Server::getClientByFd(int fd)
 {
 	for (std::list<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
@@ -614,23 +598,23 @@ Client	*Server::getClientByNick(const std::string &nickname)
 // -----------------------------------------------------------------------------
 // Channel Methods
 // -----------------------------------------------------------------------------
-void	Server::addChannel(const Channel &channel)
+void	Server::addChannel(const Channel *channel)
 {
-	_channels.push_back(channel);
+	_channels.push_back(*channel);
 }
 
-void	Server::removeChannel(Channel &channel)
+void	Server::removeChannel(Channel *channel)
 {
-	_channels.remove(channel);
+	_channels.remove(*channel);
 }
 
 // If there is no channel this function
 // create it and returns a pointer to the new channel
-Channel	*Server::createNewChannel(Message &msg)
+Channel	*Server::createNewChannel(Message *msg)
 {
-	if (isNameAvailable(_channels, msg.getChannelName()))
+	if (isNameAvailable(_channels, msg->getChannelName()))
 	{
-		_channels.push_back(Channel(msg.getChannelName(), *msg.getSender()));
+		_channels.push_back(Channel(msg->getChannelName(), msg->getSender()));
 		return &(_channels.back());
 	}
 	return NULL;
