@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:33 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/07 14:08:09 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 17:23:40 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,43 +38,41 @@ class NickNameException : public std::exception
 class Client
 {   
     public:
-
+		// Constructors and Destructor
         Client(const int socketFd);
 		Client(const Client &other);
         ~Client();
 
-		// Simple List Management
-		void                    addChannel(Channel *channel);
-        void                    removeChannel(Channel &channel);		
-
-
-
-
-
-
-
-		bool					appendBuffer(const char *buffer);
-		std::string				getFullMessage();
-
+		// Equal Overload (for list remove)
 		bool					operator==(const Client &other) const;
 
+		// Simple List Management
+		void                    addChannel(Channel *channel);
+        void                    removeChannel(Channel *channel);		
+
+		// Read message from client to buffer
+		bool					appendBuffer(const char *buffer);
+
+		// Get the full message from the buffer
+		std::string				getFullMessage();
+
+		// Send message to client
         void                    sendMessage(const std::string &ircMessage) const;
         void                    sendMessage(const std::string &code, const std::string &message) const;
         void 					sendWhoIsMsg(Client &reciever) const;
-
-
-
-        
-        
+		
+		// Setters
         void					setUniqueName(const std::string &nickname);
         void					setUsername(const std::string &username);
         void					setFullname(const std::string &fullname);
         void                    setHostname(const std::string &hostname);
-		int						getSocketFd() const;
-        const std::string		&getUniqueName() const;
-        const std::string		&getUsername() const;
-        const std::string		&getFullname() const;
-        const std::string		&getHostname() const;
+
+		// Getters
+		int						getSocketFd()		const;
+        const std::string		&getUniqueName()	const;
+        const std::string		&getUsername()		const;
+        const std::string		&getFullname()		const;
+        const std::string		&getHostname()		const;
 
     private:
         Client();

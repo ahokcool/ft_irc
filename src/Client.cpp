@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/07 16:57:07 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 17:21:05 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,11 +14,14 @@
 #include "Server.hpp"
 #include "utils.hpp"
 
+// Constructors and Destructor
+// -----------------------------------------------------------------------------
 Client::Client(const int socketFd) : _socketFd(socketFd)
 {
 	info ("Created Client Inctance", CLR_BLU);
 }
 
+// Copy Constructor
 Client::Client(const Client &other) : 
 	_inputBuffer(other._inputBuffer),
 	_socketFd(other._socketFd),
@@ -32,6 +35,7 @@ Client::Client(const Client &other) :
 		_channels.push_back(*it);
 }
 
+// Destructor
 Client::~Client()
 {
 	std::list<Channel *>::iterator it = _channels.begin();
@@ -46,6 +50,33 @@ Client::~Client()
 	info("Client destroyed", CLR_RED);
 }
 
+// Equal Overload (for list remove)
+// -----------------------------------------------------------------------------
+bool	Client::operator==(const Client &other) const
+{
+	return _socketFd == other._socketFd;
+}
+
+// Simple List Management
+// -----------------------------------------------------------------------------
+void Client::addChannel(Channel *channel)
+{
+	if(!channel)
+		return;
+	_channels.push_back(channel);
+	info("INSIDE CLIENT: Added Channel: " + channel->getUniqueName(), CLR_GRN);
+	std::cout << "INSIDE CLIENT: Channel List Size: "<< _channels.size() << std::endl;
+}
+
+void Client::removeChannel(Channel *channel)
+{
+	if(!channel)
+		return;
+	_channels.remove(channel);
+}
+
+// Read message from client to buffer
+// -----------------------------------------------------------------------------
 bool	Client::appendBuffer(const char *buffer)
 {
 	_inputBuffer += std::string(buffer);
@@ -57,6 +88,8 @@ bool	Client::appendBuffer(const char *buffer)
 	return true;
 }
 
+// Get the full message from the buffer
+// -----------------------------------------------------------------------------
 std::string	Client::getFullMessage()
 {
 	size_t pos = _inputBuffer.find("\r\n");
@@ -70,20 +103,8 @@ std::string	Client::getFullMessage()
 	return std::string("");
 }
 
-bool	Client::operator==(const Client &other) const
-{
-	return _socketFd == other._socketFd;
-}
-
-
-
-
-
- #include <string.h>
- #include <errno.h>
-
-// the last argument specifies the flags that control the behavior of the send operation. 
-// When set to 0, it means that no special flags are being used, and the send operation should proceed with default behavior.
+// Send message to client
+// -----------------------------------------------------------------------------
 void Client::sendMessage(const std::string &ircMessage) const
 {
 	if (ircMessage.empty())
@@ -98,6 +119,13 @@ void Client::sendMessage(const std::string &ircMessage) const
 	Logger::log("Message sent:\tMSG -->\t\t" 		+ msg);
 	if (bytesSent == -1)
 		Logger::log("\t ERROR -->\n\t" + std::string(strerror(errno)));
+}
+
+void	Client::sendMessage(const std::string &code, const std::string &message) const
+{
+	std::string ircMessage = 
+		":localhost " + code + " " + _nickname + " " + message + "\n";
+	sendMessage(ircMessage);
 }
 
 void Client::sendWhoIsMsg(Client &reciever) const
@@ -131,27 +159,8 @@ void Client::sendWhoIsMsg(Client &reciever) const
 		_nickname + " :End of /WHOIS list.");
 }
 
-void	Client::sendMessage(const std::string &code, const std::string &message) const
-{
-	std::string ircMessage = 
-		":localhost " + code + " " + _nickname + " " + message + "\n";
-	sendMessage(ircMessage);
-}
-
-void Client::addChannel(Channel *channel)
-{
-	if(!channel)
-		return;
-	_channels.push_back(channel);
-	info("INSIDE CLIENT: Added Channel: " + channel->getUniqueName(), CLR_GRN);
-	std::cout << "INSIDE CLIENT: Channel List Size: "<<  _channels.size() << std::endl;
-}
-
-void Client::removeChannel(Channel &channel)
-{
-	_channels.remove(&channel);
-}
-
+// Setters
+// -----------------------------------------------------------------------------
 void    Client::setUniqueName(const std::string &nickname)
 {
 	info("set nickname " + nickname, CLR_GRN);
@@ -174,6 +183,8 @@ void Client::setHostname(const std::string &hostname)
 		_hostname = hostname;
 }
 
+// Getters
+// -----------------------------------------------------------------------------
 int Client::getSocketFd() const
 {
 	return _socketFd;
@@ -199,21 +210,8 @@ const std::string &Client::getHostname() const
 	return _hostname;
 }
 
-// Static Function
-
-
-// void	Client::reserveNickName(const std::string &nickname) throw(NickNameException)
-// {
-// 	info ("Reserving Nickname: ", CLR_BLU);
-// 	info ("\t->Nickname:\t" 	+ nickname, CLR_BLU);
-// 	if (Client::_nicknames.find(nickname) != Client::_nicknames.end())
-// 	{
-// 		throw NickNameException("Nickname in use!"); // '" + nickname + "' already in use");
-// 	}
-// 	Client::_nicknames.insert(nickname);
-// }
-
-// EXCEPTION
+// Exception
+// -----------------------------------------------------------------------------
 NickNameException::NickNameException(const std::string &message) : _message(message)
 {
 	// Nothing to do here

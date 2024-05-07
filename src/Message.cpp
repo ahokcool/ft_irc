@@ -6,13 +6,14 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/02 16:44:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/07 16:55:34 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 17:26:13 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Message.hpp"
 #include "utils.hpp"
 
+// Constructor
 Message::Message(Client &sender, const std::string &ircMessage) : _sender(&sender), _receiver(NULL), _channel(NULL)
 {
 	// by architechture IRC message can not be empty
@@ -45,21 +46,46 @@ Message::Message(Client &sender, const std::string &ircMessage) : _sender(&sende
     Logger::log(values.str());
 }
 
+// Parse Message
+/*
+	NICK	nickname
+	USER	username * * :full name
+	INVITE jojojo #TEST1
+	TODO: copilot the other cases
+*/
+void Message::parseMessage(const std::string &ircMessage)
+{
+	std::istringstream iss(ircMessage);
+    std::string token;
+
+    while (iss >> token)
+	{
+		if (_cmd.empty())
+			_cmd = token;
+		else if (token[0] == '#')
+			_channelName = token;
+		else if (_args[0].empty() && token[0] != ':')
+			_args[0] = token;
+		else if (_args[1].empty() && token[0] != ':')
+			_args[1] = token;
+		else if (_args[2].empty() && token[0] != ':')
+			_args[2] = token;
+		else if (token[0] == ':')
+		{	
+			_colon = ircMessage.substr(ircMessage.find(':') + 1);
+			break;
+		}
+	}
+}
+
+// Destructor
 Message::~Message()
 {
     // Nothing to do
 }
 
-void Message::setReceiver(Client *receiver)
-{
-	_receiver = receiver;
-}
-
-void Message::setChannel(Channel *channel)
-{
-	_channel = channel;
-}
-
+// Getters
+// -----------------------------------------------------------------------------
 Client *Message::getSender() const
 {
 	return _sender;
@@ -98,33 +124,14 @@ const std::string &Message::getArg(size_t index) const
 }
 
 
-/*
-	NICK	nickname
-	USER	username * * :full name
-	INVITE jojojo #TEST1
-	TODO: copilot the other cases
-*/
-void Message::parseMessage(const std::string &ircMessage)
+// Setters
+// -----------------------------------------------------------------------------
+void Message::setReceiver(Client *receiver)
 {
-	std::istringstream iss(ircMessage);
-    std::string token;
+	_receiver = receiver;
+}
 
-    while (iss >> token)
-	{
-		if (_cmd.empty())
-			_cmd = token;
-		else if (token[0] == '#')
-			_channelName = token;
-		else if (_args[0].empty() && token[0] != ':')
-			_args[0] = token;
-		else if (_args[1].empty() && token[0] != ':')
-			_args[1] = token;
-		else if (_args[2].empty() && token[0] != ':')
-			_args[2] = token;
-		else if (token[0] == ':')
-		{	
-			_colon = ircMessage.substr(ircMessage.find(':') + 1);
-			break;
-		}
-	}
+void Message::setChannel(Channel *channel)
+{
+	_channel = channel;
 }
