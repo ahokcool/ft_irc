@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/07 19:57:05 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 23:25:46 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,14 +59,22 @@ bool	Client::operator==(const Client &other) const
 	return _socketFd == other._socketFd;
 }
 
+bool	Client::operator!=(const Client &other) const
+{
+	return _socketFd != other._socketFd;
+}
+
 // Simple List Management
 // -----------------------------------------------------------------------------
 void Client::addChannel(Channel *channel)
 {
 	if(!channel)
+	{
+		Logger::log("ERROR Trying to  add a NULL Channel to the client list!");
 		return;
+	}
 	_channels.push_back(channel);
-	Logger::log("Client " + _nickname + " joined channel: " + channel->getUniqueName() + "\n");
+	Logger::log("Client " + _nickname + " joined channel: " + channel->getUniqueName());
 	logClient();
 }	
 
@@ -132,10 +140,13 @@ void	Client::sendMessage(const std::string &code, const std::string &message) co
 
 void Client::sendWhoIsMsg(Client *reciever) const
 {
+	if (!reciever)
+		return;
+
 	// localhost 311 <nick> <user> <host> * :<real name>
 	reciever->sendMessage(
 		":localhost " + std::string(RPL_WHOISUSER) + " " +
-		_nickname + " " +
+		_nickname + " " + _nickname + " " +
 		_username + " " +
 		_hostname + " * :" +
 		_fullname);
@@ -145,13 +156,13 @@ void Client::sendWhoIsMsg(Client *reciever) const
 	if(!channels.empty())
 		reciever->sendMessage(
 			":localhost " + std::string(RPL_WHOISCHANNELS) + " " +
-			_nickname + " :" +
+			_nickname + " " +_nickname + " :" +
 			channels);
 
 	// localhost 318 <nick> :End of /WHOIS list.
 	reciever->sendMessage(
 		":localhost " + std::string(RPL_ENDOFWHOIS) + " " +
-		_nickname + " :End of /WHOIS list.");	
+		_nickname + " " +_nickname + " :End of /WHOIS list.");	
 
 	logClient();
 }
@@ -211,9 +222,17 @@ const std::string Client::getChannelList() const
 {
 	std::string channels = "";
 
-	for (std::list<Channel *>::const_iterator it = _channels.begin(); it != _channels.end(); ++it)
-		channels += "@" + (*it)->getUniqueName() + " ";
+	if(_channels.empty())
+		return channels;
 
+	for (std::list<Channel *>::const_iterator it = _channels.begin(); it != _channels.end(); ++it)
+	{
+		channels += "@"; 
+		channels += (*it)->getUniqueName();
+		channels += " ";
+		Logger::log("appeding channel list for client " + _nickname + ": " + channels);
+	}
+	Logger::log("Created channel list for client " + _nickname + ": " + channels);
 	return channels;
 }
 
@@ -246,10 +265,10 @@ void Client::logClient() const
 	logEntry << header.str() << "\n" << values.str();
 
 	// Logging the constructed message
-	Logger::log("==== START CLIENT ====");
+	Logger::log("================ START CLIENT ================");
 	Logger::log(header.str());
 	Logger::log(values.str());
-	Logger::log("==== END CLIENT ====");
+	Logger::log("================ END CLIENT ================");
 }
 
 // Exception

@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/07 20:10:15 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 23:40:06 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,15 +19,25 @@ Channel::Channel(const std::string &name, Client *client) :
 	_name(name), _topic(""), _key(""), _limit(0), _inviteOnly(false), _topicProtected(false)
 {
     Logger::log("Channel CREATED: " + _name);
-    client->addChannel(this);
+	logChanel();
+	if (!client)
+	{
+		Logger::log("ERROR Trying to create a channel without a valid client pointer!");
+		return;
+	}
+}
+
+void 	Channel::iniChannel(Client *client)
+{
+	client->addChannel(this);
     this->addClient(client);
 	this->addOperator(client);
 
 	// SEND JOIN MESSAGE FOR THE CLIENT THAT CREATED THE CHANNEL
 	client->sendMessage(":" + client->getUniqueName() + 
-		"!" + client->getUsername() + "@localhost" + // + msg.getSender().getHost()
+		"!" + client->getUsername() + "@localhost" +
 		" JOIN " + _name + " * :realname");
-	info ("Channel created: " + _name + " by " + client->getUniqueName(), CLR_GRN);
+    Logger::log("Channel INIT: " + _name);
 	logChanel();
 }
 
@@ -49,20 +59,23 @@ Channel::Channel(const Channel &other) :
 		_operators.push_back(*it);
 	for(std::list<Client *>::const_iterator it = other._invitations.begin(); it != other._invitations.end(); ++it)
 		_invitations.push_back(*it);
+	logChanel();
 }
 // Destructor
 // -----------------------------------------------------------------------------
 Channel::~Channel()
 {
-	info("Channel DESTROYED: " + _name, CLR_RED);
-    std::list<Client *>::iterator it = _clients.begin();
-
-    while (it != _clients.end())
-    {
-        (*it)->removeChannel(this);
-        it++;
-    }
+    std::list<Client *>::iterator it;
+	for(it = _invitations.begin(); it != _invitations.end(); ++it)
+		(*it)->removeChannel(this);
+	for(it = _clients.begin(); it != _clients.end(); ++it)
+		(*it)->removeChannel(this);
+	for(it = _operators.begin(); it != _operators.end(); ++it)
+		(*it)->removeChannel(this);
+	_invitations.clear();
     _clients.clear();
+	_operators.clear();
+	Logger::log("Channel DESTROYED: " + _name);
 }
 
 // Equal Overload (for list remove)
@@ -99,11 +112,11 @@ void	Channel::joinChannel(Client *client, const std::string &pswd)
 		return ;
 
 	// IF ALREADY IN CHANNEL
-	if (isClientIsInList(_clients, client))
+	if (isClientIsInList(_clients, client) || isClientIsInList(_operators, client))
 	{
-		// SEND MESSAGE ALREADY IN CHANNEL |
-		client->sendMessage(ERR_USERONCHANNEL,
-			client->getUniqueName() + " " +  _name + " :is already on channel");
+		// SEND MESSAGE ALREADY IN CHANNEL
+		client->sendMessage(ERR_USERONCHANNEL, client->getUniqueName() + " " +  _name + " :is already on channel");
+		Logger::log("Client " + client->getUniqueName() + " is already in " + _name);
 		return ;
 	}
 	
@@ -161,7 +174,7 @@ void	Channel::inviteToChannel(Client *host, Client *guest)
 	}
 
 	// IF GUEST ALREADY IN CHANNEL
-	if (isClientIsInList(_clients, guest))
+	if (isClientIsInList(_operators, guest) || isClientIsInList(_clients, guest))
 	{
 		host->sendMessage(ERR_USERONCHANNEL, guest->getUniqueName() + " " +  _name + " :is already on channel");
 		return ;
@@ -195,7 +208,7 @@ void	Channel::inviteToChannel(Client *host, Client *guest)
 void	Channel::kickFromChannel(Client *kicker, Client *kicked)
 {
 	// IF CLIENT IS NOT IN CHANNEL
-	if (!isClientIsInList(_clients, kicked))
+	if (!isClientIsInList(_operators, kicked) && !isClientIsInList(_clients, kicked))
 	{
 		kicked->sendMessage(ERR_USERNOTINCHANNEL, kicked->getUniqueName() + " " + _name + " :They aren't on that channel");
 		return ;
@@ -225,7 +238,7 @@ void	Channel::kickFromChannel(Client *kicker, Client *kicked)
 void	Channel::partChannel(Client *client)
 {
 	// IF CLIENT IS NOT IN CHANNEL
-	if (!isClientIsInList(_clients, client))
+	if (!isClientIsInList(_operators, client) && !isClientIsInList(_clients, client))
 	{
 		client->sendMessage(ERR_NOTONCHANNEL, _name + " :You're not on that channel");
 		return ;
@@ -249,7 +262,7 @@ void	Channel::partChannel(Client *client)
 void	Channel::topicOfChannel(Client *sender, const std::string &topic)
 {
 	// IF SENDER IS NOT IN CHANNEL
-	if (!isClientIsInList(_clients, sender))
+	if (!isClientIsInList(_operators, sender) && !isClientIsInList(_clients, sender))
 	{
 		sender->sendMessage(ERR_NOTONCHANNEL, _name + " :You're not on that channel");
 		return ;
@@ -312,6 +325,7 @@ void	Channel::modeOfChannel(/* TODO: */)
 void	Channel::addClient		(Client *client)
 {
 	_clients.push_back(client);
+	Logger::log("Channel " + _name + " added client: " + client->getUniqueName());
 	removeInvitation(client);
 }
 
@@ -323,6 +337,7 @@ void	Channel::removeClient	(Client *client)
 void	Channel::addOperator	(Client *client)
 {
 	_operators.push_back(client);
+	Logger::log("Channel " + _name + " added client as operator: " + client->getUniqueName());
 }
 
 void	Channel::removeOperator	(Client *client)
@@ -344,17 +359,19 @@ void	Channel::removeInvitation(Client *client)
 // -----------------------------------------------------------------------------
 void	Channel::sendMessageToClients(const std::string &ircMessage, Client *sender) const
 {
-    std::list<Client *>::const_iterator it = _clients.begin();
+    std::list<Client *>::const_iterator it;
 
-	//TODO: change this to a for loop
-    while (it != _clients.end())
+	for (it = _operators.begin(); it != _operators.end(); ++it)
     {
-		if (*it != sender)
+		if (sender && **it != *sender)
         	(*it)->sendMessage(ircMessage);
-        it++;
+    }
+	for (it = _clients.begin(); it != _clients.end(); ++it)
+    {
+		if (sender && **it != *sender)
+        	(*it)->sendMessage(ircMessage);
     }
 }
-
 
 // Getters and Setters
 // -----------------------------------------------------------------------------
@@ -365,12 +382,30 @@ const std::string	&Channel::getUniqueName() const
 
 const std::string Channel::getClientList() const
 {
-	std::string clients = "";
+	std::string users = "";
+
+	if(_operators.empty())
+		return users;
+
+	for (std::list<Client *>::const_iterator it = _operators.begin(); it != _operators.end(); ++it)
+	{
+		users += "@";
+		users += (*it)->getUniqueName();
+		users += " ";
+		Logger::log("appending client list for channel " + _name + ": " + users);
+	}
+	if(_clients.empty())
+		return users;
 
 	for (std::list<Client *>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
-		clients += "@" + (*it)->getUniqueName() + " ";
-
-	return clients;
+	{
+		users += "@";
+		users += (*it)->getUniqueName();
+		users += " ";
+		Logger::log("appending client list for channel " + _name + ": " + users);
+	}
+	Logger::log("Created client list for channel " + _name + ": " + users);
+	return users;
 }
 
 // LOG
@@ -386,7 +421,7 @@ void Channel::logChanel() const
 			<< "| " << std::setw(15) << "KEY"
 			<< "| " << std::setw(15) << "LIMIT"
 			<< "| " << std::setw(15) << "INVITE ONLY"
-			<< "| " << std::setw(15) << "TOPIC PROTECTED" << "\n"
+			<< "| " << std::setw(15) << "TOPIC PROTECTED"
 			<< "| " << std::setw(15) << "CLIENTS" << "\n";
 
 	// Log values
@@ -401,17 +436,17 @@ void Channel::logChanel() const
 
 
         // Simulate logging (You can replace this with actual log calls)
-	Logger::log("==== START CHANNEL ====");
+	Logger::log("================ START CHANNEL ================");
     Logger::log(header.str());
     Logger::log(values.str());
-	Logger::log("==== END CHANNEL ====");
+	Logger::log("================ END CHANNEL ================");
 }
 
 // Private Methods
 // -----------------------------------------------------------------------------
 bool	Channel::isClientIsInList(std::list<Client *> list, const Client *client) const
 {
-	if (list.empty())
+	if (list.empty() || !client)
 		return false;
 	std::list<Client *>::const_iterator it;
 

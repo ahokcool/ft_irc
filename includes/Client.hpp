@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:33 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/07 18:22:38 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 20:44:01 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@ class Client
 
 		// Equal Overload (for list remove)
 		bool					operator==(const Client &other) const;
+		bool					operator!=(const Client &other) const;
 
 		// Simple List Management
 		void                    addChannel(Channel *channel);

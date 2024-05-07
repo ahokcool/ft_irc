@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/07 18:40:34 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 23:18:06 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,7 +148,7 @@ void	Server::goOnline()
 				throw ServerException("Fcntl failed\n\t" +	std::string(strerror(errno)));
 			_clients.push_back(Client(new_socket));
         }
-
+		
 		// TODO: in client check for to long msgs
 		// Read from clients
 		char buffer[BUFFER_SIZE+1];	// +1 for the null terminator
@@ -305,6 +305,7 @@ void	Server::chooseCommand(Message *msg)
 void	Server::nick(Message *msg)
 {	
 	std::string oldNickname = msg->getSender()->getUniqueName();
+	std::string oldNickname2 = oldNickname;
 	std::string newNickname = msg->getArg(0);
 
 	if (oldNickname.empty())
@@ -325,7 +326,7 @@ void	Server::nick(Message *msg)
 		msg->getSender()->sendMessage(ircMessage);
 
 		// CHECK IF NEED tO SEND A WELCOME MSG NOW
-		if (oldNickname.empty() && !msg->getSender()->getUsername().empty())
+		if (oldNickname2.empty() && !msg->getSender()->getUsername().empty())
 		{
 			//:luna.AfterNET.Org 001 ash_ :Welcome to the FINISHERS' IRC Network, ash_
 			msg->getSender()->sendMessage(RPL_WELCOME, msg->getSender()->getUniqueName() + " :Welcome to FINISHERS' IRC Network, " + msg->getSender()->getUniqueName());
@@ -459,11 +460,13 @@ void	Server::join(Message *msg)
 	{
 		if(!createNewChannel(msg))
 			return ; //Smth wrong we could find the channel but we also could create it
+		std::cout << msg->getSender()->getChannelList() << std::endl;
 		return ;
 	}
 	
 	// LET THE CHANNEL DESIDE IF THE CLIENT CAN JOIN
 	msg->getChannel()->joinChannel(msg->getSender(), msg->getArg(0));
+	std::cout << msg->getSender()->getChannelList() << std::endl;
 }
 
 void	Server::invite(Message *msg)
@@ -577,11 +580,21 @@ void	Server::part(Message *msg)
 // -----------------------------------------------------------------------------
 Client	*Server::getClientByFd(int fd)
 {
+	if (_clients.empty())
+	{
+		Logger::log("ERROR: Tries to get an client pointer on an empty client server list!");
+		return NULL;
+	}
+
 	for (std::list<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 	{
 		if (it->getSocketFd() == fd)
+		{
+			Logger::log("getClientByFd() found client in server list!");
 			return &(*it);
+		}
 	}
+	Logger::log("ERROR: Couldnt find client with FD in server client list!");
 	return NULL;
 }
 
@@ -612,9 +625,12 @@ void	Server::removeChannel(Channel *channel)
 // create it and returns a pointer to the new channel
 Channel	*Server::createNewChannel(Message *msg)
 {
+	Logger::log("Trying to create a new channel: " + msg->getChannelName());
 	if (isNameAvailable(_channels, msg->getChannelName()))
 	{
 		_channels.push_back(Channel(msg->getChannelName(), msg->getSender()));
+		_channels.back().iniChannel(msg->getSender());
+		Logger::log("Server created new channel named: " + _channels.back().getUniqueName());
 		return &(_channels.back());
 	}
 	return NULL;

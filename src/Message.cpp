@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/02 16:44:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/07 19:56:53 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 20:51:56 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -139,8 +139,8 @@ void Message::logMessage() const
     logEntry << header.str() << "\n" << values.str();
 
     // Logging the constructed message
-	Logger::log("==== START MSG ====");
+	Logger::log("================ START MSG ================");
     Logger::log(header.str());
     Logger::log(values.str());
-	Logger::log("==== END MSG ====");
+	Logger::log("================ END MSG ================");
 }

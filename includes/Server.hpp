@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/07 18:28:41 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 22:26:57 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,17 +141,22 @@ class Server
 	bool	isNameAvailable(L &list, const std::string &name)
 	{
 		typename L::iterator it;
-
+		
 		if (name.empty())
 			return false;
 		if (list.empty())
 			return true;
+		Logger::log("Check if name is available: " + name);
 
 		for (it = list.begin(); it != list.end(); ++it)
 		{
 			if (it->getUniqueName() == name)
+			{
+				Logger::log("FALSE Check if name is available: " + name);
 				return false;
+			}
 		}
+		Logger::log("TRUE Check if name is available: " + name);
 		return true;
 	}
 

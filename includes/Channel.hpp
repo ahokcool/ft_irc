@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/07 20:03:01 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/07 23:14:57 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ class Channel
     public:
 		// Constructor and Destructor
         Channel(const std::string &name, Client *client);
+		void 	iniChannel(Client *client);
 		Channel(const Channel &other); // Copy Constructor
         ~Channel();
 
