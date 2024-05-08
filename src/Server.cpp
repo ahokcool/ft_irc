@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
+/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/08 20:11:56 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/08 22:03:22 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -521,12 +521,23 @@ void	Server::topic(Message *msg)
 
 void	Server::mode(Message *msg)
 {
-	(void)msg;
 	// MODE #<channelName> flag
-	// CALL THIS FUNCTION!
-	// channel.modeOfChannel()
 
-	
+	// IF CHANNEL NAME IS NOT PROVIDED
+	if (msg->getChannelName().empty())
+	{
+		msg->getSender()->sendMessage(ERR_NEEDMOREPARAMS, "MODE :Not enough parameters");
+		return ;
+	}
+
+	// IF CHANNEL DOES NOT EXIST
+	if (!msg->getChannel())
+	{
+		msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg->getChannelName() + " :No such channel");
+		return ;
+	}
+
+	msg->getChannel()->modeOfChannel(msg->getSender(), msg->getArg(0), msg->getArg(1));
 }
 
 void	Server::kick(Message *msg)

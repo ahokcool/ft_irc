@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
+/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/08 20:07:39 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/08 23:10:54 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -310,9 +310,114 @@ void	Channel::topicOfChannel(Client *sender, const std::string &topic)
 	Logger::log("Topic change message: " + _topicChange);
 }
 
-void	Channel::modeOfChannel(/* TODO: */)
+void	Channel::modeOfChannel(Client *sender, const std::string &flag, const std::string &value)
 {
-	// TODO:
+	// IF FLAG IS NOT PROVIDED
+	if (flag.empty())
+	{
+		// 	:Aurora.AfterNET.Org 324 ash2223 #test +tinrc 
+		sender->sendMessage(ERR_NEEDMOREPARAMS, _channelName + " " + getChannelFlags());
+		return ;
+	}
+
+	// IF SENDER IS NOT IN CHANNEL
+	if (getClientState(sender) < STATE_C)
+	{
+		sender->sendMessage(ERR_NOTONCHANNEL, _channelName + " :You're not on that channel");
+		return ;
+	}
+	
+	// IF SENDER IS NOT OPERATOR
+	if (getClientState(sender) < STATE_O)
+	{
+		sender->sendMessage(ERR_CHANOPRIVSNEEDED, _channelName + " :You're not channel operator");
+		return ;
+	}
+
+	std::string mode = "@";
+	char sign = '+';
+
+	if (flag.size() == 1)
+	{
+		mode[0] = flag[0];
+	}
+	else if (flag.size() == 2)
+	{
+		sign = flag[0];
+		mode[0] = flag[1];
+	}
+
+	// MODE IS WRONG IF
+	// 	- SIGN IS NOT + OR -
+	// 	- FLAG IS NOT 1 OR 2 CHAR LONG
+	// 	- FLAG IS NOT ONE OFF THE FOLLOWING: itkol
+	if (sign != '+' && sign != '-' || flag.size() > 2 || mode.find_first_not_of("itkol") == std::string::npos)
+	{
+		sender->sendMessage(ERR_UNKNOWNMODE, sender->getUniqueName() + " " + flag + " :is unknown mode char to me");
+		return ;
+	}
+
+	std::string ircMsg;
+
+	switch (mode[0])
+	{
+		case 'i':
+		{
+			if (_inviteOnly != (sign == '+'))
+			{
+				_inviteOnly = !_inviteOnly;
+				ircMsg = ":" + sender->getUniqueName() + "!" + sender->getUsername() + "@localhost" +
+					" MODE " + _channelName + " " + sign + flag;
+				return ;
+			}
+			break;
+		
+		}
+	}
+	sendMessageToClients(ircMsg);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		// sender->sendMessage(ERR_NEEDMOREPARAMS, "MODE +l:Not enough parameters");
+
+
+
+
+	
+	
+	
+
+	// IF FLAG --> i
+	
 }
 
 // Simple List Management
@@ -427,4 +532,19 @@ int	Channel::getClientState(const Client *client) const
 		if (*client == *it->first)
 			return it->second;
 	return -1;
+}
+
+std::string			Channel::getChannelFlags()
+{
+	std::string flags = "+";
+
+	if (_topicProtected)
+		flags += "t";
+	if (_inviteOnly)
+		flags += "i";
+	if (_limit != 0)
+		flags += "l";
+	if (!_key.empty())
+		flags += "k";
+	return (flags);
 }

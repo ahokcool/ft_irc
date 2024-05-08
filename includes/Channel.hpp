@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
+/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/08 17:10:38 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/08 22:09:59 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ class Channel
 
 		// Modes & Topic funtionality
 		void	topicOfChannel(Client *sender, const std::string &topic);
-		void	modeOfChannel(/* TODO: */);
+		void	modeOfChannel(Client *client, const std::string &flag, const std::string &value);
 		
 		// Simple Map Management
 		void	addClient		(Client *client, int status);	// IF CLIENT ALREADY EXISTS, IT WILL UPDATE THE STATUS
@@ -65,6 +65,7 @@ class Channel
     private:
 		// For the basic channel functionality
 		int					getClientState(const Client *client) const;
+		std::string			getChannelFlags();
 
         Channel();									// Default Constructor shouldn't be used
         const std::string		_channelName;

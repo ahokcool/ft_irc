@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   codes.hpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
+/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/04 02:01:01 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/08 19:39:01 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/08 23:11:42 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@
 #define RPL_TOPICADDITIONAL		"333"	// "<channel> astein!alex@F456A.75198A.60D2B2.ADA236.IP 1714884181"
 #define RPL_INVITING            "341"   // "<channel> <nick>"
 #define RPL_NOTOPIC             "331"   //"<channel> :No topic is set"
+#define RPL_CHANNELMODEIS       "324"   // "<channel> <mode> <mode params>"
 
 // ERROR CODES
 #define ERR_UNKNOWNCOMMAND		"421"	// "<command> :Unknown command"
@@ -45,6 +46,7 @@
 #define ERR_NOTONCHANNEL        "442"	// "<channel> 	:You're not on that channel"
 #define ERR_CHANOPRIVSNEEDED    "482"   // "<channel> 	:You're not channel operator"
 #define ERR_USERNOTINCHANNEL	"441"	// "<nick> <channel> :They aren't on that channel
+#define ERR_UNKNOWNMODE         "472"   // "<char> :is unknown mode char to me"
 
 
 
@@ -62,14 +64,13 @@
 
 // invite
 
-#define RPL_CHANNELMODEIS       324     // "<channel> <mode> <mode params>"
+// #define RPL_CHANNELMODEIS       324     // "<channel> <mode> <mode params>"
 #define ERR_CANNOTSENDTOCHAN    404     // "<channel name> :Cannot send to channel"
 
 
 
 
 // mode
-#define ERR_UNKNOWNMODE         472     // "<char> :is unknown mode char to me"
 #define ERR_USERSDONTMATCH      502     // ":Cant change mode for other users"
 #define ERR_UMODEUNKNOWNFLAG    501     // ":Unknown MODE flag"
 #define RPL_UMODEIS             221     // "<user mode string>"
@@ -117,7 +118,6 @@
 // #define ERR_UNKNOWNMODE         472     // "<char> :is unknown mode char to me"
 // #define ERR_USERSDONTMATCH      502     // ":Cant change mode for other users"
 // #define ERR_UMODEUNKNOWNFLAG    501     // ":Unknown MODE flag"
-// #define RPL_CHANNELMODEIS       324     // "<channel> <mode> <mode params>"
 // #define ERR_KEYSET              467     // "<channel> :Channel key already set"
 // #define RPL_ENDOFBANLIST        368     //  "<channel> :End of channel ban list"
 // #define ERR_NOSUCHCHANNEL       403     // "<channel name> :No such channel"
