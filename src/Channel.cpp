@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/08 17:11:07 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/08 20:07:39 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -189,8 +189,7 @@ void	Channel::inviteToChannel(Client *host, Client *guest)
 
 	// SEND INVITE
 	// host :Aurora.AfterNET.Org 341 astein astein__ #test3
-	host->sendMessage(RPL_INVITING, host->getUniqueName() + " " +
-		guest->getUniqueName() + " " + _channelName);
+	host->sendMessage(RPL_INVITING, guest->getUniqueName() + " " + _channelName);
 	
 	// guest :astein!alex@F456A.75198A.60D2B2.ADA236.IP INVITE astein__ #test3
 	guest->sendMessage(":" + host->getUniqueName() + "!" + host->getUsername() +

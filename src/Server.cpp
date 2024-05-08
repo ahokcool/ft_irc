@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/08 18:14:29 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/08 20:11:56 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -339,6 +339,13 @@ void	Server::user(Message *msg)
 	std::string oldUsername = msg->getSender()->getUsername();
 	std::string newUsername = msg->getArg(0);
 	
+	// CAN'T RE-REGISTER!
+	if(!oldUsername.empty())
+	{
+		msg->getSender()->sendMessage(ERR_ALREADYREGISTRED, msg->getSender()->getUniqueName() + " :You may not reregister");
+		return ;
+	}
+
 	if (!msg->getArg(0).empty() && !msg->getArg(1).empty() &&
 		!msg->getArg(2).empty() && !msg->getColon().empty())
 	{
@@ -346,10 +353,7 @@ void	Server::user(Message *msg)
 		msg->getSender()->setFullname(msg->getColon());
 		// CHECK IF NEED tO SEND A WELCOME MSG NOW
 		if (oldUsername.empty() && !msg->getSender()->getUniqueName().empty())
-		{
-			//:luna.AfterNET.Org 001 ash_ :Welcome to the FINISHERS' IRC Network, ash_
-			msg->getSender()->sendMessage(RPL_WELCOME, msg->getSender()->getUniqueName() + " :Welcome to FINISHERS' IRC Network, " + msg->getSender()->getUniqueName());
-		}
+			msg->getSender()->sendMessage(RPL_WELCOME, msg->getSender()->getUniqueName() + " :Welcome to " + std::string(PROMT) + ", " + msg->getSender()->getUniqueName());
 	}
 	else
 		msg->getSender()->sendMessage(ERR_NEEDMOREPARAMS, "USER :Not enough parameters");
@@ -389,7 +393,7 @@ void	Server::privmsg(Message *msg)
 	// IF CHANNEL AND RECEIPENT BOTH ARE NOT GIVEN
 	if (channelName.empty() && recipientNick.empty())
 	{
-		msg->getSender()->sendMessage(ERR_NOTEXTTOSEND, ":No text to send");
+		msg->getSender()->sendMessage(ERR_NORECIPIENT, ":No recipient given (PRIVMSG)");
 		return ;
 	}
 
@@ -476,7 +480,7 @@ void	Server::invite(Message *msg)
 	std::string channelName 	= msg->getChannelName();
 
 	// IF GUESTNICK IS NOT GIVEN DON'T DO SHIT
-	if (!guestNick.empty())
+	if (guestNick.empty())
 		return ;
 
 	// IF THE GUEST IS NOT ON THE SERVER
@@ -488,9 +492,9 @@ void	Server::invite(Message *msg)
 	}
 
 	// IF CHANNEL NAME IS NOT PROVIDED 
-	if (!channelName.empty())
+	if (channelName.empty())
 	{
-		msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, guestNick + " :No such channel");
+		msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, std::string(PROMT) + " :No such channel");
 		return ;
 	}
 
@@ -521,6 +525,8 @@ void	Server::mode(Message *msg)
 	// MODE #<channelName> flag
 	// CALL THIS FUNCTION!
 	// channel.modeOfChannel()
+
+	
 }
 
 void	Server::kick(Message *msg)

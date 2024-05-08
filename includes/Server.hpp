@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/08 18:19:48 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/08 20:11:46 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@
 #include "Logger.hpp"
 
 #define BUFFER_SIZE 512	// IRC message buffer size
+#define PROMT ">>>FINISHERS IRC NET<<<"
 
 // -------------------------------------------------------------------------
 // Standard exception class for server
@@ -89,11 +90,11 @@ class Server
 
 		typedef void	(Server::*CommandFunction)(Message*);
 		void	nick	(Message *msg);		// WORKS
-		void	user	(Message *msg);
-		void	whois	(Message *msg);
-		void	privmsg	(Message *msg);
-		void	join	(Message *msg);
-		void	invite	(Message *msg);
+		void	user	(Message *msg);		// WORKS
+		void	whois	(Message *msg);		// WORKS
+		void	privmsg	(Message *msg);		// WORKS
+		void	join	(Message *msg);		// WORKS
+		void	invite	(Message *msg);		// WORKS
 		void	topic	(Message *msg);
 		void	mode	(Message *msg);
 		void	kick	(Message *msg);		// ERORRO NO SUCH USER
@@ -164,14 +165,22 @@ class Server
 	typename L::value_type	*getInstanceByName(L &list, const std::string &name)
 	{
 		typename L::iterator	it;
+		Logger::log("Check if object is there: " + name);
 
 		if (name.empty() || list.empty())
+		{
+			Logger::log("Check if object is there: NAME is not given or LIST is empty!");
 			return NULL;
+		}
 		for (it = list.begin(); it != list.end(); ++it)
 		{
 			if (it->getUniqueName() == name)
+			{
+				Logger::log("TRUE Check if object is there: " + name);
 				return &(*it);
+			}
 		}
+		Logger::log("FALSE Check if object is there: " + name);
 		return NULL;
 	}
 };

@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/04 02:01:01 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/07 14:54:44 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/08 19:39:01 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@
 #define ERR_NICKNAMEINUSE		"433"	// "<nick> :Nickname is already in use"
 #define ERR_NOTREGISTERED		"451"	// ":You have not registered"
 #define ERR_NEEDMOREPARAMS		"461"	// "<command> :Not enough parameters"
+#define ERR_ALREADYREGISTRED	"462"	// "<nick> :You may not reregister"
 #define ERR_NOSUCHCHANNEL		"403"	// "<channel name> :No such channel"
 #define ERR_USERONCHANNEL		"443"	// "<user> <channel> :is already on channel"
 #define ERR_BADCHANNELKEY		"475"	// "<channel>	:Cannot join channel (+k)"
@@ -93,7 +94,6 @@
 
 // ALL OF THEM
 // privmsg
-// #define ERR_NORECIPIENT         411     // ":No recipient given (<command>)"
 // #define ERR_CANNOTSENDTOCHAN    404     // "<channel name> :Cannot send to channel"
 // #define ERR_WILDTOPLEVEL        414     // "<mask> :Wildcard in toplevel domain"
 // #define ERR_NOSUCHNICK          401     // "<nickname> :No such nick/channel"
