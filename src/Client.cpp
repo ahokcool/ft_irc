@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/07 23:25:46 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/08 18:42:32 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 
 // Constructors and Destructor
 // -----------------------------------------------------------------------------
-Client::Client(const int socketFd) : _socketFd(socketFd)
+Client::Client(const int socketFd) : _socketFd(socketFd), _hostname("localhost")
 {
 	Logger::log("CREATED Client Instance with fd: " + to_string(socketFd));
 	logClient();
@@ -143,10 +143,11 @@ void Client::sendWhoIsMsg(Client *reciever) const
 	if (!reciever)
 		return;
 
-	// localhost 311 <nick> <user> <host> * :<real name>
+	// localhost 311 <nick> <nick> <user> <host> * :<real name>
 	reciever->sendMessage(
 		":localhost " + std::string(RPL_WHOISUSER) + " " +
-		_nickname + " " + _nickname + " " +
+		_nickname + " " +
+		_nickname + " " +
 		_username + " " +
 		_hostname + " * :" +
 		_fullname);

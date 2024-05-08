@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/07 22:26:57 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/08 18:19:48 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,7 +88,7 @@ class Server
 		void	chooseCommand(Message *msg);
 
 		typedef void	(Server::*CommandFunction)(Message*);
-		void	nick	(Message *msg);
+		void	nick	(Message *msg);		// WORKS
 		void	user	(Message *msg);
 		void	whois	(Message *msg);
 		void	privmsg	(Message *msg);
@@ -96,7 +96,7 @@ class Server
 		void	invite	(Message *msg);
 		void	topic	(Message *msg);
 		void	mode	(Message *msg);
-		void	kick	(Message *msg);
+		void	kick	(Message *msg);		// ERORRO NO SUCH USER
 		void	part	(Message *msg);
 
 	// -------------------------------------------------------------------------

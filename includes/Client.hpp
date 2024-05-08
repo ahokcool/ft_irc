@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:33 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/07 20:44:01 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/08 18:27:12 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,9 +84,9 @@ class Client
 		std::string				_inputBuffer;
         int						_socketFd;
         std::string			   	_nickname;
-        std::string         	_username;
-        std::string				_fullname;
-        std::string         	_hostname;
+        std::string         	_username;	// Can only be changed when connecting to server!
+        std::string				_fullname;	// Can only be changed when connecting to server!
+        std::string         	_hostname;	// Can only be changed when connecting to server!
         std::list<Channel *>	_channels;
 };
 

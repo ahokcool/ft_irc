@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/07 23:18:06 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/08 18:14:29 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -305,8 +305,8 @@ void	Server::chooseCommand(Message *msg)
 void	Server::nick(Message *msg)
 {	
 	std::string oldNickname = msg->getSender()->getUniqueName();
-	std::string oldNickname2 = oldNickname;
 	std::string newNickname = msg->getArg(0);
+	bool 		isFirstNick = oldNickname.empty();
 
 	if (oldNickname.empty())
 		oldNickname = newNickname;
@@ -314,7 +314,7 @@ void	Server::nick(Message *msg)
 	if (newNickname.empty())
 		msg->getSender()->sendMessage(ERR_NONICKNAMEGIVEN, ":No nickname given");
 	else if (!isNameAvailable(_clients, newNickname))
-		msg->getSender()->sendMessage(ERR_NICKNAMEINUSE, newNickname + " :Nickname is already in use");
+		msg->getSender()->sendMessage(ERR_NICKNAMEINUSE, oldNickname + " " + newNickname + " :Nickname is already in use");
 	else
 	{
 		msg->getSender()->setUniqueName(newNickname);
@@ -326,7 +326,7 @@ void	Server::nick(Message *msg)
 		msg->getSender()->sendMessage(ircMessage);
 
 		// CHECK IF NEED tO SEND A WELCOME MSG NOW
-		if (oldNickname2.empty() && !msg->getSender()->getUsername().empty())
+		if (isFirstNick && !msg->getSender()->getUsername().empty())
 		{
 			//:luna.AfterNET.Org 001 ash_ :Welcome to the FINISHERS' IRC Network, ash_
 			msg->getSender()->sendMessage(RPL_WELCOME, msg->getSender()->getUniqueName() + " :Welcome to FINISHERS' IRC Network, " + msg->getSender()->getUniqueName());
@@ -565,7 +565,7 @@ void	Server::part(Message *msg)
 		msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg->getChannelName() + " :No such channel");
 		return ;
 	}
-	msg->getChannel()->partChannel(msg->getSender());
+	msg->getChannel()->partChannel(msg->getSender(), msg->getColon());
 
 	// IF NO CLIENTS OR OPERATORS LEFT IN CHANNEL -> DELETE CHANNEL
 	if (!msg->getChannel()->isActive())
@@ -628,7 +628,7 @@ Channel	*Server::createNewChannel(Message *msg)
 	Logger::log("Trying to create a new channel: " + msg->getChannelName());
 	if (isNameAvailable(_channels, msg->getChannelName()))
 	{
-		_channels.push_back(Channel(msg->getChannelName(), msg->getSender()));
+		_channels.push_back(Channel(msg->getChannelName()));
 		_channels.back().iniChannel(msg->getSender());
 		Logger::log("Server created new channel named: " + _channels.back().getUniqueName());
 		return &(_channels.back());
