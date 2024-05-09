@@ -3,7 +3,7 @@ NAME=ircserv
 
 # Compiler options
 CXX 		= c++
-CXXFLAGS	= -g -Wall -Wextra -Werror -std=c++98 -fsanitize=address #-Wconversion 
+CXXFLAGS	= -g -Wall -Wextra -Werror -std=c++98 #-fsanitize=address #-Wconversion 
 RM		= rm -rf
 PRINT_INFO	= -info
 

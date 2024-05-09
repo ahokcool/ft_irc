@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/09 23:20:38 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/10 00:04:35 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -166,8 +166,7 @@ void	Server::goOnline()
 				{
 					// Some read error happend
 					// The server doesn't bother to much and just deletes this client
-					info("Client" + cur_client->getUniqueName() + " disconnected", CLR_RED);
-					Logger::log("Client" + cur_client->getUniqueName() + " disconnected");
+					Logger::log("Client " + cur_client->getUniqueName() + " disconnected");
                     close(fds[i].fd);
                     fds.erase(fds.begin() + i);		// erase the client fd from the fd vector
 					_clients.remove(*cur_client);	// erase the client from the client list

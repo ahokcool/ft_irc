@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/09 23:28:41 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/10 00:36:20 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,8 +33,11 @@ Client::Client(const Client &other) :
 {
 	Logger::log("COPIED Client Instance with fd: " + to_string(_socketFd));
 	logClient();
-	for(std::list<Channel *>::const_iterator it = other._channels.begin(); it != other._channels.end(); ++it)
-		_channels.push_back(*it);
+	if (!other._channels.empty())
+	{
+		for(std::list<Channel *>::const_iterator it = other._channels.begin(); it != other._channels.end(); ++it)
+			_channels.push_back(*it);
+	}
 }
 
 // Destructor
@@ -42,11 +45,18 @@ Client::~Client()
 {
 	std::list<Channel *>::iterator it;
 	
-	for (it = _channels.begin(); it != _channels.end(); ++it)
-		(*it)->partChannel(this, "client died... *sad*");
-
+	if (!_channels.empty())
+	{
+		std::string msg;
+		for (it = _channels.begin(); it != _channels.end(); ++it)
+		{
+			msg = ":" + _nickname + "!" + _username + "@localhost" +" PART " + (*it)->getUniqueName() + " :client died... *sad*";
+			(*it)->sendMessageToClients(msg);
+			(*it)->removeClient(this);
+		}
+	}
 	_channels.clear();
-	Logger::log("DESTRUCTED Client Instance with fd: " + to_string(_socketFd));
+	info("DESTRUCTED Client Instance " + _nickname, CLR_RED);
 	logClient();
 }
 
@@ -126,7 +136,7 @@ void Client::sendMessage(const std::string &ircMessage) const
 		msg.erase(msg.length() - 1);
 	Logger::log("Message sent:\tMSG -->\t\t" 		+ msg);
 	if (bytesSent == -1)
-		Logger::log("\t ERROR -->\n\t" + std::string(strerror(errno)));
+		Logger::log("\t ERROR -->\t" + std::string(strerror(errno)));
 }
 
 void	Client::sendMessage(const std::string &code, const std::string &message) const
