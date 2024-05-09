@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/08 23:10:54 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/09 16:34:16 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 // Constructor
 // -----------------------------------------------------------------------------
 Channel::Channel(const std::string &name) : 
-	_channelName(name), _topic(""), _key(""), _limit(0), _inviteOnly(false), _topicProtected(false)
+	_channelName(name), _topic(""), _key(""), _limit(0), _inviteOnly(false), _topicProtected(true)
 {
     Logger::log("Channel CREATED: " + _channelName);
 	logChanel();
@@ -351,16 +351,16 @@ void	Channel::modeOfChannel(Client *sender, const std::string &flag, const std::
 	// 	- SIGN IS NOT + OR -
 	// 	- FLAG IS NOT 1 OR 2 CHAR LONG
 	// 	- FLAG IS NOT ONE OFF THE FOLLOWING: itkol
-	if (sign != '+' && sign != '-' || flag.size() > 2 || mode.find_first_not_of("itkol") == std::string::npos)
-	{
-		sender->sendMessage(ERR_UNKNOWNMODE, sender->getUniqueName() + " " + flag + " :is unknown mode char to me");
-		return ;
-	}
+	// if ((sign != '+' && sign != '-') || flag.size() > 2 || mode.find_first_not_of("itkol") == std::string::npos)
+	// {
+	// 	sender->sendMessage(ERR_UNKNOWNMODE, sender->getUniqueName() + " " + flag + " :is unknown mode char to me");
+	// 	return ;
+	// }
 
 	std::string ircMsg;
-
 	switch (mode[0])
 	{
+		// invite-only mode
 		case 'i':
 		{
 			if (_inviteOnly != (sign == '+'))
@@ -368,10 +368,45 @@ void	Channel::modeOfChannel(Client *sender, const std::string &flag, const std::
 				_inviteOnly = !_inviteOnly;
 				ircMsg = ":" + sender->getUniqueName() + "!" + sender->getUsername() + "@localhost" +
 					" MODE " + _channelName + " " + sign + flag;
-				return ;
 			}
 			break;
-		
+		}
+		// // topic change restriction 
+		// case 't': // TOPIC CAN BE CHANGED NOT ONLY BY OPERATORS
+		// {
+		// 	if (!_topicProtected)
+		// }
+		case 'k':
+		{
+			if (value.empty())
+			{
+				sender->sendMessage(ERR_NEEDMOREPARAMS, "MODE " + mode + " :Not enough parameters");
+				break ;
+			}
+			else if (sign == '+')
+			{
+				_key = value;
+				// :ash2223!anshovah@F456A.75198A.60D2B2.ADA236.IP MODE #test +k try
+				ircMsg = ":" + sender->getUniqueName() + "!" + sender->getUsername() + "@localhost" +
+					" MODE " + _channelName + " " + sign + mode + " " + value;
+			}
+			else
+			{
+				if (value == _key) // remove channel keyword
+				{
+					// :ash2223!anshovah@F456A.75198A.60D2B2.ADA236.IP MODE #test -k try
+					_key = "";
+					ircMsg = ":" + sender->getUniqueName() + "!" + sender->getUsername() + "@localhost" +
+					" MODE " + _channelName + " " + sign + mode + " " + value;
+				}
+				else
+				{
+					// :luna.AfterNET.Org 467 ash2223 #test :Channel key already set
+					sender->sendMessage(ERR_KEYSET, _channelName + " :Channel key already set");
+					break ;
+				}
+			}
+			break ;
 		}
 	}
 	sendMessageToClients(ircMsg);

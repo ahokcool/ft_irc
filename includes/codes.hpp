@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/04 02:01:01 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/08 23:11:42 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/09 15:59:35 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@
 #define ERR_CHANOPRIVSNEEDED    "482"   // "<channel> 	:You're not channel operator"
 #define ERR_USERNOTINCHANNEL	"441"	// "<nick> <channel> :They aren't on that channel
 #define ERR_UNKNOWNMODE         "472"   // "<char> :is unknown mode char to me"
+#define ERR_KEYSET              "467"	// "<channel>	:Channel key already set"
 
 
 
@@ -76,7 +77,6 @@
 #define RPL_UMODEIS             221     // "<user mode string>"
 
 // kick N join 
-#define ERR_KEYSET              467		// "<channel>	:Channel key already set"
 
 
 // composeChnlMsg(int number, msg)
