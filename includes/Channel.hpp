@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/09 15:32:26 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/09 23:21:05 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,11 +17,11 @@
 #include <string>
 #include <map>
 #include "Client.hpp"
+#include "Server.hpp"
 #include "utils.hpp"
-#include "Message.hpp"	//SHOULD BE REMOVED
 
 class Client;
-class Message;
+class Server;
 
 class Channel
 {
@@ -41,12 +41,12 @@ class Channel
 		// Members & Operators funtionality
 		void	joinChannel 	(Client *client, const std::string &pswd);
 		void	inviteToChannel	(Client *host, Client *guest);
-		void	kickFromChannel	(Client *kicker, Client *kicked);		
+		void	kickFromChannel	(Client *kicker, Client *kicked, const std::string &reason);		
 		void	partChannel		(Client *client, const std::string &reason);
 
 		// Modes & Topic funtionality
 		void	topicOfChannel(Client *sender, const std::string &topic);
-		void	modeOfChannel(Client *client, const std::string &flag, const std::string &value);
+		void	modeOfChannel(Client *client, const std::string &flag, const std::string &value, Server *server);
 		
 		// Simple Map Management
 		void	addClient		(Client *client, int status);	// IF CLIENT ALREADY EXISTS, IT WILL UPDATE THE STATUS

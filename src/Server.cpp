@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/08 22:03:22 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/09 23:20:38 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -329,7 +329,7 @@ void	Server::nick(Message *msg)
 		if (isFirstNick && !msg->getSender()->getUsername().empty())
 		{
 			//:luna.AfterNET.Org 001 ash_ :Welcome to the FINISHERS' IRC Network, ash_
-			msg->getSender()->sendMessage(RPL_WELCOME, msg->getSender()->getUniqueName() + " :Welcome to FINISHERS' IRC Network, " + msg->getSender()->getUniqueName());
+			msg->getSender()->sendMessage(RPL_WELCOME, msg->getSender()->getUniqueName() + " :Welcome to " + std::string(PROMT) + ", " + msg->getSender()->getUniqueName());
 		}
 	}
 }
@@ -537,33 +537,27 @@ void	Server::mode(Message *msg)
 		return ;
 	}
 
-	msg->getChannel()->modeOfChannel(msg->getSender(), msg->getArg(0), msg->getArg(1));
+	msg->getChannel()->modeOfChannel(msg->getSender(), msg->getArg(0), msg->getArg(1), this);
 }
 
 void	Server::kick(Message *msg)
 {
-	// IF CHANNEL NAME IS NOT PROVIDED
-	if (msg->getChannelName().empty())
-	{
-		msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg->getChannelName() + " :No such channel");
-		return ;
-	}
-
 	// IF CHANNEL DOES NOT EXIST
 	if (!msg->getChannel())
 	{
-		msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg->getChannelName() + " :No such channel");
+		msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg->getChannelName() + " :No such ccccccchannel");
 		return ;
 	}
 	
 	// IF NO CLIENT NAME IS PROVIDED
-	if (!msg->getArg(0).empty())
+	if (msg->getArg(0).empty())
 	{
-		msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg->getChannelName() + " :No such channel");
+		msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg->getChannelName() + " :No slololouch channel");
 		return ;
 	}
 	
 	// IF TO BE KICKED CLIENT IS NOT ON THE SERVER
+	msg->setReceiver(getInstanceByName(_clients, msg->getArg(0)));
 	if (!msg->getReceiver())
 	{
 		msg->getSender()->sendMessage(ERR_NOSUCHNICK, msg->getArg(0) + " :No such nick");
@@ -571,7 +565,7 @@ void	Server::kick(Message *msg)
 	}
 
 	// KICK THE CLIENT
-	msg->getChannel()->kickFromChannel(msg->getSender(), msg->getReceiver());
+	msg->getChannel()->kickFromChannel(msg->getSender(), msg->getReceiver(), msg->getColon());
 }
 
 void	Server::part(Message *msg)

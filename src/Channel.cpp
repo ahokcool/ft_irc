@@ -6,12 +6,12 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/09 16:34:16 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/09 23:22:11 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Channel.hpp"
-#include "Client.hpp"
+
 
 // Constructor
 // -----------------------------------------------------------------------------
@@ -198,7 +198,7 @@ void	Channel::inviteToChannel(Client *host, Client *guest)
 	Logger::log("Invite sent to " + guest->getUniqueName() + " by " + host->getUniqueName());
 }
 
-void	Channel::kickFromChannel(Client *kicker, Client *kicked)
+void	Channel::kickFromChannel(Client *kicker, Client *kicked, const std::string &reason)
 {
 	// IF KICKER IS NOT OPERATOR
 	if (getClientState(kicker) < STATE_O)
@@ -220,6 +220,8 @@ void	Channel::kickFromChannel(Client *kicker, Client *kicked)
 	// :astein!alex@F456A.75198A.60D2B2.ADA236.IP KICK #test3 astein__ :astein
 	std::string msg = ":" + kicker->getUniqueName() + "!" + kicker->getUsername() + "@localhost" +
 		" KICK " + _channelName + " " + kicked->getUniqueName() + " :" + kicker->getUniqueName();
+	if (!reason.empty())
+		msg += " :" + reason;
 	this->sendMessageToClients(msg);
 
 	kicked->removeChannel(this);
@@ -310,13 +312,13 @@ void	Channel::topicOfChannel(Client *sender, const std::string &topic)
 	Logger::log("Topic change message: " + _topicChange);
 }
 
-void	Channel::modeOfChannel(Client *sender, const std::string &flag, const std::string &value)
+void	Channel::modeOfChannel(Client *sender, const std::string &flag, const std::string &value, Server *server)
 {
 	// IF FLAG IS NOT PROVIDED
 	if (flag.empty())
 	{
 		// 	:Aurora.AfterNET.Org 324 ash2223 #test +tinrc 
-		sender->sendMessage(ERR_NEEDMOREPARAMS, _channelName + " " + getChannelFlags());
+		sender->sendMessage(RPL_CHANNELMODEIS, _channelName + " " + getChannelFlags());
 		return ;
 	}
 
@@ -327,16 +329,9 @@ void	Channel::modeOfChannel(Client *sender, const std::string &flag, const std::
 		return ;
 	}
 	
-	// IF SENDER IS NOT OPERATOR
-	if (getClientState(sender) < STATE_O)
-	{
-		sender->sendMessage(ERR_CHANOPRIVSNEEDED, _channelName + " :You're not channel operator");
-		return ;
-	}
-
 	std::string mode = "@";
 	char sign = '+';
-
+	
 	if (flag.size() == 1)
 	{
 		mode[0] = flag[0];
@@ -351,13 +346,19 @@ void	Channel::modeOfChannel(Client *sender, const std::string &flag, const std::
 	// 	- SIGN IS NOT + OR -
 	// 	- FLAG IS NOT 1 OR 2 CHAR LONG
 	// 	- FLAG IS NOT ONE OFF THE FOLLOWING: itkol
-	// if ((sign != '+' && sign != '-') || flag.size() > 2 || mode.find_first_not_of("itkol") == std::string::npos)
-	// {
-	// 	sender->sendMessage(ERR_UNKNOWNMODE, sender->getUniqueName() + " " + flag + " :is unknown mode char to me");
-	// 	return ;
-	// }
+	if ((sign != '+' && sign != '-') || (flag.size() > 2) || (mode.find_first_not_of("itkol") != std::string::npos))
+	{
+		sender->sendMessage(ERR_UNKNOWNMODE, sender->getUniqueName() + " " + flag + " :is unknown mode char to me");
+		return ;
+	}
 
-	std::string ircMsg;
+	// CHECK IS OPERATOR
+	if (getClientState(sender) < STATE_O)
+	{
+		sender->sendMessage(ERR_CHANOPRIVSNEEDED, _channelName + " :You're not channel operator");
+		return ;
+	}
+
 	switch (mode[0])
 	{
 		// invite-only mode
@@ -366,93 +367,142 @@ void	Channel::modeOfChannel(Client *sender, const std::string &flag, const std::
 			if (_inviteOnly != (sign == '+'))
 			{
 				_inviteOnly = !_inviteOnly;
-				ircMsg = ":" + sender->getUniqueName() + "!" + sender->getUsername() + "@localhost" +
-					" MODE " + _channelName + " " + sign + flag;
+				sendMessageToClients(":" + sender->getUniqueName() + "!" + sender->getUsername() + "@localhost" +
+					" MODE " + _channelName + " " + sign + mode);
 			}
 			break;
 		}
-		// // topic change restriction 
-		// case 't': // TOPIC CAN BE CHANGED NOT ONLY BY OPERATORS
-		// {
-		// 	if (!_topicProtected)
-		// }
+		// topic change restriction 
+		case 't':
+		{
+			if (_topicProtected != (sign == '+'))
+			{
+				_topicProtected = !_topicProtected;
+				sendMessageToClients(":" + sender->getUniqueName() + "!" + sender->getUsername() + "@localhost" +
+					" MODE " + _channelName + " " + sign + mode);
+			}
+			break;
+		}
 		case 'k':
 		{
+			// IF KEY IS NOT PROVIDED
 			if (value.empty())
 			{
 				sender->sendMessage(ERR_NEEDMOREPARAMS, "MODE " + mode + " :Not enough parameters");
 				break ;
 			}
-			else if (sign == '+')
+
+			// IF WE WANT TO SET ...
+			if (sign == '+')
 			{
-				_key = value;
-				// :ash2223!anshovah@F456A.75198A.60D2B2.ADA236.IP MODE #test +k try
-				ircMsg = ":" + sender->getUniqueName() + "!" + sender->getUsername() + "@localhost" +
-					" MODE " + _channelName + " " + sign + mode + " " + value;
-			}
-			else
-			{
-				if (value == _key) // remove channel keyword
+				// ... AND KEY WAS SET BEFORE ...
+				if (!_key.empty())
 				{
-					// :ash2223!anshovah@F456A.75198A.60D2B2.ADA236.IP MODE #test -k try
-					_key = "";
-					ircMsg = ":" + sender->getUniqueName() + "!" + sender->getUsername() + "@localhost" +
-					" MODE " + _channelName + " " + sign + mode + " " + value;
+					// ... INFORM SENDER 
+					sender->sendMessage(ERR_KEYSET, _channelName + " :Channel key already set");
 				}
+				// ...AND KEY WAS EMPTY BEFORE...
 				else
 				{
-					// :luna.AfterNET.Org 467 ash2223 #test :Channel key already set
-					sender->sendMessage(ERR_KEYSET, _channelName + " :Channel key already set");
+					// ... SET IT
+					_key = value;
+					// :ash2223!anshovah@F456A.75198A.60D2B2.ADA236.IP MODE #test +k try
+					sendMessageToClients(":" + sender->getUniqueName() + "!" + sender->getUsername() + "@localhost" +
+						" MODE " + _channelName + " " + sign + mode + " " + value);
+				}
+			}
+			// IF WE WANT TO REMOVE KEYWORD ...
+			else
+			{
+				// ... IF KEYWORD WAS SET BEFORE AND ...
+				if (!_key.empty())
+				{
+					// ... IF VALUE IS CORRECT KEY
+					if (value == _key) // remove channel keyword
+					{
+						// :ash2223!anshovah@F456A.75198A.60D2B2.ADA236.IP MODE #test -k try
+						_key = "";
+						sendMessageToClients(":" + sender->getUniqueName() + "!" + sender->getUsername() + "@localhost" +
+						" MODE " + _channelName + " " + sign + mode + " " + value);
+					}
+					// ... IF VALUE IS NOT CORRECT KEY
+					else
+					{
+						// :luna.AfterNET.Org 467 ash2223 #test :Channel key already set
+						sender->sendMessage(ERR_KEYSET, _channelName + " :Channel key already set");
+						break ;
+					}
+				}
+				// ... IF IT WAS NOT SET BEFORE --> IGNORE IT
+				break ;
+			}
+			break ;
+		}
+		case 'l':
+		{
+			if (sign == '-')
+			{
+				// IF FLAG WAS SET
+				if (_limit != 0)
+				{
+					// UNSET IT AND INFORM
+					_limit = 0;
+					sendMessageToClients(":" + sender->getUniqueName() + "!" + sender->getUsername() + "@localhost" +
+						" MODE " + _channelName + " -l");
+				}
+				break ;
+			}
+			//IF SIGN IS +
+			else
+			{
+				if(value.empty())
+				{
+					sender->sendMessage(ERR_NEEDMOREPARAMS, "MODE +l :Not enough parameters");
 					break ;
 				}
+				// CHECK IF VALUE IS A POSITIVE SIGNED INTEGER
+				if (intNoOverflow(value))
+				{
+					int newLimit = std::atoi(value.c_str());
+					_limit = newLimit;
+					sendMessageToClients(":" + sender->getUniqueName() + "!" + sender->getUsername() + "@localhost" +
+						" MODE " + _channelName + " +l " + value);
+				}
+				break ;
+			}
+			break ;
+		}
+		case 'o':
+		{
+			// IF TARGET IS NOT PROVIDED
+			if(value.empty())
+				break ;
+			// IF TARGET IS DOESN'T EXIST
+			Client *target = server->getClientByNick(value);
+			if (!target)
+			{
+				sender->sendMessage(ERR_NOSUCHNICK, value + " :No such nick/channel");
+				break ;
+			}
+			// IF TARGET IS NOT IN CHANNEL
+			if (getClientState(target) < STATE_C)
+			{
+				sender->sendMessage(ERR_USERNOTINCHANNEL, value + " " + _channelName + " :They aren't on that channel");
+				break ;
+			}
+
+			// IF TARGET IS NOT AN OPERATOR YET AND WE WANT TO MAKE HIM ONE...
+			// OR IF TARGET IS AN OPERATOR AND WE WANT TO REMOVE HIM
+			if ((getClientState(target) == STATE_O) != (sign == '+'))
+			{
+				// ... MAKE HIM ONE OR REMOVE HIM AND INFORM
+				addClient(target, sign == '+' ? STATE_O : STATE_C);
+				sendMessageToClients(":" + sender->getUniqueName() + "!" + sender->getUsername() + "@localhost" +
+					" MODE " + _channelName + " " + sign + "o " + value);
 			}
 			break ;
 		}
 	}
-	sendMessageToClients(ircMsg);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		// sender->sendMessage(ERR_NEEDMOREPARAMS, "MODE +l:Not enough parameters");
-
-
-
-
-	
-	
-	
-
-	// IF FLAG --> i
-	
 }
 
 // Simple List Management

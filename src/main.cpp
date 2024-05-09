@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
+/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 20:47:42 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/04 01:28:11 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/09 17:21:28 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,18 +16,17 @@
 
 int main(int ac, char **av)
 {
-
+	Logger::init();
     if (ac != 3)
     {
-        std::cout << "Usage: ./ircserv <port> <pswd>" << std::endl;
+		info("Usage: ./ircserv <port> <pswd>", CLR_RED);
         return 1;
     }
-	Logger::init();
 	Server::setupSignalHandling();
     try
     {
 		title("IRC Server", true, false);
-		info("Welcome to the IRC Server", CLR_GRN);
+		info("Welcome to " + std::string(PROMT), CLR_GRN);
 		info("End the server with Ctrl+C", CLR_GRN);
 		info("~~~~~~~~~~~~~~~~~~~~~~~~~~", CLR_GRN);
 		info("Create server instance", CLR_BLU);

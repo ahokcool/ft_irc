@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
+/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/08 18:42:32 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/09 23:28:41 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,13 +40,11 @@ Client::Client(const Client &other) :
 // Destructor
 Client::~Client()
 {
-	std::list<Channel *>::iterator it = _channels.begin();
+	std::list<Channel *>::iterator it;
+	
+	for (it = _channels.begin(); it != _channels.end(); ++it)
+		(*it)->partChannel(this, "client died... *sad*");
 
-	while (it != _channels.end())
-	{
-		(*it)->kickFromChannel(this, this); // TODO: this is fucked up
-		it++;
-	}
 	_channels.clear();
 	Logger::log("DESTRUCTED Client Instance with fd: " + to_string(_socketFd));
 	logClient();

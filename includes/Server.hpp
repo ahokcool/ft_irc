@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
+/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/08 20:11:46 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/09 23:01:30 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,11 +34,14 @@
 #include <errno.h>
 #include <poll.h>
 
-#include "Client.hpp"
 #include "Channel.hpp"
 #include "Message.hpp"
 #include "utils.hpp"
 #include "Logger.hpp"
+
+class Client;
+class Channel;
+class Message;
 
 #define BUFFER_SIZE 512	// IRC message buffer size
 #define PROMT ">>>FINISHERS IRC NET<<<"
@@ -103,9 +106,11 @@ class Server
 	// -------------------------------------------------------------------------
 	// Client Methods
 	// -------------------------------------------------------------------------
+	public:
+		// Needed by Channel Mode 'o'
+		Client	*getClientByNick(const std::string &nickname);	
 	private:
 		Client	*getClientByFd(int fd);
-		Client	*getClientByNick(const std::string &nickname);	
 	
 	// -------------------------------------------------------------------------
 	// Channel Methods
