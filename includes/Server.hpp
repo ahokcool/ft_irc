@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/09 23:01:30 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/10 00:49:49 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,6 +94,7 @@ class Server
 		typedef void	(Server::*CommandFunction)(Message*);
 		void	nick	(Message *msg);		// WORKS
 		void	user	(Message *msg);		// WORKS
+		void	who		(Message *msg);		// WORKS
 		void	whois	(Message *msg);		// WORKS
 		void	privmsg	(Message *msg);		// WORKS
 		void	join	(Message *msg);		// WORKS

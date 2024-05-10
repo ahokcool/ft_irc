@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/09 23:22:11 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/10 01:36:13 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -275,7 +275,7 @@ void	Channel::topicOfChannel(Client *sender, const std::string &topic)
 		sender->sendMessage(
 			":localhost " + std::string(RPL_TOPICADDITIONAL) +
 			" " + sender->getUniqueName() +
-			" " + _topicChange);
+			" " + _channelName + " " + _topicChange);
 		return ;
 	}
 	
@@ -300,13 +300,12 @@ void	Channel::topicOfChannel(Client *sender, const std::string &topic)
 			sender->getUsername() + "@localhost" +
 			" " + ss.str();
 	// SEND TOPIC MESSAGE
-	std::string confirmMsg =
+	std::string confirmMsg = ":" +
 		sender->getUniqueName() + "!" +
 		sender->getUsername() + "@localhost" +
 		" TOPIC " + _channelName + " :" + _topic;
 
 	sendMessageToClients(confirmMsg);
-	sender->sendMessage(confirmMsg);
 
 	Logger::log("Topic changed to: " + _topic + " by " + sender->getUniqueName());
 	Logger::log("Topic change message: " + _topicChange);
@@ -536,6 +535,29 @@ void	Channel::sendMessageToClients(const std::string &ircMessage, Client *sender
 		logMsg += " except " + sender->getUniqueName();
 	logMsg += ": " + ircMessage;
 	Logger::log(logMsg);
+}
+
+void	Channel::sendWhoMessage(Client *receiver) const
+{
+	std::map<Client *, int>::const_iterator it;
+	
+	if(_clients.empty())
+		return ;
+	for(it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		// >> :Aurora.AfterNET.Org 352 astein #birdsandbees anshovah F456A.75198A.60D2B2.ADA236.IP *.afternet.org astein H@xz :0 realname
+		std::string flags = "H";
+		if (it->second == STATE_O)
+			flags += "@";
+		else if (it->second == STATE_I)
+			flags += "*";
+		// flags += "xz";
+		receiver->sendMessage(RPL_WHOREPLY, _channelName + " " + it->first->getUsername() +
+			" " + it->first->getHostname() + " * " + it->first->getUniqueName() + " "  +
+			flags + " :0 " + it->first->getFullname());
+	}
+	receiver->sendMessage(RPL_ENDOFWHO, _channelName + " :End of /WHO list.");
+	Logger::log("Channel " + _channelName + " sent WHO message to " + receiver->getUniqueName());
 }
 
 // Getters and Setters

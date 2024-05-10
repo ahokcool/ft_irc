@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/04 02:01:01 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/09 15:59:35 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/10 01:00:34 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,8 @@
 #define RPL_WELCOME				"001"	// "<nick> :Welcome to the FINISHERS' IRC Network, <nick>
 #define RPL_WHOISUSER			"311"	// "<nick> <user> <host> * :<real name>"
 #define RPL_WHOISCHANNELS		"319"	// "<nick> :{[@|+]<channel><space>}"
+#define RPL_WHOREPLY            "352"   // "<channel> <user> <host> <server> <nick> <H|G>[*][@|+] :<hopcount> <real name>"
+#define RPL_ENDOFWHO            "315"   // "<name> :End of /WHO list"
 #define RPL_ENDOFWHOIS			"318"	// "<nick> :End of /WHOIS list"
 #define RPL_NOTOPIC				"331"	// "<channel> :No topic is set"
 #define RPL_TOPIC				"332"	// "<channel> :<topic>"

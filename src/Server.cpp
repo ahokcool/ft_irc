@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/10 00:04:35 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/10 01:09:18 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@ Server::Server(const std::string &port, const std::string &password) : _serverIP
 	// Initialize the list of allowed cmds
 	_cmds["NICK"] = &Server::nick;
     _cmds["USER"] = &Server::user;
+    _cmds["WHO"] = &Server::who;
     _cmds["WHOIS"] = &Server::whois;
     _cmds["PRIVMSG"] = &Server::privmsg;
     _cmds["JOIN"] = &Server::join;
@@ -356,6 +357,36 @@ void	Server::user(Message *msg)
 	}
 	else
 		msg->getSender()->sendMessage(ERR_NEEDMOREPARAMS, "USER :Not enough parameters");
+}
+
+void	Server::who	(Message *msg)
+{
+	// FIRST CHECK IF CHANNEL
+	if(msg->getChannel())
+	{
+		msg->getChannel()->sendWhoMessage(msg->getSender());
+		return ;
+	}
+
+	// THE SECTION BELOW IS FOR WHO <nickname>
+	// WE DONT CARE!
+
+	// // CHECK IF USER IS PROVIDED
+	// if (msg->getArg(0).empty())
+	// {
+	// 	msg->getSender()->sendMessage(ERR_NONICKNAMEGIVEN, ":No nickname given");
+	// 	return ;
+	// }
+
+	// // CHECK IF USER EXISTS
+	// Client *whoClient = getClientByNick(msg->getArg(0));
+	// if (!whoClient)
+	// {
+	// 	msg->getSender()->sendMessage(ERR_NOSUCHNICK, msg->getArg(0) + " :No such nick/channel");
+	// 	return ;
+	// }
+
+	// whoClient->sendWhoMsg(msg->getSender());
 }
 
 void	Server::whois	(Message *msg)

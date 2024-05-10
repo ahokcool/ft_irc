@@ -6,7 +6,7 @@
 /*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/09 23:21:05 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/10 01:07:06 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,6 +54,7 @@ class Channel
 
 		// Channel Broadcast Message
         void	sendMessageToClients(const std::string &ircMessage, Client *sender = NULL) const;
+		void 	sendWhoMessage(Client *receiver) const;
 
 		// Getters and Setters
 		const std::string	&getUniqueName() const;
