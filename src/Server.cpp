@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/10 21:15:39 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/10 21:25:26 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -208,9 +208,7 @@ void	Server::goOnline()
 void	Server::shutDown()
 {
 	info("[START] Shut down", CLR_YLW);
-	broadcastMessage("!!!Server shutting down in 42 seconds!!!\r\n");
-	sleep(1);
-	// TODO: SLEEP is C! Use C++ sleep_for
+	broadcastMessage("!!!Server is shutting down now!!!");
 	info("[>DONE] Shut down", CLR_GRN);
 }
 
@@ -236,19 +234,13 @@ std::vector<pollfd>	Server::getFdsAsVector() const
 void	Server::broadcastMessage(const std::string &msg) const
 {
 	info("[START] Broadcast msg", CLR_YLW);
-	std::string ircMessage = "TODO:!" + msg + "TODO:!";
-	
+	std::string ircMessage = ":localhost NOTICE * :" + msg;
+
 	// Send it to all clients
 	for (std::list<Client>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
 	{
 		// TODO: Create the ircMessage in right format! aka adding the user's name
 		it->sendMessage(ircMessage);
-	}
-
-	// Send it to all channels
-	for (std::list<Channel>::const_iterator it = _channels.begin(); it != _channels.end(); ++it)
-	{
-		it->sendMessageToClients(ircMessage);
 	}
 	info("[>DONE] Broadcast msg", CLR_GRN);
 }
