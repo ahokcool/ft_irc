@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:33 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/10 00:55:22 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/10 17:56:26 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,6 +63,7 @@ class Client
         void 					sendWhoIsMsg(Client *reciever) const;
 		
 		// Setters
+		void					setAuthenticated(bool auth);
         void					setUniqueName(const std::string &nickname);
         void					setUsername(const std::string &username);
         void					setFullname(const std::string &fullname);
@@ -70,6 +71,7 @@ class Client
 
 		// Getters
 		int						getSocketFd()		const;
+		bool					isAuthenticated()	const;	
         const std::string		&getUniqueName()	const;
         const std::string		&getUsername()		const;
         const std::string		&getFullname()		const;
@@ -83,6 +85,7 @@ class Client
         Client();
 		std::string				_inputBuffer;
         int						_socketFd;
+		bool					_authenticated;
         std::string			   	_nickname;
         std::string         	_username;	// Can only be changed when connecting to server!
         std::string				_fullname;	// Can only be changed when connecting to server!

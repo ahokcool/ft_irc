@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/02 16:44:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/07 20:51:56 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/10 21:06:40 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,7 +119,7 @@ void Message::logMessage() const
 	std::ostringstream header, values;
 
 	// Constructing headers
-    header << std::setw(15) << std::left << "CMD"
+    header << "| " << std::setw(15) << std::left << "CMD"
            << "| " << std::setw(15) << "CHANNEL"
            << "| " << std::setw(15) << "ARG0"
            << "| " << std::setw(15) << "ARG1"
@@ -127,7 +127,7 @@ void Message::logMessage() const
            << "| " << std::setw(15) << "COLON";
 
     // Constructing values under headers
-    values << std::setw(15) << std::left << (_cmd.length() > 14 ? _cmd.substr(0, 14) + "." : _cmd.empty() ? "(NULL)" : _cmd)
+    values << "| " << std::setw(15) << std::left << (_cmd.length() > 14 ? _cmd.substr(0, 14) + "." : _cmd.empty() ? "(NULL)" : _cmd)
            << "| " << std::setw(15) << (_channelName.length() > 14 ? _channelName.substr(0, 14) + "." : _channelName.empty() ? "(NULL)" : _channelName)
            << "| " << std::setw(15) << (_args[0].length() > 14 ? _args[0].substr(0, 14) + "." : _args[0].empty() ? "(NULL)" : _args[0])
            << "| " << std::setw(15) << (_args[1].length() > 14 ? _args[1].substr(0, 14) + "." : _args[1].empty() ? "(NULL)" : _args[1])
@@ -139,8 +139,8 @@ void Message::logMessage() const
     logEntry << header.str() << "\n" << values.str();
 
     // Logging the constructed message
-	Logger::log("================ START MSG ================");
+	Logger::log("\n=> START MSG =======================================================================================");
     Logger::log(header.str());
     Logger::log(values.str());
-	Logger::log("================ END MSG ================");
+	Logger::log("=> END MSG =========================================================================================\n");
 }

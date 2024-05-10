@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/04 01:28:24 by astein            #+#    #+#             */
-/*   Updated: 2024/05/04 01:36:08 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/10 20:55:28 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,8 +26,21 @@ void Logger::log(const std::string& logmsg)
 {
     // If the file is not open, return
     if (!logFile.is_open())
-        return;
+		return;
 
+	if (logmsg.empty())
+		return;
+
+	std::string msg;
+	if (logmsg[0] == '\n')
+	{
+		logFile << "\n";
+		msg = logmsg.substr(1);
+	}
+	else
+	{
+		msg = logmsg;
+	}
     // Get current time
     time_t rawtime;
     struct tm* timeinfo;
@@ -41,7 +54,7 @@ void Logger::log(const std::string& logmsg)
     std::string timestamp(buffer);
 
     // Write the log message with timestamp prefix to the file
-    logFile << timestamp << " " << logmsg << std::endl;
+    logFile << timestamp << " " << msg << std::endl;
 }
 
 void Logger::close()

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/10 00:49:49 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/10 20:35:58 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,6 +92,7 @@ class Server
 		void	chooseCommand(Message *msg);
 
 		typedef void	(Server::*CommandFunction)(Message*);
+		void	pass	(Message *msg);		// WORKS
 		void	nick	(Message *msg);		// WORKS
 		void	user	(Message *msg);		// WORKS
 		void	who		(Message *msg);		// WORKS

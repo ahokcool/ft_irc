@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/10 00:55:19 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/10 21:09:52 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 
 // Constructors and Destructor
 // -----------------------------------------------------------------------------
-Client::Client(const int socketFd) : _socketFd(socketFd), _hostname("localhost")
+Client::Client(const int socketFd) : _socketFd(socketFd), _authenticated(false), _hostname("localhost")
 {
 	Logger::log("CREATED Client Instance with fd: " + to_string(socketFd));
 	logClient();
@@ -56,7 +56,7 @@ Client::~Client()
 		}
 	}
 	_channels.clear();
-	info("DESTRUCTED Client Instance " + _nickname, CLR_RED);
+	Logger::log("DESTRUCTED Client Instance " + _nickname);
 	logClient();
 }
 
@@ -178,6 +178,11 @@ void Client::sendWhoIsMsg(Client *reciever) const
 
 // Setters
 // -----------------------------------------------------------------------------
+void	Client::setAuthenticated(bool auth)
+{
+	_authenticated = auth;
+}
+
 void    Client::setUniqueName(const std::string &nickname)
 {
 	info("set nickname " + nickname, CLR_GRN);
@@ -186,7 +191,6 @@ void    Client::setUniqueName(const std::string &nickname)
 
 void Client::setUsername(const std::string &username)
 {
-	info("set username " + username, CLR_GRN);
 	_username = username;
 }
 
@@ -205,6 +209,11 @@ void Client::setHostname(const std::string &hostname)
 int Client::getSocketFd() const
 {
 	return _socketFd;
+}
+
+bool Client::isAuthenticated() const
+{
+	return _authenticated;
 }
 
 const std::string &Client::getUniqueName() const
@@ -252,8 +261,10 @@ void Client::logClient() const
 	std::ostringstream header, values;
 
 	// Constructing headers
-	header << std::setw(15) << std::left << "INPUT BUFFER"
-			<< "| " << std::setw(15) << "SOCKET FD"
+	header	<< std::left
+			<< "| " << std::setw(15)  << "SOCKET FD"
+			<< "| " << std::setw(15) << "AUTHENTICATED"
+			<< "| " << std::setw(15) << "INPUT BUFFER"
 			<< "| " << std::setw(15) << "NICKNAME"
 			<< "| " << std::setw(15) << "USERNAME"
 			<< "| " << std::setw(15) << "FULLNAME"
@@ -261,23 +272,25 @@ void Client::logClient() const
 			<< "| " << std::setw(15) << "CHANNELS";
 
 	// Constructing values under headers
-	values << std::setw(15) << std::left << (_inputBuffer.length() > 14 ? _inputBuffer.substr(0, 14) + "." : _inputBuffer.empty() ? "(NULL)" : _inputBuffer)
+	values 	<< std::left 
 			<< "| " << std::setw(15) << _socketFd
+			<< "| " << std::setw(15) << (_authenticated ? "TRUE" : "FALSE")
+			<< "| " << std::setw(15)  << (_inputBuffer.length() > 14 ? _inputBuffer.substr(0, 14) + "." : _inputBuffer.empty() ? "(NULL)" : _inputBuffer)
 			<< "| " << std::setw(15) << (_nickname.length() > 14 ? _nickname.substr(0, 14) + "." : _nickname.empty() ? "(NULL)" : _nickname)
 			<< "| " << std::setw(15) << (_username.length() > 14 ? _username.substr(0, 14) + "." : _username.empty() ? "(NULL)" : _username)
 			<< "| " << std::setw(15) << (_fullname.length() > 14 ? _fullname.substr(0, 14) + "." : _fullname.empty() ? "(NULL)" : _fullname)
 			<< "| " << std::setw(15) << (_hostname.length() > 14 ? _hostname.substr(0, 14) + "." : _hostname.empty() ? "(NULL)" : _hostname)
-			<< "| " << getChannelList() << std::endl;
+			<< "| " << getChannelList();
 
 	// Combining headers and values into one log entry
 	std::ostringstream logEntry;
 	logEntry << header.str() << "\n" << values.str();
 
 	// Logging the constructed message
-	Logger::log("================ START CLIENT ================");
+	Logger::log("\n=> START CLIENT ====================================================================================================================");
 	Logger::log(header.str());
 	Logger::log(values.str());
-	Logger::log("================ END CLIENT ================");
+	Logger::log("=> END CLIENT ======================================================================================================================\n");
 }
 
 // Exception

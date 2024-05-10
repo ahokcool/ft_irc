@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/10 01:36:13 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/10 21:13:31 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -511,6 +511,7 @@ void	Channel::addClient		(Client *client, int status)
 {
 	_clients[client] = status;
 	Logger::log("Channel " + _channelName + " added/changed client: " + client->getUniqueName() + " to status " + to_string(status));
+	logChanel();
 }
 
 void	Channel::removeClient	(Client *client)
@@ -592,31 +593,33 @@ void Channel::logChanel() const
 	std::ostringstream header, values;
 	
 	// Log headers
-	header << std::setw(15) << std::left << "NAME"
+	header  << std::left
+			<< "| " << std::setw(15) << "NAME"
 			<< "| " << std::setw(15) << "TOPIC"
 			<< "| " << std::setw(15) << "TOPIC CHANGE"
 			<< "| " << std::setw(15) << "KEY"
 			<< "| " << std::setw(15) << "LIMIT"
 			<< "| " << std::setw(15) << "INVITE ONLY"
 			<< "| " << std::setw(15) << "TOPIC PROTECTED"
-			<< "| " << std::setw(15) << "CLIENTS" << "\n";
+			<< "| " << std::setw(15) << "CLIENTS";
 
 	// Log values
-	values << std::setw(15) << std::left << (_channelName.length() > 14 ? _channelName.substr(0, 14) + "." : _channelName.empty() ? "(NULL)" : _channelName)
+	values  << std::left
+			<< "| " << std::setw(15) << (_channelName.length() > 14 ? _channelName.substr(0, 14) + "." : _channelName.empty() ? "(NULL)" : _channelName)
 			<< "| " << std::setw(15) << (_topic.length() > 14 ? _topic.substr(0, 14) + "." : _topic.empty() ? "(NULL)" : _topic)
 			<< "| " << std::setw(15) << (_topicChange.length() > 14 ? _topicChange.substr(0, 14) + "." : _topicChange.empty() ? "(NULL)" : _topicChange)
 			<< "| " << std::setw(15) << (_key.length() > 14 ? _key.substr(0, 14) + "." : _key.empty() ? "(NULL)" : _key)
 			<< "| " << std::setw(15) << (_limit == 0 ? "(unset)" : to_string(_limit))
 			<< "| " << std::setw(15) << (_inviteOnly ? "Yes" : "No")
 			<< "| " << std::setw(15) << (_topicProtected ? "Yes" : "No")
-			<< "| " << getClientList() << std::endl;
+			<< "| " << getClientList();
 
 
         // Simulate logging (You can replace this with actual log calls)
-	Logger::log("================ START CHANNEL ================");
+	Logger::log("\n=> START CHANNEL ====================================================================================================================");
     Logger::log(header.str());
     Logger::log(values.str());
-	Logger::log("================ END CHANNEL ================");
+	Logger::log("=> END CHANNEL ======================================================================================================================\n");
 }
 
 // Private Methods

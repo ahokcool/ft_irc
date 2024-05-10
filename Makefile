@@ -1,5 +1,7 @@
 # Project: ircserv
 NAME=ircserv
+PORT=1234
+PSWD=4242
 
 # Compiler options
 CXX 		= c++
@@ -75,11 +77,11 @@ runNoPort: re
 
 run: re
 	@echo $(BLUE) $(NAME) "starting..." $(RESET)
-	@./$(NAME) 1234 42
+	@./$(NAME) $(PORT) $(PSWD)
 
 val: re
 	@echo $(BLUE) $(NAME) "starting with valgrind..." $(RESET)
-	@valgrind --leak-check=full ./$(NAME) 1234 42
+	@valgrind --leak-check=full ./$(NAME) $(PORT) $(PSWD)
 
 MSG_START:
 	@echo $(ORANGE) $(NAME) "compiling" $(RESET)

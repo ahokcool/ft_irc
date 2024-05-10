@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/10 01:09:18 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/10 21:15:39 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 Server::Server(const std::string &port, const std::string &password) : _serverIP("localhost")
 {
 	// Initialize the list of allowed cmds
+	_cmds["PASS"] = &Server::pass;
 	_cmds["NICK"] = &Server::nick;
     _cmds["USER"] = &Server::user;
     _cmds["WHO"] = &Server::who;
@@ -52,8 +53,10 @@ void Server::parseArgs(const std::string &port, const std::string &password)
 	if (portInt != 194 && (portInt < 1024 || portInt > 65535))
 		throw ServerException("Port is not the IRC port (194) or in the range 1024-65535!");
 	_port = portInt;
-	info ("port accepted: " + port, CLR_YLW);
-	// TODO: Check if password is valid
+	info ("port accepted:\t" + port, CLR_YLW);
+	if(password.empty())
+		throw ServerException("No server password provided");
+	info ("pswd accepted:\t" + password, CLR_YLW);
 	_password = password;
 }
 
@@ -120,9 +123,8 @@ void	Server::goOnline()
 	while (_keepRunning)
 	{
 		fds = getFdsAsVector();
-		info ("Waiting for connections ...", CLR_ORN);
+		info ("Waiting for messages ...", CLR_ORN);
 		int pollReturn = poll(fds.data(), fds.size() , -1);
-		info ("DONE Waiting for connections ...", CLR_ORN);
 		if (pollReturn == -1)
 		{
 			if (!_keepRunning)
@@ -148,6 +150,7 @@ void	Server::goOnline()
 			if (fcntl(new_socket, F_SETFL, O_NONBLOCK) < 0)
 				throw ServerException("Fcntl failed\n\t" +	std::string(strerror(errno)));
 			_clients.push_back(Client(new_socket));
+			info ("DONE handling NEW CONNECTION msg from fd: " + to_string(new_socket), CLR_ORN);
         }
 		
 		// TODO: in client check for to long msgs
@@ -168,6 +171,7 @@ void	Server::goOnline()
 					// Some read error happend
 					// The server doesn't bother to much and just deletes this client
 					Logger::log("Client " + cur_client->getUniqueName() + " disconnected");
+					info ("DONE handling DISCONNECTING msg from fd: " + to_string(fds[i].fd), CLR_ORN);
                     close(fds[i].fd);
                     fds.erase(fds.begin() + i);		// erase the client fd from the fd vector
 					_clients.remove(*cur_client);	// erase the client from the client list
@@ -191,10 +195,12 @@ void	Server::goOnline()
 						// 3. process the msg(s)
 						Logger::log("start processing msg from " + cur_client->getUniqueName() + " -> " + fullMsg);
 						processMessage(cur_client, fullMsg);
+						info ("DONE handling NORMAL msg from fd: " + to_string(fds[i].fd), CLR_ORN);
 					}
                 }
             }
 		}
+		
 	}	
 	info("[>DONE] Go online", CLR_YLW);
 }
@@ -270,9 +276,24 @@ void	Server::processMessage(Client *sender, const std::string &ircMessage)
 
 bool	Server::isLoggedIn(Message *msg)
 {
-	if (!msg->getSender()->getUniqueName().empty() && !msg->getSender()->getUsername().empty())
+	if (!msg->getSender() || (!msg->getSender()->getUniqueName().empty() && !msg->getSender()->getUsername().empty()))
 		return true;
 
+	// CHECK IF PASSWORD WAS PROVIDED
+	if(!msg->getSender()->isAuthenticated())
+	{
+		if (msg->getCmd() == "PASS")
+		{
+			pass(msg);
+			return false;
+		}
+		else
+		{
+			msg->getSender()->sendMessage(ERR_NOTREGISTERED, ":You have not provided the correct password (this is the first thing u have to do!)");
+			return false;
+		}
+	}
+	
 	//	1. Check if NICK is set
 	if (msg->getCmd() == "NICK")
 		nick(msg);
@@ -299,6 +320,24 @@ void	Server::chooseCommand(Message *msg)
 	}
 	// :10.11.3.6 421 anshovah_ PRIMSG :Unknown command
 	msg->getSender()->sendMessage(ERR_UNKNOWNCOMMAND, msg->getCmd() + " :Unknown command");
+}
+
+//PASS
+void	Server::pass(Message *msg)
+{
+	// CHECK IF USER ALREADY LOGGED IN
+	if (msg->getSender()->isAuthenticated())
+	{
+		msg->getSender()->sendMessage(ERR_ALREADYREGISTRED, msg->getSender()->getUniqueName() + " :You may not reregister");
+		return ;
+	}
+	if (msg->getArg(0).empty())
+	{
+		msg->getSender()->sendMessage(ERR_NEEDMOREPARAMS, "PASS :Not enough parameters");
+		return ;
+	}
+	if (msg->getArg(0) == _password)
+		msg->getSender()->setAuthenticated(true);
 }
 
 // /NICK
@@ -494,13 +533,11 @@ void	Server::join(Message *msg)
 	{
 		if(!createNewChannel(msg))
 			return ; //Smth wrong we could find the channel but we also could create it
-		std::cout << msg->getSender()->getChannelList() << std::endl;
 		return ;
 	}
 	
 	// LET THE CHANNEL DESIDE IF THE CLIENT CAN JOIN
 	msg->getChannel()->joinChannel(msg->getSender(), msg->getArg(0));
-	std::cout << msg->getSender()->getChannelList() << std::endl;
 }
 
 void	Server::invite(Message *msg)
@@ -692,7 +729,7 @@ void	Server::sigIntHandler(int sig)
 	if(sig != SIGINT)
 		return;
     _keepRunning = 0;  // Set flag to false to break the loop
-    std::cout << CLR_RED << "Shutdown signal received, terminating server..." << CLR_RST << std::endl;
+	info("[INFO] Shutdown signal received, terminating server...", CLR_RED);
 }
 
 // -----------------------------------------------------------------------------
