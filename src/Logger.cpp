@@ -6,26 +6,41 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/04 01:28:24 by astein            #+#    #+#             */
-/*   Updated: 2024/05/10 20:55:28 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/10 23:06:33 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Logger.hpp"
 
-std::ofstream Logger::logFile;
+std::ofstream Logger::_logFile;
+bool Logger::_active = true;
 
 void Logger::init()
 {
     // Open the log file in append mode
-    logFile.open("./log.txt", std::ios::app);
-    if (!logFile.is_open())
+    _logFile.open("./log.txt", std::ios::app);
+    if (!_logFile.is_open())
         std::cerr << "Error opening log file." << std::endl;
+}
+
+void Logger::activateLogger()
+{
+	_active = true;
+}
+
+void Logger::deactivateLogger()
+{
+	_active = false;
 }
 
 void Logger::log(const std::string& logmsg)
 {
+	// If not active, return
+	if (!_active)
+		return;
+
     // If the file is not open, return
-    if (!logFile.is_open())
+    if (!_logFile.is_open())
 		return;
 
 	if (logmsg.empty())
@@ -34,7 +49,7 @@ void Logger::log(const std::string& logmsg)
 	std::string msg;
 	if (logmsg[0] == '\n')
 	{
-		logFile << "\n";
+		_logFile << "\n";
 		msg = logmsg.substr(1);
 	}
 	else
@@ -54,11 +69,11 @@ void Logger::log(const std::string& logmsg)
     std::string timestamp(buffer);
 
     // Write the log message with timestamp prefix to the file
-    logFile << timestamp << " " << msg << std::endl;
+    _logFile << timestamp << " " << msg << std::endl;
 }
 
 void Logger::close()
 {
     // Close the log file
-    logFile.close();
+    _logFile.close();
 }

@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/10 21:13:31 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/10 23:54:35 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -203,7 +203,7 @@ void	Channel::kickFromChannel(Client *kicker, Client *kicked, const std::string 
 	// IF KICKER IS NOT OPERATOR
 	if (getClientState(kicker) < STATE_O)
 	{
-		kicked->sendMessage(ERR_CHANOPRIVSNEEDED, _channelName + " :You're not channel operator");
+		kicker->sendMessage(ERR_CHANOPRIVSNEEDED, _channelName + " :You're not channel operator");
 		return ;
 	}
 	
@@ -528,6 +528,9 @@ void	Channel::sendMessageToClients(const std::string &ircMessage, Client *sender
 	for(it = _clients.begin(); it != _clients.end(); ++it)
 	{
 		if (sender && *it->first == *sender)
+			continue ;
+		// IF CLIENT IS NOT IN THE CHANNEL SKIP IT (INVITED CLIENTS)
+		if (it->second < STATE_C)
 			continue ;
 		it->first->sendMessage(ircMessage);
 	}

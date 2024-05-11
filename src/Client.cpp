@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/10 21:09:52 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/10 22:11:40 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -196,12 +196,12 @@ void Client::setUsername(const std::string &username)
 
 void Client::setFullname(const std::string &fullname)
 {
-		_fullname = fullname;
+	_fullname = fullname;
 }
 
 void Client::setHostname(const std::string &hostname)
 {
-		_hostname = hostname;
+	_hostname = hostname;
 }
 
 // Getters

@@ -1,7 +1,7 @@
 # Project: ircserv
 NAME=ircserv
 PORT=1234
-PSWD=4242
+PSWD=42
 
 # Compiler options
 CXX 		= c++

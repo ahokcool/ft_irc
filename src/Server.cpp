@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/10 21:25:26 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/10 23:16:07 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -329,7 +329,9 @@ void	Server::pass(Message *msg)
 		return ;
 	}
 	if (msg->getArg(0) == _password)
+	{
 		msg->getSender()->setAuthenticated(true);
+	}
 }
 
 // /NICK
@@ -604,14 +606,14 @@ void	Server::kick(Message *msg)
 	// IF CHANNEL DOES NOT EXIST
 	if (!msg->getChannel())
 	{
-		msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg->getChannelName() + " :No such ccccccchannel");
+		msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg->getChannelName() + " :No such channel");
 		return ;
 	}
 	
 	// IF NO CLIENT NAME IS PROVIDED
 	if (msg->getArg(0).empty())
 	{
-		msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg->getChannelName() + " :No slololouch channel");
+		msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg->getChannelName() + " :No such channel");
 		return ;
 	}
 	
@@ -640,8 +642,8 @@ void	Server::part(Message *msg)
 	// IF NO CLIENTS OR OPERATORS LEFT IN CHANNEL -> DELETE CHANNEL
 	if (!msg->getChannel()->isActive())
 	{
-		// DELETE CHANNEL. NO MESSAGE NEEDED
-		_channels.remove(*msg->getChannel());
+		// DELETE CHANNEL. INFORM THE USERS
+		msg->getChannel()->sendMessageToClients("Channel " + msg->getChannelName() + " is dead! No Operators left!");
 	}	
 }
 

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 20:47:42 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/09 17:21:28 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/10 23:05:17 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@
 int main(int ac, char **av)
 {
 	Logger::init();
+	Logger::activateLogger();
+	Logger::deactivateLogger();
     if (ac != 3)
     {
 		info("Usage: ./ircserv <port> <pswd>", CLR_RED);
