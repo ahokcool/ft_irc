@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/10 23:54:35 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/11 18:42:54 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,14 @@
 // Constructor
 // -----------------------------------------------------------------------------
 Channel::Channel(const std::string &name) : 
-	_channelName(name), _topic(""), _key(""), _limit(0), _inviteOnly(false), _topicProtected(true)
+	_channelName(name),
+	_topic(""),
+	_topicChange(""),
+	_key(""),
+	_limit(0),
+	_inviteOnly(false),
+	_topicProtected(true),
+	_clients()
 {
     Logger::log("Channel CREATED: " + _channelName);
 	logChanel();

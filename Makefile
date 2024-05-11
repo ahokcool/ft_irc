@@ -81,7 +81,7 @@ run: re
 
 val: re
 	@echo $(BLUE) $(NAME) "starting with valgrind..." $(RESET)
-	@valgrind --leak-check=full ./$(NAME) $(PORT) $(PSWD)
+	@valgrind --leak-check=full --show-leak-kinds=all --track-fds=yes ./$(NAME) $(PORT) $(PSWD)
 
 MSG_START:
 	@echo $(ORANGE) $(NAME) "compiling" $(RESET)

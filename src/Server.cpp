@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/10 23:16:07 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/11 19:05:18 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,14 @@
 // -----------------------------------------------------------------------------
 // Construction / Destruction
 // -----------------------------------------------------------------------------
-Server::Server(const std::string &port, const std::string &password) : _serverIP("localhost")
+Server::Server(const std::string &port, const std::string &password) :
+	_serverIP("localhost"),
+	_address(),
+	_socket(0),
+	_port(0),
+	_password(""),
+	_clients(),
+	_channels()
 {
 	// Initialize the list of allowed cmds
 	_cmds["PASS"] = &Server::pass;
@@ -35,7 +42,17 @@ Server::Server(const std::string &port, const std::string &password) : _serverIP
 
 Server::~Server()
 {
-	// TODO: Close all sockets
+	// Close all client sockets
+	std::list<Client>::iterator it;
+	for(it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		it->sendMessage("Bye " + it->getUniqueName() + "!");
+		if(it->getSocketFd() > 4)
+		close(it->getSocketFd());
+	}
+	// Close the server socket
+	if(_socket > 3)
+		close(_socket);
 }
 
 void Server::parseArgs(const std::string &port, const std::string &password)
@@ -76,7 +93,7 @@ void	Server::initNetwork()
 		throw ServerException("Socket creation failed:\n\t" +	std::string(strerror(errno)));
 
     
-	// TODO: REVISE THIS
+	// : REVISE THIS
 	// here we futher configure the socket
     // SOL_SOCKET:		Use SOL_SOCKET for general settings
 	// SO_REUSEADDR:	Allow the socket to be reused immediately after it is closed
@@ -92,8 +109,6 @@ void	Server::initNetwork()
     _address.sin_family 		= AF_INET;
     _address.sin_addr.s_addr	= INADDR_ANY;
     _address.sin_port 			= htons(_port);
-
-	// TODO: SET THE PASSWORD
 
 	// Use fcntl to set the socket to non-blocking
 	// https://pubs.opengroup.org/onlinepubs/009695399/functions/fcntl.html
@@ -153,7 +168,6 @@ void	Server::goOnline()
 			info ("DONE handling NEW CONNECTION msg from fd: " + to_string(new_socket), CLR_ORN);
         }
 		
-		// TODO: in client check for to long msgs
 		// Read from clients
 		char buffer[BUFFER_SIZE+1];	// +1 for the null terminator
 		Client *cur_client;
@@ -234,12 +248,12 @@ std::vector<pollfd>	Server::getFdsAsVector() const
 void	Server::broadcastMessage(const std::string &msg) const
 {
 	info("[START] Broadcast msg", CLR_YLW);
-	std::string ircMessage = ":localhost NOTICE * :" + msg;
 
 	// Send it to all clients
 	for (std::list<Client>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
 	{
-		// TODO: Create the ircMessage in right format! aka adding the user's name
+		std::string ircMessage = ":localhost NOTICE ";
+		ircMessage += it->getUniqueName() + " :" + msg;
 		it->sendMessage(ircMessage);
 	}
 	info("[>DONE] Broadcast msg", CLR_GRN);

@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/10 22:11:40 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/11 19:01:22 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,15 @@
 
 // Constructors and Destructor
 // -----------------------------------------------------------------------------
-Client::Client(const int socketFd) : _socketFd(socketFd), _authenticated(false), _hostname("localhost")
+Client::Client(const int socketFd) : 
+	_socketFd(socketFd),
+	_inputBuffer(""),
+	_authenticated(false),
+	_nickname(""),
+	_username(""),
+	_fullname(""),
+	_hostname("localhost"),
+	_channels()
 {
 	Logger::log("CREATED Client Instance with fd: " + to_string(socketFd));
 	logClient();
@@ -24,8 +32,9 @@ Client::Client(const int socketFd) : _socketFd(socketFd), _authenticated(false),
 
 // Copy Constructor
 Client::Client(const Client &other) : 
-	_inputBuffer(other._inputBuffer),
 	_socketFd(other._socketFd),
+	_inputBuffer(other._inputBuffer),
+	_authenticated(other._authenticated),
 	_nickname(other._nickname),
 	_username(other._username),
 	_fullname(other._fullname),
@@ -98,7 +107,7 @@ void Client::removeChannel(Channel *channel)
 bool	Client::appendBuffer(const char *buffer)
 {
 	_inputBuffer += std::string(buffer);
-	if (_inputBuffer.size() > BUFFER_SIZE && _inputBuffer.find("\r\n") == std::string::npos)
+	if (_inputBuffer.size() > BUFFER_SIZE-2 && (_inputBuffer.find("\r\n") == std::string::npos || _inputBuffer.find("\r\n") > BUFFER_SIZE-2))
 	{
 		_inputBuffer.clear();
 		return false;

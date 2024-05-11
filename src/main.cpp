@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 20:47:42 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/10 23:05:17 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/11 18:27:22 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,10 +45,6 @@ int main(int ac, char **av)
     {
 		info ("STANDARD EXCEPTION CAUGHT: ", CLR_RED);
 		info(e.what(), CLR_RED);
-    }
-	catch (...)
-    { //TODO: check if used
-		info ("UNKNOWN EXCEPTION CAUGHT: ", CLR_RED);
     }
 	Logger::close();
 	title("IRC Server stopped!", true, true);

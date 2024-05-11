@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/02 16:44:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/10 21:06:40 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/11 18:51:29 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,17 @@
 #include "utils.hpp"
 
 // Constructor
-Message::Message(Client *sender, const std::string &ircMessage) : _sender(sender), _receiver(NULL), _channel(NULL)
+Message::Message(Client *sender, const std::string &ircMessage) :
+	_sender(sender),
+	_receiver(NULL),
+	_channel(NULL),
+	_cmd(""),
+	_channelName(""),
+	_colon("")
 {
+	_args[0] = "";
+	_args[1] = "";
+	_args[2] = "";
 	// by architechture IRC message can not be empty
 	parseMessage(ircMessage);
 	// Log Message
@@ -27,7 +36,7 @@ Message::Message(Client *sender, const std::string &ircMessage) : _sender(sender
 	NICK	nickname
 	USER	username * * :full name
 	INVITE jojojo #TEST1
-	TODO: copilot the other cases
+	...
 */
 void Message::parseMessage(const std::string &ircMessage)
 {

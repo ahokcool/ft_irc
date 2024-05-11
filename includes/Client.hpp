@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:33 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/10 17:56:26 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/11 18:38:16 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,8 +83,8 @@ class Client
 
     private:
         Client();
-		std::string				_inputBuffer;
         int						_socketFd;
+		std::string				_inputBuffer;
 		bool					_authenticated;
         std::string			   	_nickname;
         std::string         	_username;	// Can only be changed when connecting to server!
