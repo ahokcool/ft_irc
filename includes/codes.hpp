@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/04 02:01:01 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/11 17:26:16 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/12 22:16:33 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,8 +24,9 @@
 #define RPL_TOPIC				"332"	// "<channel> :<topic>"
 #define RPL_TOPICADDITIONAL		"333"	// "<channel> astein!alex@F456A.75198A.60D2B2.ADA236.IP 1714884181"
 #define RPL_INVITING			"341"	// "<channel> <nick>"
-#define RPL_NOTOPIC				"331"	//"<channel> :No topic is set"
 #define RPL_CHANNELMODEIS		"324"	// "<channel> <mode> <mode params>"
+#define RPL_NAMREPLY			"353"	// "= <channel> :@astein ash"
+#define RPL_ENDOFNAMES			"366"	// "<channel> :End of /NAMES list"
 
 // ERROR CODES
 #define ERR_UNKNOWNCOMMAND		"421"	// "<command> :Unknown command"

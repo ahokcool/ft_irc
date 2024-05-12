@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/11 19:05:18 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/12 23:02:50 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,9 @@ Server::Server(const std::string &port, const std::string &password) :
     _cmds["KICK"] = &Server::kick;
     _cmds["PART"] = &Server::part;
 	parseArgs(port, password);
+
+	// Create a lobby channel
+	_channels.push_back(Channel("#lobby", "Welcome to the lobby of: " + std::string(PROMT)));
 }
 
 Server::~Server()
@@ -73,6 +76,11 @@ void Server::parseArgs(const std::string &port, const std::string &password)
 	info ("port accepted:\t" + port, CLR_YLW);
 	if(password.empty())
 		throw ServerException("No server password provided");
+
+    // find_first_of searches for any character in whitespaces
+	const std::string whitespaces = " \t\n\r\f\v";
+	if (password.find_first_of(whitespaces) != std::string::npos)
+		throw ServerException("Whitespace in password is not allowed");
 	info ("pswd accepted:\t" + password, CLR_YLW);
 	_password = password;
 }
@@ -92,8 +100,6 @@ void	Server::initNetwork()
     if ((_socket = socket(AF_INET, SOCK_STREAM, 0)) == 0)
 		throw ServerException("Socket creation failed:\n\t" +	std::string(strerror(errno)));
 
-    
-	// : REVISE THIS
 	// here we futher configure the socket
     // SOL_SOCKET:		Use SOL_SOCKET for general settings
 	// SO_REUSEADDR:	Allow the socket to be reused immediately after it is closed
@@ -126,9 +132,14 @@ void	Server::initNetwork()
 	if (listen(_socket, 3) < 0)
 		throw ServerException("Listen failed\n\t" +	std::string(strerror(errno)));
 
+	socklen_t len = sizeof(_address);
+    if (getsockname(_socket, (struct sockaddr *)&_address, &len) == -1)
+	{
+		throw ServerException("Getsockname failed\n\t" +	std::string(strerror(errno)));
+    }
+	info("Local IP Address:\t" + std::string(inet_ntoa(_address.sin_addr)), CLR_BLU);
+	info("Local port:\t\t" + to_string(ntohs(_address.sin_port)), CLR_BLU);
 	info("[>DONE] Init network", CLR_GRN);
-	info("Server IP: ", CLR_GRN);
-	system("hostname -I | awk '{print $1}'");
 }
 
 void	Server::goOnline()
@@ -179,8 +190,8 @@ void	Server::goOnline()
 				if (!cur_client)
 					continue ; // should never happen by arcitechture
 					
-                int valread = read(fds[i].fd, buffer, BUFFER_SIZE);
-                if (valread <= 0)
+				int result = recv(fds[i].fd, buffer, BUFFER_SIZE, 0);
+                if (result <= 0)
 				{
 					// Some read error happend
 					// The server doesn't bother to much and just deletes this client
@@ -193,7 +204,7 @@ void	Server::goOnline()
                 }
 				else
 				{
-                    buffer[valread] = '\0';
+                    buffer[result] = '\0';
 					// Since the buffer could only be a part of a msg we
 					// 1. append it to the client buffer
 					if (!cur_client->appendBuffer(buffer))
@@ -282,8 +293,8 @@ void	Server::processMessage(Client *sender, const std::string &ircMessage)
 
 bool	Server::isLoggedIn(Message *msg)
 {
-	if (!msg->getSender() || (!msg->getSender()->getUniqueName().empty() && !msg->getSender()->getUsername().empty()))
-		return true;
+	if (!msg->getSender())
+		return false;
 
 	// CHECK IF PASSWORD WAS PROVIDED
 	if(!msg->getSender()->isAuthenticated())
@@ -299,6 +310,9 @@ bool	Server::isLoggedIn(Message *msg)
 			return false;
 		}
 	}
+
+	if(!msg->getSender()->getUniqueName().empty() && !msg->getSender()->getUsername().empty())
+		return true;
 	
 	//	1. Check if NICK is set
 	if (msg->getCmd() == "NICK")
@@ -345,6 +359,7 @@ void	Server::pass(Message *msg)
 	if (msg->getArg(0) == _password)
 	{
 		msg->getSender()->setAuthenticated(true);
+		msg->getSender()->logClient();
 	}
 }
 
@@ -377,6 +392,8 @@ void	Server::nick(Message *msg)
 		{
 			//:luna.AfterNET.Org 001 ash_ :Welcome to the FINISHERS' IRC Network, ash_
 			msg->getSender()->sendMessage(RPL_WELCOME, msg->getSender()->getUniqueName() + " :Welcome to " + std::string(PROMT) + ", " + msg->getSender()->getUniqueName());
+			// ADD THE CLIENT TO THE LOBBY
+			_channels.front().joinChannel(msg->getSender(), "");
 		}
 	}
 }
@@ -400,7 +417,11 @@ void	Server::user(Message *msg)
 		msg->getSender()->setFullname(msg->getColon());
 		// CHECK IF NEED tO SEND A WELCOME MSG NOW
 		if (oldUsername.empty() && !msg->getSender()->getUniqueName().empty())
+		{
 			msg->getSender()->sendMessage(RPL_WELCOME, msg->getSender()->getUniqueName() + " :Welcome to " + std::string(PROMT) + ", " + msg->getSender()->getUniqueName());
+			// ADD THE CLIENT TO THE LOBBY
+			_channels.front().joinChannel(msg->getSender(), "");
+		}
 	}
 	else
 		msg->getSender()->sendMessage(ERR_NEEDMOREPARAMS, "USER :Not enough parameters");
@@ -414,26 +435,6 @@ void	Server::who	(Message *msg)
 		msg->getChannel()->sendWhoMessage(msg->getSender());
 		return ;
 	}
-
-	// THE SECTION BELOW IS FOR WHO <nickname>
-	// WE DONT CARE!
-
-	// // CHECK IF USER IS PROVIDED
-	// if (msg->getArg(0).empty())
-	// {
-	// 	msg->getSender()->sendMessage(ERR_NONICKNAMEGIVEN, ":No nickname given");
-	// 	return ;
-	// }
-
-	// // CHECK IF USER EXISTS
-	// Client *whoClient = getClientByNick(msg->getArg(0));
-	// if (!whoClient)
-	// {
-	// 	msg->getSender()->sendMessage(ERR_NOSUCHNICK, msg->getArg(0) + " :No such nick/channel");
-	// 	return ;
-	// }
-
-	// whoClient->sendWhoMsg(msg->getSender());
 }
 
 void	Server::whois	(Message *msg)
@@ -654,7 +655,7 @@ void	Server::part(Message *msg)
 	msg->getChannel()->partChannel(msg->getSender(), msg->getColon());
 
 	// IF NO CLIENTS OR OPERATORS LEFT IN CHANNEL -> DELETE CHANNEL
-	if (!msg->getChannel()->isActive())
+	if (!msg->getChannel()->isActive() && msg->getChannel()->getUniqueName() != "#lobby")
 	{
 		// DELETE CHANNEL. INFORM THE USERS
 		msg->getChannel()->sendMessageToClients("Channel " + msg->getChannelName() + " is dead! No Operators left!");

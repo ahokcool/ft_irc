@@ -6,31 +6,31 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:18 by astein            #+#    #+#             */
-/*   Updated: 2024/05/10 20:35:58 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/12 18:46:38 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include <iostream>      // For input and output
-#include <exception>     // Standard exceptions
-#include <list>          // For list container
-#include <vector>        // For storring the poll fds
-#include <string>        // For string operations
-#include <sstream>       // For string streams
-#include <cstdlib>       // General purpose utilities: memory management, program utilities, string conversions, random numbers, etc.
-#include <cstring>       // For string manipulation and memory functions
-#include <cstdio>        // For C-style input-output like perror
-#include <fcntl.h>       // For file control options
-#include <unistd.h>      // Provides access to the POSIX operating system API
-#include <sys/socket.h>  // For socket operations
-#include <netinet/in.h>  // For internet addresses
-#include <arpa/inet.h>   // For internet operations
-#include <sys/select.h>  // For select function
-#include <signal.h>      // For signal handling
+#include <iostream>		// For input and output
+#include <exception>	// Standard exceptions
+#include <list>			// For list container
+#include <vector>		// For storring the poll fds
+#include <string>		// For string operations
+#include <sstream>		// For string streams
+#include <cstdlib>		// General purpose utilities: memory management, program utilities, string conversions, random numbers, etc.
+#include <cstring>		// For string manipulation and memory functions
+#include <cstdio> 		// For C-style input-output like perror
+#include <fcntl.h>		// For file control options
+#include <unistd.h>		// Provides access to the POSIX operating system API
+#include <sys/socket.h>	// For socket operations
+#include <netinet/in.h>	// For internet addresses
+#include <arpa/inet.h>	// For internet operations
+#include <sys/select.h>	// For select function
+#include <signal.h>		// For signal handling
 #include <map>
-#include <cstdlib>		 // For getting the ip of the server
+#include <cstdlib>		// For getting the ip of the server
 #include <errno.h>
 #include <poll.h>
 

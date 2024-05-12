@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/11 18:42:54 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/12 23:03:09 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,9 +15,9 @@
 
 // Constructor
 // -----------------------------------------------------------------------------
-Channel::Channel(const std::string &name) : 
+Channel::Channel(const std::string &name, const std::string &topic) : 
 	_channelName(name),
-	_topic(""),
+	_topic(topic),
 	_topicChange(""),
 	_key(""),
 	_limit(0),
@@ -29,15 +29,20 @@ Channel::Channel(const std::string &name) :
 	logChanel();
 }
 
+// Initialize the channel with the client that created it
+// -----------------------------------------------------------------------------
+// It could be called by anyone so the only way to kinf od protect it is to 
+// check if the client list is empty
 void 	Channel::iniChannel(Client *client)
 {
+	if (!_clients.empty())
+		return ;
 	client->addChannel(this);
+	std::string msg;
+	// SEND JOIN MESSAGE FOR THE CLIENT WAS ADDED
+	msg =	":" + client->getUniqueName() + "!" + client->getUsername() + "@localhost" +" JOIN " + _channelName + " * :realname";
+	client->sendMessage(msg);
     this->addClient(client, STATE_O);
-
-	// SEND JOIN MESSAGE FOR THE CLIENT THAT CREATED THE CHANNEL
-	client->sendMessage(":" + client->getUniqueName() + 
-		"!" + client->getUsername() + "@localhost" +
-		" JOIN " + _channelName + " * :realname");
     Logger::log("Channel INIT: " + _channelName);
 	logChanel();
 }
@@ -150,18 +155,19 @@ void	Channel::joinChannel(Client *client, const std::string &pswd)
 
 	// IF WE GOT HERE
 	// JOIN CHANNEL
+
+	// 1. MSG TO NEW CLIENT
+	std::string msgToSend;
+	msgToSend =	":" + client->getUniqueName() + "!" + client->getUsername() + "@localhost" +" JOIN " + _channelName + " * :realname";
+	client->sendMessage(msgToSend);
+
+	// 2. ADD CLIENT TO CHANNEL (which will send him the mode and topic, and names)
 	client->addChannel(this);
 	this->addClient(client, STATE_C);
+	
+	// 3. SEND JOIN MESSAGE TO EVERYONE ELSE
+	this->sendMessageToClients(msgToSend, client);
 
-	// CREATE MSG
-	std::string msgToSend =
-		":" + client->getUniqueName() + 
-		"!" + client->getUsername() + "@*" + // + client->getHost()
-		" JOIN " + _channelName + " * :realname";
-
-	// INFORM ALL CHANNEL MEMBERS
-	// >> :ash222!anshovah@F456A.75198A.60D2B2.ADA236.IP JOIN #qweqwe * :realname
-	this->sendMessageToClients(msgToSend);	
 	Logger::log("Client " + client->getUniqueName() + " joined " + _channelName);
 }
 
@@ -238,6 +244,16 @@ void	Channel::kickFromChannel(Client *kicker, Client *kicked, const std::string 
 
 void	Channel::partChannel(Client *client, const std::string &reason)
 {
+	if (!client)
+		return ;
+
+	// PREVENT CLEINT FROM LEAVING LOBBY CHANNEL
+	if (_channelName == "#lobby")
+	{
+		client->sendMessage(ERR_UNKNOWNCOMMAND, _channelName + " :You can't leave the Lobby channel!");
+		return ;
+	}
+	
 	// IF CLIENT IS NOT IN CHANNEL
 	if (getClientState(client) < STATE_C)
 	{
@@ -275,14 +291,8 @@ void	Channel::topicOfChannel(Client *sender, const std::string &topic)
 	// IF NO TOPIC IS PROVIDED
 	if (topic.empty())
 	{
-		sender->sendMessage(
-			":localhost " + std::string(RPL_TOPIC) +
-			" " + sender->getUniqueName() +
-			" " + _channelName + " :" + _topic);
-		sender->sendMessage(
-			":localhost " + std::string(RPL_TOPICADDITIONAL) +
-			" " + sender->getUniqueName() +
-			" " + _channelName + " " + _topicChange);
+		// SEND TOPIC MESSAGE
+		sendTopicMessage(sender);
 		return ;
 	}
 	
@@ -514,9 +524,15 @@ void	Channel::modeOfChannel(Client *sender, const std::string &flag, const std::
 // Simple List Management
 // -----------------------------------------------------------------------------
 // IF CLIENT ALREADY EXISTS, IT WILL UPDATE THE STATUS
+// THIS WILL ALSO SEND THE RPL_TOPIC and RPL_NAMREPLY MSG
 void	Channel::addClient		(Client *client, int status)
 {
 	_clients[client] = status;
+	if (status > STATE_I)
+	{
+		sendTopicMessage(client);
+		sendNamesMessage(client);
+	}
 	Logger::log("Channel " + _channelName + " added/changed client: " + client->getUniqueName() + " to status " + to_string(status));
 	logChanel();
 }
@@ -571,6 +587,28 @@ void	Channel::sendWhoMessage(Client *receiver) const
 	Logger::log("Channel " + _channelName + " sent WHO message to " + receiver->getUniqueName());
 }
 
+void	Channel::sendTopicMessage(Client *receiver) const
+{
+	if (_topic.empty())
+	{
+		receiver->sendMessage(RPL_NOTOPIC, _channelName + " :No topic is set");
+		Logger::log("Channel " + _channelName + " sent NO TOPIC message to " + receiver->getUniqueName());
+		return ;
+	}
+
+	receiver->sendMessage(RPL_TOPIC, _channelName + " :" + _topic);
+	receiver->sendMessage(RPL_TOPICADDITIONAL, _channelName + " " + _topicChange);
+	Logger::log("Channel " + _channelName + " sent TOPIC message to " + receiver->getUniqueName());
+}
+
+void	Channel::sendNamesMessage(Client *receiver) const
+{
+	std::string names = getClientList();
+	receiver->sendMessage(RPL_NAMREPLY, "= " + _channelName + " :" + names);
+	receiver->sendMessage(RPL_ENDOFNAMES, _channelName + " :End of /NAMES list.");
+	Logger::log("Channel " + _channelName + " sent NAMES message to " + receiver->getUniqueName());
+}
+
 // Getters and Setters
 // -----------------------------------------------------------------------------
 const std::string	&Channel::getUniqueName() const
@@ -587,7 +625,8 @@ const std::string Channel::getClientList() const
 	{
 		if (it->second > STATE_I)
 		{
-			users += "@";
+			if (it->second == STATE_O)
+				users += "@";
 			users += it->first->getUniqueName();
 			users += " ";
 		}

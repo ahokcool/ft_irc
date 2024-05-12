@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/10 01:07:06 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/12 23:01:47 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ class Channel
 {
     public:
 		// Constructor and Destructor
-        Channel(const std::string &name);
+        Channel(const std::string &name, const std::string &topic = "");
 		void 	iniChannel(Client *client);
 		Channel(const Channel &other); // Copy Constructor
         ~Channel();
@@ -49,7 +49,6 @@ class Channel
 		void	modeOfChannel(Client *client, const std::string &flag, const std::string &value, Server *server);
 		
 		// Simple Map Management
-		void	addClient		(Client *client, int status);	// IF CLIENT ALREADY EXISTS, IT WILL UPDATE THE STATUS
 		void	removeClient	(Client *client);
 
 		// Channel Broadcast Message
@@ -64,6 +63,13 @@ class Channel
 		void 				logChanel() const;
 
     private:
+		// Simple Map Management
+		void	addClient		(Client *client, int status);	// IF CLIENT ALREADY EXISTS, IT WILL UPDATE THE STATUS
+	
+		// MSG Functions
+		void 	sendTopicMessage(Client *receiver) const;
+		void 	sendNamesMessage(Client *receiver) const;
+
 		// For the basic channel functionality
 		int					getClientState(const Client *client) const;
 		std::string			getChannelFlags();

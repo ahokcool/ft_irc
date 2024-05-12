@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/11 19:01:22 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/12 19:33:56 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,7 +107,7 @@ void Client::removeChannel(Channel *channel)
 bool	Client::appendBuffer(const char *buffer)
 {
 	_inputBuffer += std::string(buffer);
-	if (_inputBuffer.size() > BUFFER_SIZE-2 && (_inputBuffer.find("\r\n") == std::string::npos || _inputBuffer.find("\r\n") > BUFFER_SIZE-2))
+	if (_inputBuffer.size() > BUFFER_SIZE - 1 && (_inputBuffer.find("\n") == std::string::npos || _inputBuffer.find("\n") > BUFFER_SIZE - 1))
 	{
 		_inputBuffer.clear();
 		return false;
@@ -119,12 +119,12 @@ bool	Client::appendBuffer(const char *buffer)
 // -----------------------------------------------------------------------------
 std::string	Client::getFullMessage()
 {
-	size_t pos = _inputBuffer.find("\r\n");
+	size_t pos = _inputBuffer.find("\n");
 	if(pos != std::string::npos)
 	{
 		std::string _fullMsg;
 		_fullMsg = _inputBuffer.substr(0, pos);
-		_inputBuffer = _inputBuffer.substr(pos + 2);
+		_inputBuffer = _inputBuffer.substr(pos + 1);
 		return _fullMsg;
 	}
 	return std::string("");
@@ -138,7 +138,7 @@ void Client::sendMessage(const std::string &ircMessage) const
 		return ;
 	std::string msg = ircMessage;
 	if(msg[msg.size() - 1] != '\n')
-		msg += "\r\n";
+		msg += "\n";
 	ssize_t bytesSent = send(_socketFd, msg.c_str(), msg.length(), 0);
 	// LOGGER
 	if (!msg.empty() && msg[msg.length() - 1] == '\n')

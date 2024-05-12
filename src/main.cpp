@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 20:47:42 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/11 18:27:22 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/12 19:19:07 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ int main(int ac, char **av)
 {
 	Logger::init();
 	Logger::activateLogger();
-	Logger::deactivateLogger();
+	// Logger::deactivateLogger();
     if (ac != 3)
     {
 		info("Usage: ./ircserv <port> <pswd>", CLR_RED);
