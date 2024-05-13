@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/13 18:44:02 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/13 18:55:55 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -285,7 +285,8 @@ void	Server::processMessage(Client *sender, const std::string &ircMessage)
 	// Check if args contain non valid chars
 	std::string nonValidChars = "'\"&(),:;<=>?@\\";
 	// Check if channelname contain non valid chars
-	if (!msg.getChannelName().empty() && msg.getChannelName().find_first_of(nonValidChars) != std::string::npos)
+	if (!msg.getChannelName().empty() &&
+		(msg.getChannelName().find_first_of(nonValidChars) != std::string::npos || msg.getChannelName().size() < 2))
 	{
 		msg.getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg.getChannelName() + " :channelname contains invalid characters");
 		return ;
