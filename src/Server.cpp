@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/12 23:02:50 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/13 16:29:57 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,9 +63,13 @@ void Server::parseArgs(const std::string &port, const std::string &password)
 	u_int16_t	portInt;
 	std::istringstream iss(port);
 
-	if (!(iss >> portInt))
+	const std::string numbers = "0123456789";
+	if (port.find_first_of(numbers) != std::string::npos)
     	throw ServerException("Invalid port number\n\t>>Port is not the IRC port (194) or in the range 1024-65535!");
 
+	if (!(iss >> portInt))
+    	throw ServerException("Invalid port number\n\t>>Port is not the IRC port (194) or in the range 1024-65535!");
+	std::cout << portInt << std::endl;
 	// 194 is the default port for IRC
 	// https://en.wikipedia.org/wiki/Port_(computer_networking)
 	// The ports up to 49151 are not as strictly controlled
