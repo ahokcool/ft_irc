@@ -1,6 +1,6 @@
 # Project: ircserv
 NAME=ircserv
-PORT=44558
+PORT=1234
 PSWD=42
 
 # Compiler options

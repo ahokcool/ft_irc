@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:40 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/12 19:33:56 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/13 17:49:32 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ Client::~Client()
 		for (it = _channels.begin(); it != _channels.end(); ++it)
 		{
 			msg = ":" + _nickname + "!" + _username + "@localhost" +" PART " + (*it)->getUniqueName() + " :client died... *sad*";
-			(*it)->sendMessageToClients(msg);
+			(*it)->sendMessageToClients(msg, this);
 			(*it)->removeClient(this);
 		}
 	}

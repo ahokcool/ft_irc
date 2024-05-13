@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
+/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/13 16:42:54 by anshovah         ###   ########.fr       */
+/*   Updated: 2024/05/13 18:18:46 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -630,14 +630,20 @@ void	Server::kick(Message *msg)
 	}
 	
 	// IF NO CLIENT NAME IS PROVIDED
-	if (msg->getArg(0).empty())
+	if (msg->getArg(0).empty() && msg->getColon().empty())
 	{
 		msg->getSender()->sendMessage(ERR_NOSUCHCHANNEL, msg->getChannelName() + " :No such channel");
 		return ;
 	}
 	
 	// IF TO BE KICKED CLIENT IS NOT ON THE SERVER
-	msg->setReceiver(getInstanceByName(_clients, msg->getArg(0)));
+	if (!msg->getColon().empty())
+	{
+		std::cout << "A" << msg->getColon()  <<"A\n";
+		msg->setReceiver(getInstanceByName(_clients, msg->getColon()));
+	}
+	else
+		msg->setReceiver(getInstanceByName(_clients, msg->getArg(0)));
 	if (!msg->getReceiver())
 	{
 		msg->getSender()->sendMessage(ERR_NOSUCHNICK, msg->getArg(0) + " :No such nick");

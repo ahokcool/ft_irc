@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/02 16:44:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/11 18:51:29 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/13 18:30:00 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,13 @@ void Message::parseMessage(const std::string &ircMessage)
 		else if (token[0] == ':')
 		{	
 			_colon = ircMessage.substr(ircMessage.find(':') + 1);
-			break;
+			for (int i = _colon.length() - 1; i >= 0; i--)
+			{
+        		// Check if the character is non-printable or whitespace
+        		if (_colon[i] < 32 || std::isspace(static_cast<unsigned char>(_colon[i])))
+            		_colon.erase(i, 1); // Remove the character
+				break;
+			}
 		}
 	}
 }
