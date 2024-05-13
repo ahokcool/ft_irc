@@ -1,18 +1,21 @@
-MESSAGES FROM HEXCHAT: (WE SHOULD SAVE THIS FOR FRANCISCO AND THE KIDS)
+!CMDS WE ACCEPT!
+================
 
-KICK
-!!! any operator can kick another operator, doesn't matter if he was the first one
-client who's not there        	KICK #TEST1 hhhhh
-just client		     	KICK #TEST1 anshovah_
-KICK ""		    		KICK #TEST1 "
-KICK " "           		KICK #TEST1
-KICK /KICK			KICK #TEST1 /KICK
-
-INVITE
-INVITE jojojo			INVITE jojojo #TEST1
-INVITE ""			INVITE " #TEST1
-INVITE " "			INVITE   #TEST1
-
-TOPIC
-if not set
-	
+PASS	<pswd>
+NICK	<nick>
+USER	<username> * * :<fullname>
+WHO 	#<channelName>
+WHOIS	<username>
+TOPIC	:[<topic>]
+JOIN 	#<channelName>
+INVITE	#<channelname> <username>
+PART	#<channelname> :[<reason>]
+KICK	#<channelname> <username> :[<reason>]
+MODE	#<channelname> <flag> [<value>]
+	FLAGS:
+		SIGNS: <none> + -
+			i	invite only
+			t	topic protected
+			k	keyword
+			o	give operartor privileges
+			l	set limit of clients
