@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
+/*   By: anshovah <anshovah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/13 16:29:57 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/13 16:42:54 by anshovah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ void Server::parseArgs(const std::string &port, const std::string &password)
 	std::istringstream iss(port);
 
 	const std::string numbers = "0123456789";
-	if (port.find_first_of(numbers) != std::string::npos)
+	if (port.find_first_not_of(numbers) != std::string::npos)
     	throw ServerException("Invalid port number\n\t>>Port is not the IRC port (194) or in the range 1024-65535!");
 
 	if (!(iss >> portInt))
@@ -734,13 +734,21 @@ volatile sig_atomic_t	Server::_keepRunning = 1;
 
 void	Server::setupSignalHandling()
 {
-    signal(SIGINT, Server::sigIntHandler);
+	// All signals in an ugly way :D
+	for (int i = 1; i < 32; i++)
+	{
+		if (i != SIGKILL && i != SIGSTOP)
+			signal(i, Server::sigIntHandler);
+	}
 }
 
 void	Server::sigIntHandler(int sig)
 {
 	if(sig != SIGINT)
+	{
+		info("End the server with Ctrl+C", CLR_GRN);
 		return;
+	}
     _keepRunning = 0;  // Set flag to false to break the loop
 	info("[INFO] Shutdown signal received, terminating server...", CLR_RED);
 }
