@@ -1,0 +1,32 @@
+=======================
+>>>FINISHERS IRC NET<<<
+=======================
+> INFO MESSAGE
+================
+> CMDS WE ACCEPT
+================
+/PASS	<pswd>
+/NICK	<nick>
+/USER	<username> * * :<fullname>
+/WHO 	#<channelName>
+/WHOIS	<username>
+/TOPIC	:[<topic>]
+/JOIN 	#<channelName>
+/INVITE	#<channelname> <username>
+/PART	#<channelname> :[<reason>]
+/KICK	#<channelname> <username> :[<reason>]
+/MODE	#<channelname> <flag> [<value>]
+			FLAGS:
+				SIGNS: <none> + -
+					i	set / remove channel mode to invite only
+					t	set / remove channel mode to topic protected
+					k	set / remove channel keyword
+					o	set / remove operartor privileges to user
+					l	set / remove channel limit of clients
+
+Have fun and enjoy our IRC SERVER
+
+>>>FINISHERS IRC NET<<<
+=======================
+> END INFO MESSAGE
+=======================

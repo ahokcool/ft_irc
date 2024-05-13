@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/12 23:01:47 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/13 21:45:00 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,7 +79,7 @@ class Channel
         std::string				_topic;
         std::string				_topicChange;
         std::string				_key;				// empty string means no password
-        size_t					_limit; 			// 0 means unset
+        int						_limit; 			// 0 means unset
         bool					_inviteOnly;
         bool					_topicProtected;
 		

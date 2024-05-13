@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 23:23:46 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/12 23:03:09 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/13 21:45:23 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -144,7 +144,7 @@ void	Channel::joinChannel(Client *client, const std::string &pswd)
 	if (_limit != 0)
 	{
 		// CHECK IF CHANNEL IS FULL
-		size_t noOfClients = 0;
+		int noOfClients = 0;
 		std::map<Client *, int>::const_iterator it;
 		for(it = _clients.begin(); it != _clients.end(); ++it)
 			if (it->second > STATE_I)
@@ -476,13 +476,21 @@ void	Channel::modeOfChannel(Client *sender, const std::string &flag, const std::
 					sender->sendMessage(ERR_NEEDMOREPARAMS, "MODE +l :Not enough parameters");
 					break ;
 				}
+
 				// CHECK IF VALUE IS A POSITIVE SIGNED INTEGER
 				if (intNoOverflow(value))
 				{
 					int newLimit = std::atoi(value.c_str());
+					if (_limit == newLimit)
+						break ;
+					if (newLimit <= 0)
+					{
+						sender->sendMessage(ERR_NEEDMOREPARAMS, "MODE +l :Not enough parameters");
+						break ;
+					}
 					_limit = newLimit;
 					sendMessageToClients(":" + sender->getUniqueName() + "!" + sender->getUsername() + "@localhost" +
-						" MODE " + _channelName + " +l " + value);
+						" MODE " + _channelName + " +l " + to_string(_limit));
 				}
 				break ;
 			}
