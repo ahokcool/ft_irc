@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/01 22:55:11 by astein            #+#    #+#             */
-/*   Updated: 2024/05/13 21:30:57 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/13 22:09:24 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -283,7 +283,7 @@ void	Server::processMessage(Client *sender, const std::string &ircMessage)
 	Message     msg(sender, ircMessage);
 	
 	// Check if args contain non valid chars
-	std::string nonValidChars = "'\"&(),:;<=>?@\\";
+	std::string nonValidChars = "'\":\\";
 	// Check if channelname contain non valid chars
 	if (!msg.getChannelName().empty() &&
 		(msg.getChannelName().find_first_of(nonValidChars) != std::string::npos || msg.getChannelName().size() < 2))
@@ -296,7 +296,7 @@ void	Server::processMessage(Client *sender, const std::string &ircMessage)
 	{
 		if (msg.getArg(i).find_first_of(nonValidChars) != std::string::npos)
 		{
-			msg.getSender()->sendMessage(ERR_ERRONEUSNICKNAME, msg.getArg(i) + " :argument contains invalid characters");
+			msg.getSender()->sendMessage(":localhost NOTICE " + msg.getSender()->getUniqueName() + " :Your message contains invalid characters and was not delivered.");
 			return ;
 		}
 	}

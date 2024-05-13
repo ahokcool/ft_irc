@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/04 02:01:01 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/13 18:37:31 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/13 21:54:44 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,5 @@
 #define ERR_USERNOTINCHANNEL	"441"	// "<nick> <channel> :They aren't on that channel
 #define ERR_UNKNOWNMODE			"472"	// "<char> :is unknown mode char to me"
 #define ERR_KEYSET				"467"	// "<channel>	:Channel key already set"
-#define ERR_ERRONEUSNICKNAME	"432"	// "argument contains invalid characters"
 
 #endif

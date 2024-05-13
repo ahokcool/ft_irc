@@ -6,7 +6,7 @@
 /*   By: astein <astein@student.42lisboa.com>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/02 16:44:47 by anshovah          #+#    #+#             */
-/*   Updated: 2024/05/13 18:30:00 by astein           ###   ########.fr       */
+/*   Updated: 2024/05/13 22:02:00 by astein           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,8 +63,10 @@ void Message::parseMessage(const std::string &ircMessage)
         		// Check if the character is non-printable or whitespace
         		if (_colon[i] < 32 || std::isspace(static_cast<unsigned char>(_colon[i])))
             		_colon.erase(i, 1); // Remove the character
-				break;
+				else
+					break;
 			}
+			break;
 		}
 	}
 }
