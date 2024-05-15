@@ -86,43 +86,43 @@ We used the client [HexChat](https://hexchat.github.io/) to test the server.
 
 | Define Name           | Code | Description |
 |-----------------------|------|-------------|
-| RPL_WELCOME           | 001  | "<nick> :Welcome to the FINISHERS' IRC Network, <nick>" |
-| RPL_WHOISUSER         | 311  | "<nick> <user> <host> * :<real name>" |
-| RPL_WHOISCHANNELS     | 319  | "<nick> :{[@\\|+]<channel><space>}" |
-| RPL_WHOREPLY          | 352  | "<channel> <user> <host> <server> <nick> <H\|G>[\\\*][@\\|+] :<hopcount> <real name>" |
-| RPL_ENDOFWHO          | 315  | "<name> :End of /WHO list" |
-| RPL_ENDOFWHOIS        | 318  | "<nick> :End of /WHOIS list" |
-| RPL_NOTOPIC           | 331  | "<channel> :No topic is set" |
-| RPL_TOPIC             | 332  | "<channel> :<topic>" |
-| RPL_TOPICADDITIONAL   | 333  | "<channel> astein!alex@F456A.75198A.60D2B2.ADA236.IP 1714884181" |
-| RPL_INVITING          | 341  | "<channel> <nick>" |
-| RPL_CHANNELMODEIS     | 324  | "<channel> <mode> <mode params>" |
-| RPL_NAMREPLY          | 353  | "= <channel> :@astein ash" |
-| RPL_ENDOFNAMES        | 366  | "<channel> :End of /NAMES list" |
+| RPL_WELCOME           | ```001```  | \<nick> :Welcome to the FINISHERS' IRC Network, \<nick> |
+| RPL_WHOISUSER         | ```311```  | \<nick> \<user> \<host> * :\<real name> |
+| RPL_WHOISCHANNELS     | ```319```  | \<nick> :{[@\\|+]\<channel>\<space>} |
+| RPL_WHOREPLY          | ```352```  | \<channel> \<user> \<host> \<server> \<nick> \<H\|G>[\\\*][@\\|+] :\<hopcount> \<real name> |
+| RPL_ENDOFWHO          | ```315```  | \<name> :End of /WHO list |
+| RPL_ENDOFWHOIS        | ```318```  | \<nick> :End of /WHOIS list |
+| RPL_NOTOPIC           | ```331```  | \<channel> :No topic is set |
+| RPL_TOPIC             | ```332```  | \<channel> :\<topic> |
+| RPL_TOPICADDITIONAL   | ```333```  | \<channel> astein!alex@F456A.75198A.60D2B2.ADA236.IP 1714884181 |
+| RPL_INVITING          | ```341```  | \<channel> \<nick> |
+| RPL_CHANNELMODEIS     | ```324```  | \<channel> \<mode> \<mode params> |
+| RPL_NAMREPLY          | ```353```  | = \<channel> :@astein ash |
+| RPL_ENDOFNAMES        | ```366```  | \<channel> :End of /NAMES list |
 
 ### Error Codes
 
 | Define Name           | Code | Description |
 |-----------------------|------|-------------|
-| ERR_UNKNOWNCOMMAND    | 421  | "<command> :Unknown command" |
-| ERR_NORECIPIENT       | 411  | ":No recipient given (<command>)" |
-| ERR_NOTEXTTOSEND      | 412  | ":No text to send" |
-| ERR_NOSUCHNICK        | 401  | "<nickname> :No such nick/channel" |
-| ERR_NONICKNAMEGIVEN   | 431  | ":No nickname given" |
-| ERR_NICKNAMEINUSE     | 433  | "<nick> :Nickname is already in use" |
-| ERR_NOTREGISTERED     | 451  | ":You have not registered" |
-| ERR_NEEDMOREPARAMS    | 461  | "<command> :Not enough parameters" |
-| ERR_ALREADYREGISTRED  | 462  | "<nick> :You may not reregister" |
-| ERR_NOSUCHCHANNEL     | 403  | "<channel name> :No such channel" |
-| ERR_USERONCHANNEL     | 443  | "<user> <channel> :is already on channel" |
-| ERR_BADCHANNELKEY     | 475  | "<channel> :Cannot join channel (+k)" |
-| ERR_INVITEONLYCHAN    | 473  | "<channel> :Cannot join channel (+i)" |
-| ERR_CHANNELISFULL     | 471  | "<channel> :Cannot join channel (+l)" |
-| ERR_NOTONCHANNEL      | 442  | "<channel> :You're not on that channel" |
-| ERR_CHANOPRIVSNEEDED  | 482  | "<channel> :You're not channel operator" |
-| ERR_USERNOTINCHANNEL  | 441  | "<nick> <channel> :They aren't on that channel" |
-| ERR_UNKNOWNMODE       | 472  | "<char> :is unknown mode char to me" |
-| ERR_KEYSET            | 467  | "<channel> :Channel key already set" |
+| ERR_UNKNOWNCOMMAND    | ```421```  | \<command> :Unknown command |
+| ERR_NORECIPIENT       | ```411```  | :No recipient given (\<command>) |
+| ERR_NOTEXTTOSEND      | ```412```  | :No text to send |
+| ERR_NOSUCHNICK        | ```401```  | \<nickname> :No such nick/channel |
+| ERR_NONICKNAMEGIVEN   | ```431```  | :No nickname given |
+| ERR_NICKNAMEINUSE     | ```433```  | \<nick> :Nickname is already in use |
+| ERR_NOTREGISTERED     | ```451```  | :You have not registered |
+| ERR_NEEDMOREPARAMS    | ```461```  | \<command> :Not enough parameters |
+| ERR_ALREADYREGISTRED  | ```462```  | \<nick> :You may not reregister |
+| ERR_NOSUCHCHANNEL     | ```403```  | \<channel name> :No such channel |
+| ERR_USERONCHANNEL     | ```443```  | \<user> \<channel> :is already on channel |
+| ERR_BADCHANNELKEY     | ```475```  | \<channel> :Cannot join channel (+k) |
+| ERR_INVITEONLYCHAN    | ```473```  | \<channel> :Cannot join channel (+i) |
+| ERR_CHANNELISFULL     | ```471```  | \<channel> :Cannot join channel (+l) |
+| ERR_NOTONCHANNEL      | ```442```  | \<channel> :You're not on that channel |
+| ERR_CHANOPRIVSNEEDED  | ```482```  | \<channel> :You're not channel operator |
+| ERR_USERNOTINCHANNEL  | ```441```  | \<nick> \<channel> :They aren't on that channel |
+| ERR_UNKNOWNMODE       | ```472```  | \<char> :is unknown mode char to me |
+| ERR_KEYSET            | ```467```  | \<channel> :Channel key already set |
 
 
 <!-- ahokcool FOOTER-->
