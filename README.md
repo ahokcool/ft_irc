@@ -88,8 +88,8 @@ We used the client [HexChat](https://hexchat.github.io/) to test the server.
 |-----------------------|------|-------------|
 | RPL_WELCOME           | 001  | "<nick> :Welcome to the FINISHERS' IRC Network, <nick>" |
 | RPL_WHOISUSER         | 311  | "<nick> <user> <host> * :<real name>" |
-| RPL_WHOISCHANNELS     | 319  | "<nick> :{[@\|+]<channel><space>}" |
-| RPL_WHOREPLY          | 352  | "<channel> <user> <host> <server> <nick> <H\|G>[\*][@\|+] :<hopcount> <real name>" |
+| RPL_WHOISCHANNELS     | 319  | "<nick> :{[@\\|+]<channel><space>}" |
+| RPL_WHOREPLY          | 352  | "<channel> <user> <host> <server> <nick> <H\|G>[\\\*][@\\|+] :<hopcount> <real name>" |
 | RPL_ENDOFWHO          | 315  | "<name> :End of /WHO list" |
 | RPL_ENDOFWHOIS        | 318  | "<nick> :End of /WHOIS list" |
 | RPL_NOTOPIC           | 331  | "<channel> :No topic is set" |
